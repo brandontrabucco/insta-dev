@@ -257,14 +257,14 @@ class InstaPipeline(Callable):
             )
 
             function_calls = [
-                {"dotpath": function_call.dotpath, "args": function_call.args}
-                for function_call in (action.function_calls or [])
+                {"dotpath": x.dotpath, "args": x.args}
+                for x in action.function_calls
             ]
 
             actions.append({
                 "function_calls": function_calls,
                 "response": action.response,
-                "matched_response": action.matched_response,
+                "matched_response": action.matched_response
             })
 
         return observations, actions
@@ -403,10 +403,16 @@ class InstaPipeline(Callable):
                 instruction = task
             )
 
-            judgment = {} if judgment is NULL_JUDGMENT else {
-                "task_is_feasible": judgment.values["task_is_feasible"],
-                "success": judgment.values["success"],
-                "on_right_track": judgment.values["on_right_track"],
+            judgment = {
+                "task_is_feasible": judgment.values.get(
+                    "task_is_feasible"
+                ),
+                "success": judgment.values.get(
+                    "success"
+                ),
+                "on_right_track": judgment.values.get(
+                    "on_right_track"
+                ),
                 "response": judgment.response,
                 "matched_response": judgment.matched_response,
             }

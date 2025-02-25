@@ -22,7 +22,11 @@ from transformers import AutoTokenizer
 import openai
 
 
-NULL_JUDGMENT = None
+NULL_JUDGMENT = BrowserJudgment(
+    values = {},
+    response = None,
+    matched_response = None
+)
 
 
 class BrowserJudge(Callable):

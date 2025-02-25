@@ -111,7 +111,7 @@ def get_function_calls(
             FunctionCall(
                 dotpath = "setChecked",
                 args = "{}".format(
-                    action_kwargs.get("checked")
+                    "true" if action_kwargs.get("checked", False) else "false"
                 )
             )
         )
@@ -120,7 +120,7 @@ def get_function_calls(
 
         function_calls.append(
             FunctionCall(
-                dotpath = "goBack",
+                dotpath = "page.goBack",
                 args = ""
             )
         )
@@ -129,7 +129,7 @@ def get_function_calls(
 
         function_calls.append(
             FunctionCall(
-                dotpath = "goto",
+                dotpath = "page.goto",
                 args = "'{}'".format(
                     action_kwargs.get("url")
                 )

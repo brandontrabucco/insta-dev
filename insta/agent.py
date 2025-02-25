@@ -22,7 +22,11 @@ from transformers import AutoTokenizer
 import openai
 
 
-NULL_ACTION = None
+NULL_ACTION = BrowserAction(
+    function_calls = [],
+    response = None,
+    matched_response = None
+)
 
 
 class BrowserAgent(Callable):
