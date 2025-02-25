@@ -294,9 +294,16 @@ class InstaPipeline(Callable):
             instruction = instruction
         )
 
-    def iter_pipeline(self) -> Generator[InstaPipelineOutput, None, None]:
-        """Run the InSTA pipeline for internet-scale data collection, and
-        yield the observations, actions, and judgments for each task.
+    def iter_pipeline(self, dataset: List[Dict[str, str]] = None) -> \
+        Generator[InstaPipelineOutput, None, None]:
+        """Run the InSTA pipeline for internet-scale data collection, and yield
+        the observations, actions, and judgments for each task.
+
+        Arguments:
+
+        dataset: List[Dict[str, str]]
+            Override the default dataset, and run the pipeline on custom tasks,
+            each entry must be a dictionary with keys "domain" and "task".
 
         Returns:
 
@@ -306,7 +313,8 @@ class InstaPipeline(Callable):
         
         """
 
-        dataset_ids = list(range(len(self.dataset)))
+        dataset = dataset or self.dataset
+        dataset_ids = list(range(len(dataset)))
 
         random.seed(self.seed)
         random.shuffle(dataset_ids)
@@ -322,7 +330,7 @@ class InstaPipeline(Callable):
 
         for example_id in progress_bar:
 
-            example_dict = self.dataset[example_id]
+            example_dict = dataset[example_id]
             domain = example_dict["domain"]
             task = example_dict["task"]
 
@@ -448,12 +456,20 @@ class InstaPipeline(Callable):
             )
 
             
-    def run_pipeline(self) -> None:
-        """Run the InSTA pipeline for internet-scale data collection, and
-        yield the observations, actions, and judgments for each task.
+    def run_pipeline(self, dataset: List[Dict[str, str]] = None) -> None:
+        """Run the InSTA pipeline for internet-scale data collection, and yield
+        the observations, actions, and judgments for each task.
+
+        Arguments:
+
+        dataset: List[Dict[str, str]]
+            Override the default dataset, and run the pipeline on custom tasks,
+            each entry must be a dictionary with keys "domain" and "task".
 
         """
 
-        for x in self.iter_pipeline():
+        for x in self.iter_pipeline(
+            dataset = dataset
+        ):
             
             pass

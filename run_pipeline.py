@@ -110,7 +110,7 @@ if __name__ == "__main__":
         "--seed",
         type = int,
         help = "Seed for the dataset",
-        default = 123
+        default = 0
     )
 
     parser.add_argument(
@@ -157,6 +157,8 @@ if __name__ == "__main__":
     generation_kwargs = {
         "model": args.model_name,
         "max_tokens": 2048,
+        "top_p": 1.0,
+        "temperature": 0.0
     }
 
     agent_config = get_agent_config(
