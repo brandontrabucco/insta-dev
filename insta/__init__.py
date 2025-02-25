@@ -75,3 +75,8 @@ from insta.pipeline import (
     InstaPipeline,
     InstaPipelineOutput,
 )
+
+from insta.visualize import (
+    create_video,
+    create_demo_videos,
+)

@@ -70,7 +70,7 @@ class InstaPipeline(Callable):
                  judge_config: JudgeConfig = DEFAULT_JUDGE_CONFIG,
                  browser_config: BrowserConfig = DEFAULT_BROWSER_CONFIG,
                  dataset: str = DEFAULT_DATASET,
-                 dataset_split: str = DEFAULT_DATASET,
+                 dataset_split: str = DEFAULT_DATASET_SPLIT,
                  observations_dir: str = DEFAULT_OBSERVATIONS_DIR,
                  screenshot_dir: str = DEFAULT_SCREENSHOT_DIR,
                  actions_dir: str = DEFAULT_ACTIONS_DIR,
