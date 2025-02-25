@@ -1,0 +1,54 @@
+# Base image to run Playwright
+FROM mcr.microsoft.com/playwright:v1.50.1
+SHELL ["/bin/bash", "-c"]
+
+# adding a change
+ENV PATH="/miniconda3/bin:${PATH}"
+ARG PATH="/miniconda3/bin:${PATH}"
+
+ENV CODE_URL="http://github.com/brandontrabucco/insta-private"
+
+# Install wget to fetch Miniconda
+RUN apt-get update && \
+    apt-get install -y wget git screen htop && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Miniconda on x86 or ARM platforms
+RUN arch=$(uname -m) && if [ "$arch" = "x86_64" ]; then MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"; elif [ "$arch" = "aarch64" ]; then MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh"; else echo "Unsupported architecture: $arch"; exit 1; fi && wget $MINICONDA_URL -O miniconda.sh && mkdir -p /home/user/.conda && bash miniconda.sh -b -p /miniconda3 && rm -f miniconda.sh
+
+# clone the source code from https://github.com/data-for-agents/insta
+RUN git clone $CODE_URL /code/insta
+RUN chmod -R 777 /code/insta
+RUN chmod -R 777 /miniconda3
+
+# install the requirements
+RUN source /miniconda3/bin/activate && \
+    conda create -n insta python=3.10 -y && \
+    conda activate insta && \
+    pip install -e /code/insta[gradio]
+
+# Create a user for the Huggingface space
+RUN groupmod -g 1010 ubuntu && \
+    usermod -u 1010 -g 1010 ubuntu
+RUN useradd -m -u 1000 user
+
+# Set the working directory
+WORKDIR /code/insta
+USER user
+
+# Set the user environment
+ENV HOME=/home/user PATH=/home/user/.local/bin:$PATH
+ENV PATH="/miniconda3/bin:${PATH}"
+ARG PATH="/miniconda3/bin:${PATH}"
+
+# Expose the Playwright server ports
+ENV SERVER_BASE_PORT=3000
+ENV SERVER_WORKERS=8
+
+# Expose Gradio and Playwright ports
+EXPOSE 7860 3000-3007
+ENV GRADIO_SERVER_NAME="0.0.0.0"
+
+# Start the Huggingface demo
+CMD ["bash", "gradio/start_gradio.sh"]
