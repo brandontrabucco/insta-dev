@@ -99,13 +99,18 @@ def create_video(
         actions,
     ):
         
-        screenshot_path = obs["screenshot_path"]
-        metadata = obs["metadata"]
-
-        if screenshot_path is None or \
-                not os.path.exists(screenshot_path):
+        has_valid_screenshot = (
+            "screenshot_path" in obs and
+            obs["screenshot_path"] is not None and
+            os.path.exists(obs["screenshot_path"])
+        )
+        
+        if not has_valid_screenshot:
             
             continue
+        
+        screenshot_path = obs["screenshot_path"]
+        metadata = obs["metadata"]
 
         frame = cv2.imread(
             screenshot_path
