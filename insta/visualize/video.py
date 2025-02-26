@@ -61,6 +61,7 @@ def create_video(
     observations_dir: str = "data/observations",
     actions_dir: str = "data/actions",
     judgments_dir: str = "data/judgments",
+    screenshot_dir: str = "data/screenshots",
     video_dir: str = "data/videos",
     output_height: int = 720,
     output_width: int = 1280,
@@ -102,18 +103,29 @@ def create_video(
         has_valid_screenshot = (
             "screenshot_path" in obs and
             obs["screenshot_path"] is not None and
-            os.path.exists(obs["screenshot_path"])
+            os.path.exists(os.path.join(
+                screenshot_dir, domain, os.path.basename(
+                    obs["screenshot_path"])))
         )
         
         if not has_valid_screenshot:
             
             continue
         
-        screenshot_path = obs["screenshot_path"]
+        screenshot_path = os.path.join(
+            screenshot_dir, domain, os.path.basename(
+                obs["screenshot_path"]))
+    
         metadata = obs["metadata"]
 
         frame = cv2.imread(
             screenshot_path
+        )
+
+        # bgr to rgb
+        frame = cv2.cvtColor(
+            frame,
+            cv2.COLOR_BGR2RGB
         )
 
         frame_height, frame_width, _ = frame.shape
@@ -254,6 +266,7 @@ def create_demo_videos(
     observations_dir: str = "data/observations",
     actions_dir: str = "data/actions",
     judgments_dir: str = "data/judgments",
+    screenshot_dir: str = "data/screenshots",
     video_dir: str = "data/videos",
     output_height: int = 720,
     output_width: int = 1280,
@@ -290,6 +303,7 @@ def create_demo_videos(
         observations_dir = observations_dir,
         actions_dir = actions_dir,
         judgments_dir = judgments_dir,
+        screenshot_dir = screenshot_dir,
         video_dir = video_dir,
         output_height = output_height,
         output_width = output_width,
@@ -324,25 +338,31 @@ if __name__ == "__main__":
     parser.add_argument(
         "--observations_dir",
         type = str,
-        default = "data/observations"
+        default = "data-backup/observations"
     )
     
     parser.add_argument(
         "--actions_dir",
         type = str,
-        default = "data/actions"
+        default = "data-backup/actions"
     )
     
     parser.add_argument(
         "--judgments_dir",
         type = str,
-        default = "data/judgments"
+        default = "data-backup/judgments"
+    )
+
+    parser.add_argument(
+        "--screenshot_dir",
+        type = str,
+        default = "data-backup/screenshots"
     )
 
     parser.add_argument(
         "--video_dir",
         type = str,
-        default = "data/videos"
+        default = "data-backup/videos"
     )
     
     parser.add_argument(
@@ -382,6 +402,7 @@ if __name__ == "__main__":
         observations_dir = args.observations_dir,
         actions_dir = args.actions_dir,
         judgments_dir = args.judgments_dir,
+        screenshot_dir = args.screenshot_dir,
         video_dir = args.video_dir,
         output_height = args.output_height,
         output_width = args.output_width,
