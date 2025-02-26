@@ -159,7 +159,9 @@ outputs = tool(
 )
 ```
 
-For LLM tools, frameworks like Langchain and Transformers assume they are stateless, so the session ID assigned by the tool must be propagated to future calls (note the `session_id = "awesome-avocado"` above). Running this action produces the following observation:
+For LLM tools, frameworks like Langchain and Transformers assume they are stateless, so the session ID assigned by the tool must be propagated to future calls (note the `session_id = "awesome-avocado"` above).
+
+Running this action produces a next observation:
 
 ```
 Here is your assigned session ID: `awesome-avocado`
