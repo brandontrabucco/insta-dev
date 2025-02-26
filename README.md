@@ -60,7 +60,39 @@ Videos are saved to `./data/videos` by default.
 
 ## Gym Environment & Tools
 
-We are excited to present the **official Gym Environment and LLM Tools** for *InSTA: Towards Internet-Scale Training For Agents (https://arxiv.org/abs/2502.06776)*. We provide official tools for popular LLM inference frameworks, including `transformers`, and `langchain`.
+We are excited to present the **Official Gym Environment and LLM Tools** for using [InSTA](https://arxiv.org/abs/2502.06776) with popular LLM inference frameworks, including `transformers`, and `langchain`.
+
+### Loading The Gym Environment
+
+After pulling our docker image, starting the environment docker container, and starting a local vLLM server, you can load the `InstaEnv` and generate actions with a `BrowserAgent`:
+
+```python
+from insta import (
+    InstaEnv,
+    BrowserAgent
+)
+
+agent = BrowserAgent()
+
+env = InstaEnv()
+
+obs, info = env.reset(
+    url = "http://example.com"
+)
+
+done = False
+
+while not done:
+
+    action = agent(
+        observation = obs.processed_text,
+        instruction = "example task"
+    )
+
+    obs, reward, done, truncated, info = obs.step(
+        action = action
+    )
+```
 
 ### Loading Tools
 
@@ -144,50 +176,7 @@ latest meta llama models
 [id: 334] "I'm Feeling Lucky" (btnI submit input) [id: 380] Advertising link [id: 381] Business link [id: 382] How Search works link [id: 384] data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAYCAMAAAAiV0... link [id: 388] Privacy link [id: 389] Terms link [id: 395] Settings button
 ```
 
-InSTA captures the structure, flow, hierarchy, and style of the webpage in its markdown representation. Interactive elements, including forms, buttons, links, and other widgets are noted with an `[id: ##]` identifier for agents to refer to.
-
-### Serving The Environment Locally
-
-The last example connects to the gradio demo we are serving at `http://insta.btrabuc.co:7860`, which should be used respectfully. To serve the environment locally, [install docker](https://docs.docker.com/engine/install/), and run the following commands in your terminal to pull the container and run it.
-
-```bash
-docker pull brandontrabucco/insta-browser-environment
-docker run -p 7860:7860 -p 3000-3007:3000-3007 -t brandontrabucco/insta-browser-environment
-```
-
-This will serve the gradio demo (located at `gradio/app.py`) on your machine at `http://localhost:7860`, and will serve 8 parallel instances of the underlying playwright Node.js server on the port range 3000-3007. Once the environment is running locally, you can connect to it from any of `InstaTool`, `InstaTransformersTool`, `InstaLangchainTool` classes.
-
-### Loading The Gym Environment
-
-To facilitate training LLM agents using InSTA, we provide an **official Gym environment**. After pulling our docker image, and starting the environment following the last section, you can load the `InstaEnv` and generate actions with a `BrowserAgent`:
-
-```python
-from insta import (
-    InstaEnv,
-    BrowserAgent
-)
-
-agent = BrowserAgent()
-
-env = InstaEnv()
-
-obs, info = env.reset(
-    url = "http://example.com"
-)
-
-done = False
-
-while not done:
-
-    action = agent(
-        observation = obs.processed_text,
-        instruction = "example task"
-    )
-
-    obs, reward, done, truncated, info = obs.step(
-        action = action
-    )
-```
+InSTA captures the structure, flow, hierarchy, and style of the webpage in its markdown representation. Interactive elements, including forms, buttons, links, and other widgets are noted with an `[id: ##]` identifier that agents can refer to.
 
 ## Citing Us
 
