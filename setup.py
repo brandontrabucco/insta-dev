@@ -11,8 +11,8 @@ REQUIREMENTS = [
     'lxml[html_clean]',
     'tqdm',
     'Pillow',
+    'scikit-video',
     'gradio',
-    'gradio_tools',
     'gradio_client',
     'langchain'
 ]
