@@ -60,7 +60,7 @@ Videos are saved to `./data/videos` by default.
 
 ## Gym Environment & Tools
 
-We are excited to present the **Official Gym Environment and LLM Tools** for using [InSTA](https://arxiv.org/abs/2502.06776) with popular LLM inference frameworks, including `transformers`, and `langchain`.
+We are excited to present the **Official Gym Environment and LLM Tools** for [InSTA](https://arxiv.org/abs/2502.06776).
 
 ### Loading The Gym Environment
 
