@@ -120,7 +120,7 @@ outputs = tool(
 )
 ```
 
-Running the above will produce the following observation:
+Running the above will produce an observation:
 
 ```
 Here is your assigned session ID: `awesome-avocado`
