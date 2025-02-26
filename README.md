@@ -108,6 +108,18 @@ outputs = tool(
 )
 ```
 
+If you are running the docker environment locally, you would use:
+
+```python
+from insta import InstaTransformersTool
+
+tool = InstaTransformersTool()
+
+outputs = tool(
+    url = "http://google.com"
+)
+```
+
 Running the above will produce the following observation:
 
 ```
@@ -128,7 +140,7 @@ Google [id: 4] About link [id: 5] Store link [id: 11] Gmail link [id: 13] Search
 [id: 239] "I'm Feeling Lucky" (btnI submit input) [id: 285] Advertising link [id: 286] Business link [id: 287] How Search works link [id: 289] data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAYCAMAAAAiV0... link [id: 293] Privacy link [id: 294] Terms link [id: 300] Settings button
 ```
 
-InSTA produces a compact markdown representation of webpages. We can represent typical webpages in as few as ~200 tokens (the demo above requires just 240 tokens). The `InstaTransformersGradioTool` uses a JSON-based action format by default, and we can fill the textbox marked `[id: 77]` with the following code snippet. The action format can be overridden to a Javascript format, and extended to custom formats depending on your needs.
+InSTA produces a compact markdown representation of webpages. We can represent typical webpages in as few as ~200 tokens (the demo above requires just 240 tokens). The `InstaTransformersTool` uses a JSON-based action format by default, and we can fill the textbox marked `[id: 77]` with the following code snippet. The action format can be overridden to a Javascript format, and extended to custom formats depending on your needs.
 
 ```python
 import json
@@ -176,7 +188,7 @@ latest meta llama models
 [id: 334] "I'm Feeling Lucky" (btnI submit input) [id: 380] Advertising link [id: 381] Business link [id: 382] How Search works link [id: 384] data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAYCAMAAAAiV0... link [id: 388] Privacy link [id: 389] Terms link [id: 395] Settings button
 ```
 
-InSTA captures the structure, flow, hierarchy, and style of the webpage in its markdown representation. Interactive elements, including forms, buttons, links, and other widgets are noted with an `[id: ##]` identifier that agents can refer to.
+InSTA captures the structure, and flow of webpages in its markdown representation. Interactive elements, including forms, buttons, links, and other widgets are noted with an `[id: ##]` identifier that agents can refer to.
 
 ## Citing Us
 
