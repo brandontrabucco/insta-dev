@@ -5,7 +5,7 @@ from insta.configs.browser_config import (
     get_browser_config
 )
 
-from insta.tools.insta_tool import (
+from insta.tools.insta_tools import (
     InstaTool
 )
 
@@ -37,7 +37,7 @@ INSTA_TOOL = InstaTool(
     playwright_port = PLAYWRIGHT_PORT,
     playwright_workers = PLAYWRIGHT_WORKERS,
     observation_processor = "markdown",
-    action_parser = "javascript",
+    action_parser = "json",
     candidates = "all",
     browser_kwargs = None,
     context_kwargs = None
@@ -90,9 +90,9 @@ url_textbox = gr.Textbox(
     placeholder = "Enter a URL ..."
 )
 
-javascript_textbox = gr.Textbox(    
-    label = "Javascript",
-    placeholder = "Enter an action in javascript ..."
+action_textbox = gr.Textbox(    
+    label = "JSON",
+    placeholder = "Enter an action in JSON ..."
 )
 
 
@@ -117,7 +117,7 @@ gradio_app = gr.Interface(
     inputs = [
         session_id_textbox,
         url_textbox,
-        javascript_textbox
+        action_textbox
     ],
     outputs = [
         outout_session_id_textbox,

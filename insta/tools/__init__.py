@@ -1,13 +1,10 @@
-from insta.tools.api import (
+from insta.tools.core import (
     InstaToolOutput,
     interact_with_browser
 )
 
-from insta.tools.insta_tool import (
-    InstaTool
-)
-
-from insta.tools.gradio_tools import (
+from insta.tools.insta_tools import (
+    InstaTool,
     InstaGradioTool
 )
 

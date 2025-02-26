@@ -10,19 +10,61 @@ The predominant approach for training web navigation agents gathers human demons
 
 [website](https://data-for-agents.github.io)    |    [paper](https://arxiv.org/abs/2502.06776)    |    [data](https://huggingface.co/datasets/data-for-agents/insta-150k)
 
-## Official Gym Environment & LLM Tools
+## Quickstart Guide
 
-We are excited to present the **official Gym Environment and LLM Tools** for *InSTA: Towards Internet-Scale Training For Agents (https://arxiv.org/abs/2502.06776)*. Our guide below will help you get started with our pipeline in < 5 minutes.
+The quickest way to start is to load the environment with docker:
 
 ```bash
-pip install git+https://github.com/data-for-agents/insta
+docker pull brandontrabucco/insta-browser-environment
+docker run -p 7860:7860 -p 3000-3007:3000-3007 -t brandontrabucco/insta-browser-environment &
 ```
 
-We provide an official `gym.Env` environment for LLM training, and official tools for popular LLM inference frameworks, including `transformers.agents.tools`, and `langchain.tools`. See the quickstart guide below, and start by loading one of our tools.
+Then download and install the code for InSTA:
 
-## Loading The Demo Tool
+```bash
+git clone https://github.com/data-for-agents/insta
+cd insta && pip install -e .
+```
 
-We provide a gradio demo at `http://insta.btrabuc.co:7860` for the demo tool below that allows you to start using our tools immediately after installing the `insta` package using pip. Use the demo tool respectfully, the instance serving it is relatively modest.
+And start vLLM to serve Llama 3.3 70B:
+
+```bash
+export MODEL_NAME="meta-llama/Llama-3.3-70B-Instruct"
+bash start_vllm_server.sh
+```
+
+Then, run the following example:
+
+```python
+from insta import (
+    InstaPipeline,
+    create_demo_videos
+)
+
+pipeline = InstaPipeline()
+
+pipeline.run_pipeline(dataset = [
+    {"domain": "example.com", "task": "example task"},
+])
+
+create_demo_videos(
+    task_is_feasible_threshold = 0.0,
+    success_threshold = 0.0,
+    on_right_track_threshold = 0.0,
+)
+```
+
+This example will run the `InstaPipeline` to collect agent trajectories for `example task` on `example.com`, and will save observations, actions, and evaluations to `./data`. Running the `create_demo_videos` function after running the `InstaPipeline` will visualize agent behaviors in the data by rendering MP4 videos, and accepts parameters for filtering trajectories by the estimated probability of success (see `success_threshold` above), and other conditions.
+
+Videos are saved to `./data/videos` by default.
+
+## Gym Environment & Tools
+
+We are excited to present the **official Gym Environment and LLM Tools** for *InSTA: Towards Internet-Scale Training For Agents (https://arxiv.org/abs/2502.06776)*. We provide official tools for popular LLM inference frameworks, including `transformers`, and `langchain`.
+
+### Loading Tools
+
+We are serving a gradio demo at `http://insta.btrabuc.co:7860` for the demo tool below that allows you to start using InSTA without running the docker environment yourself.
 
 ```python
 from insta import InstaTransformersGradioTool
@@ -54,12 +96,22 @@ Google [id: 4] About link [id: 5] Store link [id: 11] Gmail link [id: 13] Search
 [id: 239] "I'm Feeling Lucky" (btnI submit input) [id: 285] Advertising link [id: 286] Business link [id: 287] How Search works link [id: 289] data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAYCAMAAAAiV0... link [id: 293] Privacy link [id: 294] Terms link [id: 300] Settings button
 ```
 
-InSTA produces a compact markdown representation of webpages. We can represent typical webpages in as few as ~200 tokens (the demo above requires just 240 tokens). The `InstaTransformersGradioTool` uses javascript-based actions by default, and we can fill the textbox marked `[id: 77]` with the following action. The action format can be overridden to a JSON-based format, and custom formats depending on your needs.
+InSTA produces a compact markdown representation of webpages. We can represent typical webpages in as few as ~200 tokens (the demo above requires just 240 tokens). The `InstaTransformersGradioTool` uses a JSON-based action format by default, and we can fill the textbox marked `[id: 77]` with the following code snippet. The action format can be overridden to a Javascript format, and extended to custom formats depending on your needs.
 
 ```python
+import json
+
+action = json.dumps({
+    "action_key": "fill",
+    "action_kwargs": {
+        "value": "latest meta llama models"
+    },
+    "target_element_id": 77
+})
+
 outputs = tool(
     session_id = "awesome-avocado",
-    action = "page.locator(\"[id='77']\").fill(\"latest meta llama models\")"
+    action = action
 )
 ```
 
@@ -92,70 +144,50 @@ latest meta llama models
 [id: 334] "I'm Feeling Lucky" (btnI submit input) [id: 380] Advertising link [id: 381] Business link [id: 382] How Search works link [id: 384] data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAYCAMAAAAiV0... link [id: 388] Privacy link [id: 389] Terms link [id: 395] Settings button
 ```
 
-InSTA captures the structure, flow, hierarchy, and style of the webpage in its markdown representation. Interactive elements, including forms, buttons, links, and other widgets are noted with an `[id: ##]` identifier for agents.
+InSTA captures the structure, flow, hierarchy, and style of the webpage in its markdown representation. Interactive elements, including forms, buttons, links, and other widgets are noted with an `[id: ##]` identifier for agents to refer to.
 
-## Serving The Environment Locally
+### Serving The Environment Locally
 
-The previous demo connects to an environment served at `http://insta.btrabuc.co:7860`, which should be used respectfully. To serve the environment locally, we provide a docker container. [Install docker](https://docs.docker.com/engine/install/), and run the following commands in your terminal:
+The last example connects to the gradio demo we are serving at `http://insta.btrabuc.co:7860`, which should be used respectfully. To serve the environment locally, [install docker](https://docs.docker.com/engine/install/), and run the following commands in your terminal to pull the container and run it.
 
 ```bash
 docker pull brandontrabucco/insta-browser-environment
 docker run -p 7860:7860 -p 3000-3007:3000-3007 -t brandontrabucco/insta-browser-environment
 ```
 
-This will serve the gradio demo (located at `gradio/app.py`) on your machine at `http://localhost:7860`. Once the environment is running, you can connect to it from the official tools, for example:
+This will serve the gradio demo (located at `gradio/app.py`) on your machine at `http://localhost:7860`, and will serve 8 parallel instances of the underlying playwright Node.js server on the port range 3000-3007. Once the environment is running locally, you can connect to it from any of `InstaTool`, `InstaTransformersTool`, `InstaLangchainTool` classes.
+
+### Loading The Gym Environment
+
+To facilitate training LLM agents using InSTA, we provide an **official Gym environment**. After pulling our docker image, and starting the environment following the last section, you can load the `InstaEnv` and generate actions with a `BrowserAgent`:
 
 ```python
 from insta import (
-    InstaTool
+    InstaEnv,
+    BrowserAgent
 )
 
-tool = InstaTool()
-
-outputs = tool(
-    url = "http://btrabuc.co"
-)
-```
-
-The base `InstaTool` tool is a `Callable` that accepts a `session_id` argument, `url` argument, and an `action` argument. Interact with the `InstaTool` using the following workflow:
-
-1) Submit a `url` to start a new browsing session.
-2) Copy the assigned `session_id`, and submit an `action`.
-
-The base `InstaTool` tool returns an instance of `InstaToolOutput` with a `session_id` key, a `processed_text` key, and a `screenshot` key. When building custom tools on top of InSTA, process these into your own tailored LLM prompt.
-
-## Loading The Gym Environment
-
-To facilitate training LLM agents using InSTA, we provide an **official Gym environment**. After pulling our docker image, and starting the environment following the last section, you can load the InSTA Gym environment as follows:
-
-```python
-from insta import InstaEnv
+agent = BrowserAgent()
 
 env = InstaEnv()
 
-obs, info = env.reset(url = "http://example.com")
+obs, info = env.reset(
+    url = "http://example.com"
+)
+
+done = False
+
+while not done:
+
+    action = agent(
+        observation = obs.processed_text,
+        instruction = "example task"
+    )
+
+    obs, reward, done, truncated, info = obs.step(
+        action = action
+    )
 ```
-
-The environment expects actions in the form of a `BrowserAction` instance. This action represents a chain of function calls in the Playwright API, and can be parsed from LLM-generated texted using an `ActionParser`.
-
-~~~python
-from insta import ACTION_PARSERS
-
-action_parser = ACTION_PARSERS["javascript"]()
-
-action = action_parser.parse_action("""
-
-Here is my action:
-
-```javascript
-page.locator("[id='5']").click()
-```
-
-""")
-
-obs, reward, done, truncated, info = obs.step(action)
-
-~~~
 
 ## Citing Us
 
