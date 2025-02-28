@@ -1,6 +1,6 @@
 # InSTA: Towards Internet-Scale Training For Agents
 
-![Pipeline Overview](https://data-for-agents.github.io/static/images/data-for-agents-teaser.gif)
+![Pipeline Overview](https://data-for-agents.github.io/static/images/pipeline_overview.png)
 
 **Brandon Trabucco (1) Gunnar Sigurdsson (2) Robinson Piramuthu (2) Ruslan Salakhutdinov (1)**
 
