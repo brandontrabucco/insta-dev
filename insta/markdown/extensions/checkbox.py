@@ -38,13 +38,10 @@ class InSTACheckboxSchema(InSTABaseSchema):
     
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
     ) -> str:
-        
-        node_metadata = node_metadata or {}
 
         title = (
             clean_label(node.html_element.attrib.get("name")) or 
@@ -68,10 +65,10 @@ class InSTACheckboxSchema(InSTABaseSchema):
         is_checked = (
             node.html_element.attrib.get("aria-checked") or 
             node.html_element.attrib.get("checked") or 
-            node_metadata.get("editable_value")
+            node.metadata.get("editable_value")
         )
         
-        candidate_id = node_metadata[
+        candidate_id = node.metadata[
             "candidate_id"
         ]
 

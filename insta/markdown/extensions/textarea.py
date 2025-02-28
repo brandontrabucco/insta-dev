@@ -41,17 +41,14 @@ class InSTATextareaSchema(InSTABaseSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
     ) -> str:
-        
-        node_metadata = node_metadata or {}
 
         content = str(
             node.html_element.attrib.get("aria-valuetext") or 
-            node_metadata.get("editable_value") or
+            node.metadata.get("editable_value") or
             node.html_element.attrib.get("value") or 
             node.html_element.attrib.get("placeholder") or ""
         )
@@ -75,7 +72,7 @@ class InSTATextareaSchema(InSTABaseSchema):
             title_outputs
         )
         
-        candidate_id = node_metadata[
+        candidate_id = node.metadata[
             "candidate_id"
         ]
 

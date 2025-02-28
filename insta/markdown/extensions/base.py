@@ -24,7 +24,7 @@ class InSTABaseSchema(MarkdownSchema):
         )
 
         return (
-            is_match and node_metadata is not None
-            and 'backend_node_id' in node_metadata
-            and 'candidate_id' in node_metadata
+            is_match and node_metadata is not None and 
+            'backend_node_id' in node_metadata and
+            'candidate_id' in node_metadata
         )

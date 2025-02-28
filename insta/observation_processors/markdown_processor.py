@@ -91,7 +91,6 @@ class MarkdownProcessor(BaseProcessor):
         outputs = safe_call(
             render_markdown_tree,
             markdown_nodes,
-            observation.metadata,
             catch_errors = CATCH_PARSE_ERRORS,
             log_errors = LOG_PARSE_ERRORS,
             max_errors = MAX_PARSE_ERRORS

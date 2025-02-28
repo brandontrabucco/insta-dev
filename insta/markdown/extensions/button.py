@@ -53,13 +53,10 @@ class InSTAButtonSchema(InSTABaseSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
     ) -> str:
-        
-        node_metadata = node_metadata or {}
         
         inner_text = clean_label(" ".join(
             child_representations
@@ -71,7 +68,7 @@ class InSTAButtonSchema(InSTABaseSchema):
             (inner_text if inner_text not in EMPTY_TEXT else "#")
         )
         
-        candidate_id = node_metadata[
+        candidate_id = node.metadata[
             "candidate_id"
         ]
 

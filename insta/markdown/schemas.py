@@ -121,7 +121,6 @@ class MarkdownSchema:
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -201,7 +200,6 @@ class OrderedListSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -257,7 +255,6 @@ class UnorderedListSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -312,7 +309,6 @@ class ListItemSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -342,7 +338,6 @@ class TableSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -404,7 +399,6 @@ class TableRowSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -484,7 +478,6 @@ class TableCellSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -524,7 +517,6 @@ class HeadingSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -552,7 +544,6 @@ class ImageSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -563,9 +554,9 @@ class ImageSchema(MarkdownSchema):
             node.html_element.get('src')
         )
         
-        if node_metadata is not None:
+        if node.metadata is not None:
 
-            computed_style = node_metadata[
+            computed_style = node.metadata[
                 "computed_style"
             ]
 
@@ -597,7 +588,6 @@ class LinkSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -608,9 +598,9 @@ class LinkSchema(MarkdownSchema):
             clean_label(node.html_element.get('href'))
         )
         
-        if node_metadata is not None:
+        if node.metadata is not None:
 
-            computed_style = node_metadata[
+            computed_style = node.metadata[
                 "computed_style"
             ]
 
@@ -643,7 +633,6 @@ class BoldSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -675,7 +664,6 @@ class ItalicSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -713,7 +701,6 @@ class UnderlineSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -746,7 +733,6 @@ class StrikethroughSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -791,7 +777,6 @@ class InlineCodeSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -836,7 +821,6 @@ class FencedCodeSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -867,7 +851,6 @@ class BlockquoteSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -889,7 +872,6 @@ class HorizontalRuleSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -914,7 +896,6 @@ class TextSchema(MarkdownSchema):
 
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
@@ -941,6 +922,7 @@ class SchemaLookup(dict):
         self.clear()
 
         for x in MARKDOWN_SCHEMAS:
+
             self[x.type] = x
 
     def __getitem__(self, key):
@@ -950,15 +932,17 @@ class SchemaLookup(dict):
             x.type for x in MARKDOWN_SCHEMAS
         ])
 
-        parity = (
-            len(current_keys) == len(current_schemas) and all([
+        dict_has_parity = (
+            len(current_keys) == 
+            len(current_schemas) and all([
                 x == y for x, y in zip(
                     current_keys, current_schemas
                 )
             ])
         )
 
-        if not parity:
+        if not dict_has_parity:
+
             self.rebuild()
 
         return super(

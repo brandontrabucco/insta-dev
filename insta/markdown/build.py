@@ -26,8 +26,12 @@ def get_text_and_children(
     
     parts = []
 
-    if html_element.text is not None \
-            and len(html_element.text.strip()) > 0:
+    has_start_text = (
+        html_element.text is not None
+        and len(html_element.text.strip()) > 0
+    )
+
+    if has_start_text:
 
         parts.append(
             html_element.text.strip()
@@ -37,8 +41,12 @@ def get_text_and_children(
 
         parts.append(child)
 
-        if child.tail is not None \
-                and len(child.tail.strip()) > 0:
+        has_end_text = (
+            child.tail is not None
+            and len(child.tail.strip()) > 0
+        )
+
+        if has_end_text:
 
             parts.append(
                 child.tail.strip()
@@ -74,7 +82,7 @@ def match_schema(
     
             return False
     
-    if node_metadata is None:  # handle text nodes
+    if isinstance(html_element, str):  # text nodes
 
         node_has_metadata = (
             isinstance(last_html_node, HtmlElement) and
@@ -223,7 +231,7 @@ def element_within_viewport(
 
 
 def expand_markdown_tree(
-    node: HTMLDOMNode,
+    html_dom_node: HTMLDOMNode,
     metadata: NodeToMetadata,
     last_markdown_node: MarkdownNode = None,
     last_html_node: HtmlElement = None,
@@ -235,23 +243,25 @@ def expand_markdown_tree(
     node_metadata = None
 
     node_has_metadata = (
-        isinstance(node, HtmlElement) and
+        isinstance(html_dom_node, HtmlElement) and
         metadata is not None and
-        'backend_node_id' in node.attrib
+        'backend_node_id' in html_dom_node.attrib
     )
 
     if node_has_metadata:
 
-        backend_node_id = str(node.attrib[
-            'backend_node_id'
-        ])
+        backend_node_id = str(
+            html_dom_node.attrib[
+                'backend_node_id'
+            ]
+        )
 
         node_metadata = metadata[
             backend_node_id
         ]
     
-    if isinstance(node, str) and match_schema(
-        TYPE_TO_SCHEMA['text'], node,
+    if isinstance(html_dom_node, str) and match_schema(
+        TYPE_TO_SCHEMA['text'], html_dom_node,
         node_metadata = node_metadata,
         metadata = metadata,
         last_markdown_node = last_markdown_node,
@@ -263,12 +273,12 @@ def expand_markdown_tree(
         
         return [
             MarkdownNode(
-                text_content = node,
+                text_content = html_dom_node,
                 type = 'text'
             )
         ]
     
-    elif isinstance(node, str):
+    elif isinstance(html_dom_node, str):
 
         return []
     
@@ -277,7 +287,8 @@ def expand_markdown_tree(
     for schema in MARKDOWN_SCHEMAS:
 
         if match_schema(
-            schema, node, node_metadata = node_metadata,
+            schema, html_dom_node,
+            node_metadata = node_metadata,
             metadata = metadata,
             last_markdown_node = last_markdown_node,
             last_html_node = last_html_node,
@@ -288,7 +299,8 @@ def expand_markdown_tree(
 
             output_nodes.append(
                 parse_from_schema(
-                    schema, node, node_metadata,
+                    schema, html_dom_node,
+                    node_metadata = node_metadata,
                     metadata = metadata,
                     restrict_viewport = restrict_viewport,
                     require_visible = require_visible,
@@ -302,9 +314,9 @@ def expand_markdown_tree(
 
         return output_nodes
 
-    last_html_node = node
+    last_html_node = html_dom_node
     
-    for child in get_text_and_children(node):
+    for child in get_text_and_children(html_dom_node):
 
         output_nodes.extend(
             expand_markdown_tree(

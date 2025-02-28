@@ -35,13 +35,10 @@ class InSTASelectSchema(InSTABaseSchema):
     
     def format(
         self, node: MarkdownNode,
-        node_metadata: NodeMetadata,
         child_representations: List[str],
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
     ) -> str:
-        
-        node_metadata = node_metadata or {}
 
         options = node.html_element.findall(
             ".//option"
@@ -52,7 +49,7 @@ class InSTASelectSchema(InSTABaseSchema):
             for option in options
         ]
         
-        editable_value = node_metadata.get(
+        editable_value = node.metadata.get(
             "editable_value"
         )
 
@@ -93,7 +90,7 @@ class InSTASelectSchema(InSTABaseSchema):
             title_outputs
         )
 
-        candidate_id = node_metadata[
+        candidate_id = node.metadata[
             "candidate_id"
         ]
 
