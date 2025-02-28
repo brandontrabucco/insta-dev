@@ -338,31 +338,31 @@ if __name__ == "__main__":
     parser.add_argument(
         "--observations_dir",
         type = str,
-        default = "data-backup/observations"
+        default = "data/observations"
     )
     
     parser.add_argument(
         "--actions_dir",
         type = str,
-        default = "data-backup/actions"
+        default = "data/actions"
     )
     
     parser.add_argument(
         "--judgments_dir",
         type = str,
-        default = "data-backup/judgments"
+        default = "data/judgments"
     )
 
     parser.add_argument(
         "--screenshot_dir",
         type = str,
-        default = "data-backup/screenshots"
+        default = "data/screenshots"
     )
 
     parser.add_argument(
         "--video_dir",
         type = str,
-        default = "data-backup/videos"
+        default = "data/videos"
     )
     
     parser.add_argument(
