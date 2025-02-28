@@ -232,8 +232,7 @@ const process_observation = ([MAX_NODE_SIZE, MAX_HTML_SIZE, SKIP_TAGS]) => {
             'scroll_top': scroll_top,
             'editable_value': editable_value,
             'is_visible': is_visible,
-            'is_frontmost': is_frontmost,
-            'top_elem_outer_html': top_elem_outer_html
+            'is_frontmost': is_frontmost
         };
     };
     let allNodes = Array.from(document.body.getElementsByTagName('*'));

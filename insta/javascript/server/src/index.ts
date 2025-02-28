@@ -319,8 +319,7 @@ const process_observation = ([
             'scroll_top': scroll_top,
             'editable_value': editable_value,
             'is_visible': is_visible,
-            'is_frontmost': is_frontmost,
-            'top_elem_outer_html': top_elem_outer_html
+            'is_frontmost': is_frontmost
         };
 
     }
