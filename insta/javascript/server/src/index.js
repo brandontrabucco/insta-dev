@@ -154,6 +154,16 @@ const generate_session_id = () => {
 // extract metadata from the webpage for agents
 // includes all data needed to reconstruct the webpage
 const process_observation = ([MAX_NODE_SIZE, MAX_HTML_SIZE, SKIP_TAGS]) => {
+    function elementFromPoint(x, y) {
+        var _a, _b;
+        let node = document.elementFromPoint(x, y);
+        let child = (_a = node === null || node === void 0 ? void 0 : node.shadowRoot) === null || _a === void 0 ? void 0 : _a.elementFromPoint(x, y);
+        while (child && child !== node) {
+            node = child;
+            child = (_b = node === null || node === void 0 ? void 0 : node.shadowRoot) === null || _b === void 0 ? void 0 : _b.elementFromPoint(x, y);
+        }
+        return child || node;
+    }
     const metadata = {};
     const preprocess_node = (node, backend_node_id) => {
         if (node.tagName in SKIP_TAGS) {
@@ -183,13 +193,47 @@ const process_observation = ([MAX_NODE_SIZE, MAX_HTML_SIZE, SKIP_TAGS]) => {
         else if (node.getAttribute('contenteditable') === 'true') {
             editable_value = node.innerText;
         }
+        const is_visible = node.checkVisibility({
+            contentVisibilityAuto: true,
+            opacityProperty: true,
+            visibilityProperty: true,
+        });
+        let is_frontmost = false;
+        let top_elem_outer_html = '';
+        if (is_visible) {
+            let top_element = elementFromPoint(bounding_client_rect.x +
+                bounding_client_rect.width / 2, bounding_client_rect.y +
+                bounding_client_rect.height / 2);
+            if (top_element) {
+                while (top_element) {
+                    const top_element_is_visible = top_element.checkVisibility({
+                        contentVisibilityAuto: true,
+                        opacityProperty: true,
+                        visibilityProperty: true,
+                    });
+                    if (top_element_is_visible ||
+                        top_element.parentElement === null ||
+                        top_element.parentElement === document.body) {
+                        break;
+                    }
+                    top_element = (top_element.parentElement);
+                }
+                is_frontmost = (node === top_element ||
+                    node.contains(top_element) ||
+                    top_element.contains(node));
+                top_elem_outer_html = (top_element.outerHTML);
+            }
+        }
         metadata[backend_node_id] = {
             'backend_node_id': backend_node_id,
             'bounding_client_rect': bounding_client_rect,
             'computed_style': computed_style,
             'scroll_left': scroll_left,
             'scroll_top': scroll_top,
-            'editable_value': editable_value
+            'editable_value': editable_value,
+            'is_visible': is_visible,
+            'is_frontmost': is_frontmost,
+            'top_elem_outer_html': top_elem_outer_html
         };
     };
     let allNodes = Array.from(document.body.getElementsByTagName('*'));

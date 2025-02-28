@@ -173,6 +173,22 @@ const process_observation = ([
     MAX_NODE_SIZE, MAX_HTML_SIZE, SKIP_TAGS
 ]: [number, number, string[]]) => {
 
+    function elementFromPoint(x: number, y: number) {
+
+        let node = document.elementFromPoint(x, y);
+        let child = node?.shadowRoot?.elementFromPoint(x, y);
+    
+        while (child && child !== node) {
+
+            node = child;
+            child = node?.shadowRoot?.elementFromPoint(x, y);
+
+        }
+
+        return child || node;
+
+    }
+
     const metadata: { [key: number]: any } = {};
 
     const preprocess_node = (node: Element, backend_node_id: number) => {
@@ -237,13 +253,74 @@ const process_observation = ([
 
         }
 
+        const is_visible = node.checkVisibility({
+            contentVisibilityAuto: true,
+            opacityProperty: true,
+            visibilityProperty: true,
+        });
+
+        let is_frontmost = false;
+        let top_elem_outer_html = '';
+
+        if (is_visible) {
+
+            let top_element = elementFromPoint(
+                bounding_client_rect.x +
+                bounding_client_rect.width / 2,
+                bounding_client_rect.y + 
+                bounding_client_rect.height / 2
+            );
+
+            if (top_element) {
+
+                while (top_element) {
+
+                    const top_element_is_visible = top_element.checkVisibility({
+                        contentVisibilityAuto: true,
+                        opacityProperty: true,
+                        visibilityProperty: true,
+                    });
+
+                    if (
+                        top_element_is_visible || 
+                        top_element.parentElement === null || 
+                        top_element.parentElement === document.body
+                    ) {
+
+                        break;
+
+                    }
+
+                    top_element = (
+                        top_element.parentElement
+                    );
+
+                }
+
+                is_frontmost = (
+                    node === top_element ||
+                    node.contains(top_element) ||
+                    top_element.contains(node)
+                );
+
+                top_elem_outer_html = (
+                    top_element.outerHTML
+                );
+
+            }
+
+        }
+
         metadata[backend_node_id] = {
             'backend_node_id': backend_node_id,
             'bounding_client_rect': bounding_client_rect,
             'computed_style': computed_style,
             'scroll_left': scroll_left,
             'scroll_top': scroll_top,
-            'editable_value': editable_value
+            'editable_value': editable_value,
+            'is_visible': is_visible,
+            'is_frontmost': is_frontmost,
+            'top_elem_outer_html': top_elem_outer_html
         };
 
     }

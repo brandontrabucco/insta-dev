@@ -72,6 +72,8 @@ class MarkdownNode:
     html_element: lxml.html.HtmlElement = None
     text_content: str = None
 
+    metadata: NodeMetadata = None
+
     children: List['MarkdownNode'] = field(
         default_factory = list
     )
@@ -900,6 +902,15 @@ class HorizontalRuleSchema(MarkdownSchema):
 
 @register_schema('text')
 class TextSchema(MarkdownSchema):
+    
+    def match(
+        self, html_element: lxml.html.HtmlElement | str,
+        node_metadata: NodeMetadata = None,
+    ) -> bool:
+        
+        return isinstance(
+            html_element, str
+        )
 
     def format(
         self, node: MarkdownNode,

@@ -15,7 +15,9 @@ class BaseProcessor(abc.ABC):
     @abc.abstractmethod
     def process(
         self, observation: BrowserObservation,
-        restrict_viewport: Tuple[float, float, float, float] = None
+        restrict_viewport: Tuple[float, float, float, float] = None,
+        require_visible: bool = True,
+        require_frontmost: bool = True
     ) -> BrowserObservation:
         """Process the latest observation from a web browsing environment, 
         and create an agent-readible observation, with an option to
@@ -29,6 +31,14 @@ class BaseProcessor(abc.ABC):
         restrict_viewport: Tuple[float, float, float, float]
             A tuple of the form (x, y, width, height) that restricts the 
             observation to the current viewport.
+
+        require_visible: bool
+            Boolean indicating whether the observation should only include
+            elements that are current in a visible state.
+
+        require_frontmost: bool
+            Boolean indicating whether the observation should only include
+            elements that are currently in the frontmost layer.
 
         Returns:
 

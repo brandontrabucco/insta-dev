@@ -9,7 +9,10 @@ class BrowserConfig:
     playwright_port: int = 3000
     
     screenshot: bool = True
+
     restrict_viewport: Tuple[float, float, float, float] = None
+    require_visible: bool = True
+    require_frontmost: bool = True
 
     headless: bool = True
     stealthy: bool = True
@@ -27,6 +30,8 @@ class BrowserConfig:
 
 DEFAULT_BROWSER_CONFIG = BrowserConfig(
     restrict_viewport = (0, 0, 1920, 1080),
+    require_visible = True,
+    require_frontmost = True,
     headless = True,
     stealthy = True,
     proxy = None,
@@ -61,6 +66,14 @@ def get_browser_config(
         restrict_viewport = env_config_kwargs.get(
             "restrict_viewport",
             DEFAULT_BROWSER_CONFIG.restrict_viewport
+        ),
+        require_visible = env_config_kwargs.get(
+            "require_visible",
+            DEFAULT_BROWSER_CONFIG.require_visible
+        ),
+        require_frontmost = env_config_kwargs.get(
+            "require_frontmost",
+            DEFAULT_BROWSER_CONFIG.require_frontmost
         ),
         headless = env_config_kwargs.get(
             "headless",

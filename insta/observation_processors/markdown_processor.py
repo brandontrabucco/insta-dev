@@ -33,7 +33,9 @@ class MarkdownProcessor(BaseProcessor):
 
     def process(
         self, observation: BrowserObservation,
-        restrict_viewport: Tuple[float, float, float, float] = None
+        restrict_viewport: Tuple[float, float, float, float] = None,
+        require_visible: bool = True,
+        require_frontmost: bool = True
     ) -> BrowserObservation:
         """Process the latest observation from a web browsing environment, 
         and create an agent-readible observation, with an option to
@@ -48,6 +50,14 @@ class MarkdownProcessor(BaseProcessor):
             A tuple of the form (x, y, width, height) that restricts the 
             observation to the current viewport.
 
+        require_visible: bool
+            Boolean indicating whether the observation should only include
+            elements that are current in a visible state.
+
+        require_frontmost: bool
+            Boolean indicating whether the observation should only include
+            elements that are currently in the frontmost layer.
+
         Returns:
 
         observation: PlaywrightObservation
@@ -61,6 +71,8 @@ class MarkdownProcessor(BaseProcessor):
             observation.raw_html,
             observation.metadata,
             restrict_viewport = restrict_viewport,
+            require_visible = require_visible,
+            require_frontmost = require_frontmost,
             catch_errors = CATCH_PARSE_ERRORS,
             log_errors = LOG_PARSE_ERRORS,
             max_errors = MAX_PARSE_ERRORS

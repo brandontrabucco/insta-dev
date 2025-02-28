@@ -51,6 +51,9 @@ class NodeMetadata:
 
     editable_value: str = None
 
+    is_visible: bool = None
+    is_frontmost: bool = None
+
 
 NodeToMetadata = Dict[str, NodeMetadata]
 

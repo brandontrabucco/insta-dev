@@ -7,21 +7,21 @@ from insta.markdown.schemas import (
 
 from insta.utils import (
     NodeToMetadata,
-    NodeMetadata,
-    SKIP_TAGS
+    NodeMetadata
 )
 
 from typing import List, Tuple
 
+from lxml.html import HtmlElement
 import lxml.html
 import lxml.html.clean
 
 
-HTMLDOMNode = lxml.html.HtmlElement | str
+HTMLDOMNode = HtmlElement | str
 
 
 def get_text_and_children(
-    html_element: lxml.html.HtmlElement
+    html_element: HtmlElement
 ) -> List[HTMLDOMNode]:
     
     parts = []
@@ -49,23 +49,73 @@ def get_text_and_children(
 
 def match_schema(
     schema: MarkdownSchema,
-    html_element: lxml.html.HtmlElement,
+    html_element: HtmlElement,
     node_metadata: NodeMetadata = None,
-    last_node: MarkdownNode = None
+    metadata: NodeToMetadata = None,
+    last_markdown_node: MarkdownNode = None,
+    last_html_node: HtmlElement = None,
+    restrict_viewport: Tuple[float, float, float, float] = None,
+    require_visible: bool = True,
+    require_frontmost: bool = True,
 ) -> bool:
     
-    if last_node is not None:
+    if last_markdown_node is not None:
 
-        last_schema = TYPE_TO_SCHEMA[
-            last_node.type
+        last_markdown_schema = TYPE_TO_SCHEMA[
+            last_markdown_node.type
         ]
 
         transition_not_allowed = (
             schema.type not in 
-            (last_schema.transitions or [])
+            (last_markdown_schema.transitions or [])
         )
 
         if transition_not_allowed:
+    
+            return False
+    
+    if node_metadata is None:  # handle text nodes
+
+        node_has_metadata = (
+            isinstance(last_html_node, HtmlElement) and
+            metadata is not None and
+            'backend_node_id' in last_html_node.attrib
+        )
+
+        if node_has_metadata:
+
+            backend_node_id = str(
+                last_html_node
+                .attrib['backend_node_id']
+            )
+
+            node_metadata = metadata[
+                backend_node_id
+            ]
+
+    if node_metadata is not None and \
+            (require_visible or require_frontmost):
+
+        is_visible = element_is_visible(
+            metadata = node_metadata,
+            require_visible = require_visible,
+            require_frontmost = require_frontmost
+        )
+
+        if not is_visible:
+
+            return False
+
+    if node_metadata is not None and \
+            restrict_viewport is not None:
+
+        within_viewport = element_within_viewport(
+            metadata = node_metadata,
+            restrict_viewport = restrict_viewport
+        )
+
+        if not within_viewport:
+
             return False
 
     return schema.match(
@@ -76,51 +126,72 @@ def match_schema(
 
 def parse_from_schema(
     schema: MarkdownSchema,
-    html_element: lxml.html.HtmlElement,
-    metadata: NodeToMetadata = None,
-    restrict_viewport: Tuple[float, float, float, float] = None
+    html_element: HtmlElement,
+    node_metadata: NodeMetadata,
+    metadata: NodeToMetadata,
+    restrict_viewport: Tuple[float, float, float, float] = None,
+    require_visible: bool = True,
+    require_frontmost: bool = True,
 ) -> MarkdownNode:
 
     element_type = schema.type
 
-    markdown_node = MarkdownNode(
+    last_markdown_node = MarkdownNode(
         html_element = html_element,
+        metadata = node_metadata,
         children = [],
         type = element_type,
     )
 
+    last_html_node = html_element
+
     for child in get_text_and_children(html_element):
 
-        markdown_node.children.extend(
+        last_markdown_node.children.extend(
             expand_markdown_tree(
                 child, metadata = metadata,
                 restrict_viewport = restrict_viewport,
-                last_node = markdown_node
+                last_markdown_node = last_markdown_node,
+                last_html_node = last_html_node,
+                require_visible = require_visible,
+                require_frontmost = require_frontmost
             )
         )
 
-    return markdown_node
+        if isinstance(child, HtmlElement):
+
+            last_html_node = child
+
+    return last_markdown_node
 
 
 def element_is_visible(
-    computed_style: dict,
-    bounding_client_rect: dict,
-    html_element: lxml.html.HtmlElement
+    metadata: NodeMetadata,
+    require_visible: bool = True,
+    require_frontmost: bool = True
 ) -> bool:
 
-    is_visible = (
-        computed_style['visibility'] != 'hidden' and
-        computed_style['display'] != 'none' and
-        html_element.attrib.get('aria-hidden') != 'true'
+    pass_through = (
+        metadata['computed_style']['display'] 
+        == 'contents'
     )
 
-    return is_visible
+    is_visible = (
+        (metadata['is_visible'] or not require_visible)
+        and (metadata['is_frontmost'] or not require_frontmost)
+    )
+
+    return pass_through or is_visible
 
 
 def element_within_viewport(
-    bounding_client_rect: dict,
+    metadata: NodeMetadata,
     restrict_viewport: Tuple[float, float, float, float]
 ) -> bool:
+
+    bounding_client_rect = metadata[
+        'bounding_client_rect'
+    ]
         
     elem_x0 = bounding_client_rect['x']
     elem_y0 = bounding_client_rect['y']
@@ -153,26 +224,18 @@ def element_within_viewport(
 
 def expand_markdown_tree(
     node: HTMLDOMNode,
-    metadata: NodeToMetadata = None,
+    metadata: NodeToMetadata,
+    last_markdown_node: MarkdownNode = None,
+    last_html_node: HtmlElement = None,
     restrict_viewport: Tuple[float, float, float, float] = None,
-    last_node: MarkdownNode = None
+    require_visible: bool = True,
+    require_frontmost: bool = True,
 ) -> List[MarkdownNode]:
-    
-    if isinstance(node, str):
-        
-        return [
-            MarkdownNode(
-                text_content = node,
-                type = 'text'
-            )
-        ]
-
-    # check if node is currently visible and not hidden
-    # skip rendering if not visible
 
     node_metadata = None
 
     node_has_metadata = (
+        isinstance(node, HtmlElement) and
         metadata is not None and
         'backend_node_id' in node.attrib
     )
@@ -186,67 +249,77 @@ def expand_markdown_tree(
         node_metadata = metadata[
             backend_node_id
         ]
-
-        bounding_client_rect = node_metadata[
-            'bounding_client_rect'
-        ]
-        computed_style = node_metadata[
-            'computed_style'
-        ]
-
-        is_visible = element_is_visible(
-            computed_style,
-            bounding_client_rect,
-            html_element = node
-        )
-
-        if not is_visible:
-            return []
-
-        if restrict_viewport is not None:
-
-            within_viewport = element_within_viewport(
-                bounding_client_rect,
-                restrict_viewport
+    
+    if isinstance(node, str) and match_schema(
+        TYPE_TO_SCHEMA['text'], node,
+        node_metadata = node_metadata,
+        metadata = metadata,
+        last_markdown_node = last_markdown_node,
+        last_html_node = last_html_node,
+        restrict_viewport = restrict_viewport,
+        require_visible = require_visible,
+        require_frontmost = require_frontmost
+    ):
+        
+        return [
+            MarkdownNode(
+                text_content = node,
+                type = 'text'
             )
+        ]
+    
+    elif isinstance(node, str):
 
-            if not within_viewport:
-                return []
+        return []
     
     output_nodes = []
 
     for schema in MARKDOWN_SCHEMAS:
 
         if match_schema(
-            schema, node,
-            node_metadata = node_metadata,
-            last_node = last_node
+            schema, node, node_metadata = node_metadata,
+            metadata = metadata,
+            last_markdown_node = last_markdown_node,
+            last_html_node = last_html_node,
+            restrict_viewport = restrict_viewport,
+            require_visible = require_visible,
+            require_frontmost = require_frontmost
         ):
 
             output_nodes.append(
                 parse_from_schema(
-                    schema, node,
+                    schema, node, node_metadata,
                     metadata = metadata,
-                    restrict_viewport = restrict_viewport
+                    restrict_viewport = restrict_viewport,
+                    require_visible = require_visible,
+                    require_frontmost = require_frontmost
                 )
             )
 
             break 
 
-    text_and_children = get_text_and_children(node)
+    if len(output_nodes) > 0:
 
-    if len(output_nodes) == 0 \
-            and len(text_and_children) > 0:
-        
-        for child in text_and_children:
+        return output_nodes
 
-            output_nodes.extend(
-                expand_markdown_tree(
-                    child, metadata = metadata,
-                    restrict_viewport = restrict_viewport,
-                    last_node = last_node
-                )
+    last_html_node = node
+    
+    for child in get_text_and_children(node):
+
+        output_nodes.extend(
+            expand_markdown_tree(
+                child, metadata = metadata,
+                restrict_viewport = restrict_viewport,
+                last_markdown_node = last_markdown_node,
+                last_html_node = last_html_node,
+                require_visible = require_visible,
+                require_frontmost = require_frontmost
             )
+        )
+
+        if isinstance(child, HtmlElement):
+
+            last_html_node = child
 
     return output_nodes
 
@@ -279,7 +352,9 @@ CLEANER = lxml.html.clean.Cleaner(
 def get_markdown_tree(
     raw_html: str,
     metadata: NodeToMetadata,
-    restrict_viewport: Tuple[float, float, float, float] = None
+    restrict_viewport: Tuple[float, float, float, float] = None,
+    require_visible: bool = True,
+    require_frontmost: bool = True,
 ) -> List[MarkdownNode]:
     """Process an HTML string into a tree of MarkdownNodes, an intermediate step
     before rendering the markdown tree into a string.
@@ -299,6 +374,14 @@ def get_markdown_tree(
         A tuple of the form (x, y, width, height) that restricts the 
         observation to the current viewport.
 
+    require_visible: bool
+        Boolean flag indicating whether the observation should only include
+        elements that are current in a visible state.
+
+    require_frontmost: bool
+        Boolean flag indicating whether the observation should only include
+        elements that are currently in the frontmost layer.
+
     Returns:
 
     List[MarkdownNode]
@@ -315,5 +398,7 @@ def get_markdown_tree(
 
     return expand_markdown_tree(
         root_node, metadata = metadata,
-        restrict_viewport = restrict_viewport
+        restrict_viewport = restrict_viewport,
+        require_visible = require_visible,
+        require_frontmost = require_frontmost
     )
