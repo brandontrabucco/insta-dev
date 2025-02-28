@@ -49,6 +49,13 @@ METADATA_KEYS = [
 ]
 
 
+VALUES_KEYS = [
+    "task_is_feasible",
+    "success",
+    "on_right_track"
+]
+
+
 InstaPipelineOutput = namedtuple(
     "InstaPipelineOutput",
     ["observations", "actions", "judgment"]
@@ -138,8 +145,8 @@ class InstaPipeline(Callable):
 
         self.max_actions = max_actions
         self.skip_finished = skip_finished
-        self.seed = seed
 
+        self.seed = seed
         self.rank = rank
         self.world_size = world_size
 
@@ -228,31 +235,31 @@ class InstaPipeline(Callable):
 
                 if outputs.done: break
 
-            obs = outputs.observation
+            observation = outputs.observation
             metadata = None
 
-            if obs.metadata is not None:
+            if observation.metadata is not None:
 
                 metadata = {
                     backend_node_id: {
                         key: node_metadata.get(key)
                         for key in METADATA_KEYS
                     } for backend_node_id, node_metadata in
-                    obs.metadata.items()
+                    observation.metadata.items()
                 }
 
             observations.append({
-                "current_url": obs.current_url,
-                "processed_text": obs.processed_text,
-                "raw_html": obs.raw_html,
-                "screenshot": obs.screenshot,
+                "current_url": observation.current_url,
+                "processed_text": observation.processed_text,
+                "raw_html": observation.raw_html,
+                "screenshot": observation.screenshot,
                 "metadata": metadata
             })
     
             self.agent.pop_observation()
             
             action = self.agent(
-                observation = obs.processed_text,
+                observation = observation.processed_text,
                 instruction = instruction
             )
 
@@ -278,6 +285,17 @@ class InstaPipeline(Callable):
             ],
             instruction = instruction
         )
+
+        judgment_values = {
+            key: judgment.values.get(key)
+            for key in VALUES_KEYS
+        }
+
+        judgment = {
+            **judgment_values,
+            "response": judgment.response,
+            "matched_response": judgment.matched_response,
+        }
 
         return observations, actions, judgment
     
@@ -372,11 +390,6 @@ class InstaPipeline(Callable):
                 "{}".format(domain)
             )
 
-            os.makedirs(
-                screenshot_dir,
-                exist_ok = True
-            )
-
             skip_this_task = (
                 self.skip_finished and
                 os.path.exists(judgments_path)
@@ -391,16 +404,23 @@ class InstaPipeline(Callable):
                 instruction = task
             )
 
-            for observation_id, observation in enumerate(observations):
+            os.makedirs(
+                screenshot_dir,
+                exist_ok = True
+            )
 
-                screenshot = observation.pop("screenshot")
+            for step_idx, observation in enumerate(observations):
+
+                screenshot = observation.pop(
+                    "screenshot"
+                )
 
                 if screenshot is not None:
 
                     screenshot_path = os.path.join(
                         screenshot_dir,
                         "screenshot_{:02d}.jpg"
-                        .format(observation_id)
+                        .format(step_idx)
                     )
 
                     screenshot.convert("RGB").save(
@@ -410,20 +430,6 @@ class InstaPipeline(Callable):
                     observation["screenshot_path"] = (
                         screenshot_path
                     )
-
-            judgment = {
-                "task_is_feasible": judgment.values.get(
-                    "task_is_feasible"
-                ),
-                "success": judgment.values.get(
-                    "success"
-                ),
-                "on_right_track": judgment.values.get(
-                    "on_right_track"
-                ),
-                "response": judgment.response,
-                "matched_response": judgment.matched_response,
-            }
                     
             with open(observations_path, "w") as file:
                 
