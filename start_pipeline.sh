@@ -7,8 +7,8 @@ MODEL_NAME=${MODEL_NAME:-"meta-llama/Llama-3.3-70B-Instruct"}
 NUM_AGENTS=${NUM_AGENTS:-32}
 PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-8}
 
-RANK=${RANK:-0}
-WORLD_SIZE=${WORLD_SIZE:-1}
+RANK=${RANK:-1}
+WORLD_SIZE=${WORLD_SIZE:-2}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
@@ -25,4 +25,4 @@ PIPELINE_ARGS=(
     ${PRUNE_OBSERVATIONS}
 )
 
-python -u run_pipeline.py ${PIPELINE_ARGS[@]} >> agents.log 2>&1
+python -u run_pipeline.py ${PIPELINE_ARGS[@]} > agents.log 2>&1

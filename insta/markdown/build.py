@@ -92,14 +92,11 @@ def match_schema(
 
         if node_has_metadata:
 
-            backend_node_id = str(
-                last_html_node
-                .attrib['backend_node_id']
-            )
-
-            node_metadata = metadata[
-                backend_node_id
-            ]
+            node_metadata = metadata.get(str(
+                last_html_node.attrib[
+                    'backend_node_id'
+                ]
+            ))
 
     if node_metadata is not None and \
             (require_visible or require_frontmost):
