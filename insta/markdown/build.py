@@ -250,15 +250,11 @@ def expand_markdown_tree(
 
     if node_has_metadata:
 
-        backend_node_id = str(
+        node_metadata = metadata.get(str(
             html_dom_node.attrib[
                 'backend_node_id'
             ]
-        )
-
-        node_metadata = metadata[
-            backend_node_id
-        ]
+        ))
     
     if isinstance(html_dom_node, str) and match_schema(
         TYPE_TO_SCHEMA['text'], html_dom_node,
