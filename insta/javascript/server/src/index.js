@@ -199,7 +199,6 @@ const process_observation = ([MAX_NODE_SIZE, MAX_HTML_SIZE, SKIP_TAGS]) => {
             visibilityProperty: true,
         });
         let is_frontmost = false;
-        let top_elem_outer_html = '';
         if (is_visible) {
             let top_element = elementFromPoint(bounding_client_rect.x +
                 bounding_client_rect.width / 2, bounding_client_rect.y +
@@ -221,7 +220,6 @@ const process_observation = ([MAX_NODE_SIZE, MAX_HTML_SIZE, SKIP_TAGS]) => {
                 is_frontmost = (node === top_element ||
                     node.contains(top_element) ||
                     top_element.contains(node));
-                top_elem_outer_html = (top_element.outerHTML);
             }
         }
         metadata[backend_node_id] = {

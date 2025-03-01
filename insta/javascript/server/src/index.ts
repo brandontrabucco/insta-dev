@@ -260,7 +260,6 @@ const process_observation = ([
         });
 
         let is_frontmost = false;
-        let top_elem_outer_html = '';
 
         if (is_visible) {
 
@@ -301,10 +300,6 @@ const process_observation = ([
                     node === top_element ||
                     node.contains(top_element) ||
                     top_element.contains(node)
-                );
-
-                top_elem_outer_html = (
-                    top_element.outerHTML
                 );
 
             }
