@@ -66,6 +66,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--num_agents",
+        type = int,
+        help = "Number of parallel agents to run",
+        default = 1
+    )
+
+    parser.add_argument(
         "--observations_dir",
         type = str,
         help = "Directory to save observations",
@@ -161,10 +168,7 @@ if __name__ == "__main__":
 
     browser_config = get_browser_config(
         playwright_url = args.playwright_url,
-        playwright_port = (
-            args.playwright_port +
-            args.rank % args.playwright_workers
-        )
+        playwright_port = args.playwright_port
     )
 
     pipeline = InstaPipeline(
@@ -188,6 +192,9 @@ if __name__ == "__main__":
         split = args.dataset_split
     )
 
-    pipeline.run(
-        dataset = dataset
+    pipeline.launch(
+        dataset = dataset,
+        num_agents = args.num_agents,
+        playwright_workers = args.playwright_workers,
+        return_trajectories = False
     )

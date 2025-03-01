@@ -151,6 +151,25 @@ SKIP_TAGS = [
 ]
 
 
+METADATA_KEYS = [
+    'backend_node_id',
+    'bounding_client_rect',
+    'computed_style',
+    'scroll_left',
+    'scroll_top',
+    'editable_value',
+    'is_visible',
+    'is_frontmost'
+]
+
+
+VALUE_KEYS = [
+    "task_is_feasible",
+    "success",
+    "on_right_track"
+]
+
+
 def safe_call(
     func: Callable, *func_args: Any,
     catch_errors: bool = True,
@@ -235,3 +254,39 @@ def safe_call(
         )
             
     return BrowserStatus.ERROR
+
+
+MINIMAL_STYLE_KEYS = [
+    'display'
+]
+
+
+def prune_observation(observation: dict) -> dict:
+    """Reduce the size of the computed styles in the observations file
+    by removing keys that are not needed.
+
+    Arguments:
+
+    observations_file: str
+        The path to the observations file to prune.
+
+    """
+
+    if observation["metadata"] is None:
+        
+        return observation
+
+    for metadata in observation["metadata"].values():
+
+        if metadata["computed_style"] is not None:
+
+            keys_to_remove = [
+                x for x in metadata["computed_style"].keys()
+                if x not in MINIMAL_STYLE_KEYS
+            ]
+
+            for key in keys_to_remove:
+
+                del metadata["computed_style"][key]
+
+    return observation
