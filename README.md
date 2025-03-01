@@ -41,11 +41,15 @@ from insta import (
     create_demo_videos
 )
 
+dataset = [
+    {"domain": "duckduckgo.com", "task": "retrieve a news article on US politics"},
+]
+
 pipeline = InstaPipeline()
 
-pipeline.run_pipeline(dataset = [
-    {"domain": "example.com", "task": "example task"},
-])
+pipeline.launch(
+    dataset = dataset
+)
 
 create_demo_videos(
     task_is_feasible_threshold = 0.0,
@@ -54,7 +58,7 @@ create_demo_videos(
 )
 ```
 
-This example will run the `InstaPipeline` to collect agent trajectories for `example task` on `example.com`, and will save observations, actions, and evaluations to `./data`. Running the `create_demo_videos` function after running the `InstaPipeline` will visualize agent behaviors in the data by rendering MP4 videos, and accepts parameters for filtering trajectories by the estimated probability of success (see `success_threshold` above), and other conditions.
+This example will run the `InstaPipeline` to collect agent trajectories for `retrieve a news article on US politics` starting from `duckduckgo.com`, and will save observations, actions, and evaluations to `./data`. Running the `create_demo_videos` function after running the `InstaPipeline` will visualize agent behaviors in the data by rendering MP4 videos, and accepts parameters for filtering trajectories by the estimated probability of success (see `success_threshold` above), and other conditions.
 
 Videos are saved to `./data/videos` by default.
 
@@ -72,26 +76,24 @@ from insta import (
     BrowserAgent
 )
 
-agent = BrowserAgent()
+url = "http://duckduckgo.com"
+instruction = "retrieve a news article on US politics"
 
 env = InstaEnv()
+agent = BrowserAgent()
 
-obs, info = env.reset(
-    url = "http://example.com"
+observation, info = env.reset(
+    url = url
 )
 
-done = False
+action = agent(
+    observation = observation.processed_text,
+    instruction = instruction
+)
 
-while not done:
-
-    action = agent(
-        observation = obs.processed_text,
-        instruction = "example task"
-    )
-
-    obs, reward, done, truncated, info = obs.step(
-        action = action
-    )
+obs, reward, done, truncated, info = obs.step(
+    action = action
+)
 ```
 
 ### Loading Tools
@@ -120,7 +122,9 @@ outputs = tool(
 )
 ```
 
-Running the above will produce an observation:
+<details>
+    
+<summary>Running the above will produce an observation:</summary>
 
 ```
 Here is your assigned session ID: `awesome-avocado`
@@ -139,6 +143,8 @@ Google [id: 4] About link [id: 5] Store link [id: 11] Gmail link [id: 13] Search
 [id: 238] "Google Search" (btnK submit input)
 [id: 239] "I'm Feeling Lucky" (btnI submit input) [id: 285] Advertising link [id: 286] Business link [id: 287] How Search works link [id: 289] data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAYCAMAAAAiV0... link [id: 293] Privacy link [id: 294] Terms link [id: 300] Settings button
 ```
+
+</details>
 
 InSTA produces a compact markdown representation of webpages. We can represent typical webpages in as few as ~200 tokens (the demo above requires just 240 tokens). The `InstaTransformersTool` uses a JSON-based action format by default, and we can fill the textbox marked `[id: 77]` with the following code snippet. The action format can be overridden to a Javascript format, and extended to custom formats depending on your needs.
 
@@ -161,7 +167,9 @@ outputs = tool(
 
 For LLM tools, frameworks like Langchain and Transformers assume they are stateless, so the session ID assigned by the tool must be propagated to future calls (note the `session_id = "awesome-avocado"` above).
 
-Running this action produces a next observation:
+<details>
+    
+<summary>Running this action produces a next observation:</summary>
 
 ```
 Here is your assigned session ID: `awesome-avocado`
@@ -189,6 +197,8 @@ latest meta llama models
 [id: 333] "Google Search" (btnK submit input)
 [id: 334] "I'm Feeling Lucky" (btnI submit input) [id: 380] Advertising link [id: 381] Business link [id: 382] How Search works link [id: 384] data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAYCAMAAAAiV0... link [id: 388] Privacy link [id: 389] Terms link [id: 395] Settings button
 ```
+
+</details>
 
 InSTA captures the structure, and flow of webpages in its markdown representation. Interactive elements, including forms, buttons, links, and other widgets are noted with an `[id: ##]` identifier that agents can refer to.
 
