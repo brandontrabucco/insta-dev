@@ -30,8 +30,8 @@ from collections import namedtuple
 import gymnasium
 
 
-InstaEnvResetOuptut = namedtuple(
-    "InstaEnvResetOuptut",
+InstaEnvResetOutput = namedtuple(
+    "InstaEnvResetOutput",
     ["observation", "info"]
 )
 
@@ -74,7 +74,7 @@ def return_reset_error(error: EnvError | ServerError) -> \
         error_message
     )
 
-    return InstaEnvResetOuptut(
+    return InstaEnvResetOutput(
         observation = processed_obs,
         info = {}
     )
@@ -291,7 +291,7 @@ class InstaEnv(gymnasium.Env):
                 goto_status
             )
         
-        return InstaEnvResetOuptut(
+        return InstaEnvResetOutput(
             observation = self.get_obs(), 
             info = {}
         )

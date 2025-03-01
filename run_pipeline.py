@@ -5,8 +5,9 @@ from insta import (
     InstaPipeline
 )
 
+from datasets import load_dataset
+
 import argparse
-import os
 
 
 if __name__ == "__main__":
@@ -107,6 +108,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--prune_observations",
+        action = "store_true",
+        help = "Prune observation metadata to reduce disk usage",
+        default = False
+    )
+
+    parser.add_argument(
         "--seed",
         type = int,
         help = "Seed for the dataset",
@@ -128,26 +136,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
-    os.makedirs(
-        args.observations_dir, 
-        exist_ok = True
-    )
-
-    os.makedirs(
-        args.screenshot_dir, 
-        exist_ok = True
-    )
-
-    os.makedirs(
-        args.actions_dir, 
-        exist_ok = True
-    )
-
-    os.makedirs(
-        args.judgments_dir, 
-        exist_ok = True
-    )
 
     client_kwargs = {
         "api_key": args.api_key,
@@ -183,17 +171,23 @@ if __name__ == "__main__":
         agent_config = agent_config,
         judge_config = judge_config,
         browser_config = browser_config,
-        dataset = args.dataset,
-        dataset_split = args.dataset_split,
         observations_dir = args.observations_dir,
         screenshot_dir = args.screenshot_dir,
         actions_dir = args.actions_dir,
         judgments_dir = args.judgments_dir,
         max_actions = args.max_actions,
         skip_finished = args.skip_finished,
+        prune_observations = args.prune_observations,
         seed = args.seed,
         rank = args.rank,
         world_size = args.world_size
     )
 
-    pipeline.run_pipeline()
+    dataset = load_dataset(
+        args.dataset,
+        split = args.dataset_split
+    )
+
+    pipeline.run(
+        dataset = dataset
+    )

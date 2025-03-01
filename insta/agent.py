@@ -89,7 +89,7 @@ class BrowserAgent(Callable):
             **self.config.client_kwargs
         )
 
-        self.reset_context()
+        self.reset()
 
     def get_action(
         self, context: List[dict],
@@ -223,7 +223,7 @@ class BrowserAgent(Callable):
             instruction = instruction
         )
 
-    def reset_context(self):
+    def reset(self) -> None:
         """Reset the context for the LLM agent, and remove previous 
         observations and actions, which should be performed right after
         calling the environment reset method.
@@ -335,7 +335,7 @@ class BrowserAgent(Callable):
         """
 
         previous_context = self.context
-        self.reset_context()
+        self.reset()
 
         return previous_context
     

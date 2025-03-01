@@ -21,7 +21,9 @@ from insta.client import (
 )
 
 from insta.gym_env import (
-    InstaEnv
+    InstaEnv,
+    InstaEnvResetOutput,
+    InstaEnvStepOutput,
 )
 
 from insta.agent import (

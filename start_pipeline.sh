@@ -15,7 +15,8 @@ python -u run_pipeline.py --rank {} \
     --world_size ${WORLD_SIZE} \
     --model_name ${MODEL_NAME} \
     --playwright_workers ${PLAYWRIGHT_WORKERS} \
-    --skip_finished >> agents.log 2>&1
+    --skip_finished \
+    --prune_observations >> agents.log 2>&1
 
 END_OF_SCRIPT
 
