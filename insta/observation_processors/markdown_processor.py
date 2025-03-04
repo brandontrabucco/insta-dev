@@ -2,6 +2,10 @@ from insta.observation_processors.base_processor import (
     BaseProcessor
 )
 
+from insta.observation_processors.pii_tools import (
+    scrubadub_clean
+)
+
 from insta.utils import (
     BrowserObservation,
     BrowserStatus,
@@ -35,7 +39,8 @@ class MarkdownProcessor(BaseProcessor):
         self, observation: BrowserObservation,
         restrict_viewport: Tuple[float, float, float, float] = None,
         require_visible: bool = True,
-        require_frontmost: bool = True
+        require_frontmost: bool = True,
+        remove_pii: bool = True
     ) -> BrowserObservation:
         """Process the latest observation from a web browsing environment, 
         and create an agent-readible observation, with an option to
@@ -57,6 +62,10 @@ class MarkdownProcessor(BaseProcessor):
         require_frontmost: bool
             Boolean indicating whether the observation should only include
             elements that are currently in the frontmost layer.
+
+        remove_pii: bool
+            Boolean indicating whether the observation should remove any
+            personally identifiable information.
 
         Returns:
 
@@ -105,12 +114,20 @@ class MarkdownProcessor(BaseProcessor):
                 current_url = observation.current_url,
                 processed_text = FAILED_MESSAGE
             )
+        
+        processed_text = " ".join(outputs)
+
+        if remove_pii:  # remove PII using the scrubadub library
+
+            processed_text = scrubadub_clean(
+                processed_text
+            ) 
 
         return BrowserObservation(
             raw_html = observation.raw_html,
             screenshot = observation.screenshot,
             metadata = observation.metadata,
             current_url = observation.current_url,
-            processed_text = " ".join(outputs)
+            processed_text = processed_text
         )
 

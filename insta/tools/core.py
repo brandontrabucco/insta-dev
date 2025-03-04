@@ -367,7 +367,8 @@ def interact_with_browser(
     obs = observation_processor.process(
         obs, restrict_viewport = config.restrict_viewport,
         require_visible = config.require_visible,
-        require_frontmost = config.require_frontmost
+        require_frontmost = config.require_frontmost,
+        remove_pii = config.remove_pii
     )
 
     return InstaToolOutput(

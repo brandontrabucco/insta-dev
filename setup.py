@@ -14,7 +14,9 @@ REQUIREMENTS = [
     'scikit-video',
     'gradio',
     'gradio_client',
-    'langchain'
+    'langchain',
+    'scrubadub',
+    'scrubadub_spacy',
 ]
 
 URL = (

@@ -13,6 +13,8 @@ class BrowserConfig:
     restrict_viewport: Tuple[float, float, float, float] = None
     require_visible: bool = True
     require_frontmost: bool = True
+    
+    remove_pii: bool = False
 
     headless: bool = True
     stealthy: bool = True
@@ -32,6 +34,7 @@ DEFAULT_BROWSER_CONFIG = BrowserConfig(
     restrict_viewport = (0, 0, 1920, 1080),
     require_visible = True,
     require_frontmost = True,
+    remove_pii = False,
     headless = True,
     stealthy = True,
     proxy = None,
@@ -74,6 +77,10 @@ def get_browser_config(
         require_frontmost = env_config_kwargs.get(
             "require_frontmost",
             DEFAULT_BROWSER_CONFIG.require_frontmost
+        ),
+        remove_pii = env_config_kwargs.get(
+            "remove_pii",
+            DEFAULT_BROWSER_CONFIG.remove_pii
         ),
         headless = env_config_kwargs.get(
             "headless",

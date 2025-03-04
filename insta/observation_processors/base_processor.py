@@ -17,7 +17,8 @@ class BaseProcessor(abc.ABC):
         self, observation: BrowserObservation,
         restrict_viewport: Tuple[float, float, float, float] = None,
         require_visible: bool = True,
-        require_frontmost: bool = True
+        require_frontmost: bool = True,
+        remove_pii: bool = True
     ) -> BrowserObservation:
         """Process the latest observation from a web browsing environment, 
         and create an agent-readible observation, with an option to
@@ -39,6 +40,10 @@ class BaseProcessor(abc.ABC):
         require_frontmost: bool
             Boolean indicating whether the observation should only include
             elements that are currently in the frontmost layer.
+
+        remove_pii: bool
+            Boolean indicating whether the observation should remove any
+            personally identifiable information.
 
         Returns:
 

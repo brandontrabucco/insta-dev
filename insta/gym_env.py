@@ -230,7 +230,8 @@ class InstaEnv(gymnasium.Env):
         return self.observation_processor.process(
             obs, restrict_viewport = self.config.restrict_viewport,
             require_visible = self.config.require_visible,
-            require_frontmost = self.config.require_frontmost
+            require_frontmost = self.config.require_frontmost,
+            remove_pii = self.config.remove_pii
         )
 
     def reset(self, url: str, browser_kwargs = None, context_kwargs = None
