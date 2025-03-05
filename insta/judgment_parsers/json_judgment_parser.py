@@ -117,7 +117,7 @@ Here is an example where the script fills the input `[id: 13] "Name..." (Enter y
 
 Here is an example where the script sets the value of a range slider `[id: 71] "$250 (5)" (range slider min: 0 max: 50 step: 1)` to $1000:
 
-This slider has a range of 0 to 50 with a step of 1, and the value is currently set to 5. You must translate the desired "$1000" to the correct underlying range value.
+This slider has a range of 0 to 50 with a step of 1, and the value is currently set to 5. The script must translate the desired "$1000" to the correct underlying range value.
 
 ```json
 {
@@ -221,7 +221,7 @@ Here is an example where the script stops and reports `I'm done!`:
 
 ## Formatting The Response
 
-Think step by step, and start your response with an explanation of your reasoning in 50 words. Then, provide an evaluation in the following JSON schema:
+Format your evaluation in the following JSON schema:
 
 ```json
 {
@@ -233,16 +233,19 @@ Think step by step, and start your response with an explanation of your reasonin
 
 Here is what each key means:
 
-- `task_is_feasible`: What is the probability the desired task is feasible, rated from 0.0 (not possible) to 1.0 (absolutely certain)?
-- `success`: What is the probability the desired task has been completed successfully, rated from 0.0 (not possible) to 1.0 (absolutely certain)?
-- `on_right_track`: What is the probability the script is on the right track towards a future success, rated from 0.0 (not possible) to 1.0 (absolutely certain)?
+- `task_is_feasible`: The probability the desired task is feasible
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+- `success`: The probability the desired task has been completed successfully.
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+- `on_right_track`: The probability the script is on the right track towards a future success.
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-Thanks for helping me evaluate the script, please follow the instructions carefully. Format your response with a summary of what the script has done so far, a step-by-step explanation of your reasoning, and exactly one evaluation following the JSON schema provided above."""
+Thanks for helping me with evaluation, please follow the instructions carefully. Start your response with a summary of what the script has accomplished, followed by a step-by-step explanation of your evaluation, and finally, provide your evaluation in the JSON format. Limit your response to 500 words."""
 
 
 USER_PROMPT_TEMPLATE = """The desired task is: {instruction}
 
-My script has taken the following actions so far:
+The script has taken the following actions so far:
 
 {previous_actions}
 
@@ -262,7 +265,9 @@ Enter an evaluation in the following JSON schema:
     "success": float,
     "on_right_track": float
 }}
-```"""
+```
+
+Start your response with a summary of what the script has accomplished, followed by a step-by-step explanation of your evaluation, and finally, provide your evaluation in the JSON format. Limit your response to 500 words."""
 
 
 class JsonJudgmentParser(BaseJudgmentParser):

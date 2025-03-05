@@ -153,7 +153,7 @@ if __name__ == "__main__":
         "model": args.model_name,
         "max_tokens": 2048,
         "top_p": 1.0,
-        "temperature": 0.0
+        "temperature": 0.5
     }
 
     agent_config = get_agent_config(

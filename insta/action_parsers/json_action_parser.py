@@ -350,7 +350,7 @@ Suppose you want to open google search:
 }
 ```
 
-Thanks for helping me perform tasks on the web, please follow the instructions carefully. Format your response with a summary of what you have done so far, a step-by-step explanation of your reasoning, and exactly one action you would like to perform. Limit your response to 500 words."""
+Thanks for helping me perform tasks on the web, please follow the instructions carefully. Start your response with a summary of what you have done so far, followed by a step-by-step explanation of your reasoning, and finally, exactly one action you would like to perform. Limit your response to 500 words."""
 
 
 USER_PROMPT_TEMPLATE = """Here is the current viewport rendered in markdown:
@@ -359,7 +359,7 @@ USER_PROMPT_TEMPLATE = """Here is the current viewport rendered in markdown:
 
 {instruction}
 
-Enter an action in the following schema:
+Enter an action in the following JSON schema:
 
 ```json
 {{
@@ -367,7 +367,9 @@ Enter an action in the following schema:
     "action_kwargs": dict,
     "target_element_id": int | null,
 }}
-```"""
+```
+
+Start your response with a summary of what you have done so far, followed by a step-by-step explanation of your reasoning, and finally, exactly one action you would like to perform. Limit your response to 500 words."""
 
 
 class JsonActionParser(BaseActionParser):
