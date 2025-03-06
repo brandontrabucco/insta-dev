@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Dict
 
 
@@ -59,45 +59,12 @@ DEFAULT_JUDGE_CONFIG = JudgeConfig(
 
 
 def get_judge_config(
-    **judge_config_kwargs
+    **judge_kwargs
 ) -> JudgeConfig:
     
+    default_judge_kwargs = asdict(DEFAULT_JUDGE_CONFIG)
+    default_judge_kwargs.update(judge_kwargs)
+    
     return JudgeConfig(
-        tokenizer = judge_config_kwargs.get(
-            "tokenizer",
-            DEFAULT_TOKENIZER
-        ),
-        client_kwargs = judge_config_kwargs.get(
-            "client_kwargs",
-            DEFAULT_CLIENT_KWARGS
-        ),
-        generation_kwargs = judge_config_kwargs.get(
-            "generation_kwargs",
-            DEFAULT_GENERATION_KWARGS
-        ),
-        last_actions = judge_config_kwargs.get(
-            "last_actions",
-            DEFAULT_LAST_ACTIONS
-        ),
-        last_obs = judge_config_kwargs.get(
-            "last_obs",
-            DEFAULT_LAST_OBS
-        ),
-        max_obs_tokens = judge_config_kwargs.get(
-            "max_obs_tokens",
-            DEFAULT_MAX_OBS_TOKENS
-        ),
-        catch_errors = judge_config_kwargs.get(
-            "catch_errors", 
-            DEFAULT_CATCH_ERRORS
-        ),
-        max_errors = judge_config_kwargs.get(
-            "max_errors", 
-            DEFAULT_MAX_ERRORS
-        ),
-        log_errors = judge_config_kwargs.get(
-            "log_errors", 
-            DEFAULT_LOG_ERRORS
-        ),
+        **default_judge_kwargs
     )
-

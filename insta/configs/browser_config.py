@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Tuple
 
 
@@ -15,9 +15,6 @@ class BrowserConfig:
     require_frontmost: bool = True
     
     remove_pii: bool = False
-
-    headless: bool = True
-    stealthy: bool = True
     proxy: dict = None
 
     screen_width: int = 1920
@@ -35,8 +32,6 @@ DEFAULT_BROWSER_CONFIG = BrowserConfig(
     require_visible = True,
     require_frontmost = True,
     remove_pii = False,
-    headless = True,
-    stealthy = True,
     proxy = None,
     screen_width = 1920,
     screen_height = 1080,
@@ -50,72 +45,12 @@ DEFAULT_BROWSER_CONFIG = BrowserConfig(
 
 
 def get_browser_config(
-    **env_config_kwargs
+    **browser_kwargs
 ) -> BrowserConfig:
     
+    default_browser_kwargs = asdict(DEFAULT_BROWSER_CONFIG)
+    default_browser_kwargs.update(browser_kwargs)
+    
     return BrowserConfig(
-        playwright_url = env_config_kwargs.get(
-            "playwright_url",
-            DEFAULT_BROWSER_CONFIG.playwright_url
-        ),
-        playwright_port = env_config_kwargs.get(
-            "playwright_port",
-            DEFAULT_BROWSER_CONFIG.playwright_port
-        ),
-        screenshot = env_config_kwargs.get(
-            "screenshot",
-            DEFAULT_BROWSER_CONFIG.screenshot
-        ),
-        restrict_viewport = env_config_kwargs.get(
-            "restrict_viewport",
-            DEFAULT_BROWSER_CONFIG.restrict_viewport
-        ),
-        require_visible = env_config_kwargs.get(
-            "require_visible",
-            DEFAULT_BROWSER_CONFIG.require_visible
-        ),
-        require_frontmost = env_config_kwargs.get(
-            "require_frontmost",
-            DEFAULT_BROWSER_CONFIG.require_frontmost
-        ),
-        remove_pii = env_config_kwargs.get(
-            "remove_pii",
-            DEFAULT_BROWSER_CONFIG.remove_pii
-        ),
-        headless = env_config_kwargs.get(
-            "headless",
-            DEFAULT_BROWSER_CONFIG.headless
-        ),
-        stealthy = env_config_kwargs.get(
-            "stealthy",
-            DEFAULT_BROWSER_CONFIG.stealthy
-        ),
-        proxy = env_config_kwargs.get(
-            "proxy",
-            DEFAULT_BROWSER_CONFIG.proxy
-        ),
-        screen_width = env_config_kwargs.get(
-            "screen_width",
-            DEFAULT_BROWSER_CONFIG.screen_width
-        ),
-        screen_height = env_config_kwargs.get(
-            "screen_height",
-            DEFAULT_BROWSER_CONFIG.screen_height
-        ),
-        catch_errors = env_config_kwargs.get(
-            "catch_errors",
-            DEFAULT_BROWSER_CONFIG.catch_errors
-        ),
-        log_errors = env_config_kwargs.get(
-            "log_errors",
-            DEFAULT_BROWSER_CONFIG.log_errors
-        ),
-        max_errors = env_config_kwargs.get(
-            "max_errors",
-            DEFAULT_BROWSER_CONFIG.max_errors
-        ),
-        delays = env_config_kwargs.get(
-            "delays",
-            DEFAULT_BROWSER_CONFIG.delays
-        )
+        **default_browser_kwargs
     )

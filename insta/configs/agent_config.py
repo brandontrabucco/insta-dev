@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Dict
 
 
@@ -56,41 +56,12 @@ DEFAULT_AGENT_CONFIG = AgentConfig(
 
 
 def get_agent_config(
-    **agent_config_kwargs
+    **agent_kwargs
 ) -> AgentConfig:
     
+    default_agent_kwargs = asdict(DEFAULT_AGENT_CONFIG)
+    default_agent_kwargs.update(agent_kwargs)
+    
     return AgentConfig(
-        tokenizer = agent_config_kwargs.get(
-            "tokenizer",
-            DEFAULT_TOKENIZER
-        ),
-        client_kwargs = agent_config_kwargs.get(
-            "client_kwargs",
-            DEFAULT_CLIENT_KWARGS
-        ),
-        generation_kwargs = agent_config_kwargs.get(
-            "generation_kwargs",
-            DEFAULT_GENERATION_KWARGS
-        ),
-        max_history = agent_config_kwargs.get(
-            "max_history",
-            DEFAULT_MAX_HISTORY
-        ),
-        max_obs_tokens = agent_config_kwargs.get(
-            "max_obs_tokens",
-            DEFAULT_MAX_OBS_TOKENS
-        ),
-        catch_errors = agent_config_kwargs.get(
-            "catch_errors", 
-            DEFAULT_CATCH_ERRORS
-        ),
-        max_errors = agent_config_kwargs.get(
-            "max_errors", 
-            DEFAULT_MAX_ERRORS
-        ),
-        log_errors = agent_config_kwargs.get(
-            "log_errors", 
-            DEFAULT_LOG_ERRORS
-        ),
+        **default_agent_kwargs
     )
-
