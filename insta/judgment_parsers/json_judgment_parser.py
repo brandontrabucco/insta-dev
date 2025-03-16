@@ -237,10 +237,10 @@ Here is what each key means:
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 - `success`: The probability the desired task has been completed successfully.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
-- `on_right_track`: The probability the script is on the right track towards a future success.
+- `on_right_track`: The probability the script has reasoned correctly about its actions (even if the task is not complete).
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-Thanks for helping me with evaluation, please follow the instructions carefully. Start your response with a summary of what the script has accomplished, followed by a step-by-step explanation of your evaluation, and finally, provide your evaluation in the JSON format. Limit your response to 200 words."""
+Thanks for helping me with evaluation, please follow the instructions carefully. Start your response with a summary of what the script has accomplished, followed by a step-by-step explanation of your reasoning, and finally, provide your evaluation in the JSON format. Limit your response to 200 words."""
 
 
 USER_PROMPT_TEMPLATE = """The desired task is: {instruction}
@@ -267,7 +267,7 @@ Enter an evaluation in the following JSON schema:
 }}
 ```
 
-Start your response with a summary of what the script has accomplished, followed by a step-by-step explanation of your evaluation, and finally, provide your evaluation in the JSON format. Limit your response to 200 words."""
+Start your response with a summary of what the script has accomplished, followed by a step-by-step explanation of your reasoning, and finally, provide your evaluation in the JSON format. Limit your response to 200 words."""
 
 
 class JsonJudgmentParser(BaseJudgmentParser):
