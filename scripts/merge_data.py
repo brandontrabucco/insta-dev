@@ -14,13 +14,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_data_dir",
         type = str,
-        defauly = "old-data"
+        default = "old-data"
     )
 
     parser.add_argument(
         "--output_data_dir",
         type = str,
-        defauly = "data"
+        default = "data"
     )
 
     parser.add_argument(
@@ -166,28 +166,32 @@ if __name__ == "__main__":
         # check if the target path exists in output
         # if not copy from input to output
 
-        if not os.path.exists(output_actions_path):
+        if not os.path.exists(output_actions_path) \
+                and os.path.exists(input_actions_path):
 
             shutil.copy(
                 input_actions_path,
                 output_actions_path
             )
 
-        if not os.path.exists(output_observations_path):
+        if not os.path.exists(output_observations_path) \
+                and os.path.exists(input_observations_path):
 
             shutil.copy(
                 input_observations_path,
                 output_observations_path
             )
 
-        if not os.path.exists(output_judgment_path):
+        if not os.path.exists(output_judgment_path) \
+                and os.path.exists(input_judgment_path):
 
             shutil.copy(
                 input_judgment_path,
                 output_judgment_path
             )
 
-        if not os.path.exists(output_screenshots_path):
+        if not os.path.exists(output_screenshots_path) \
+                and os.path.exists(input_screenshots_path):
 
             shutil.copytree(
                 input_screenshots_path,
