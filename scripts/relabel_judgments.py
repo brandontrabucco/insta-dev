@@ -7,6 +7,8 @@ from insta.utils import (
     VALUE_KEYS
 )
 
+from multiprocessing import Pool
+from functools import partial
 from datasets import load_dataset
 
 import argparse
@@ -14,6 +16,107 @@ import random
 import tqdm
 import json
 import os
+
+
+def relabel_judgments(
+    example_id,
+    dataset = None,
+    input_actions_dir = None,
+    input_observations_dir = None,
+    input_judgments_dir = None,
+    judge_config = None
+):
+    
+    judge = BrowserJudge(
+        config = judge_config
+    )
+
+    example_dict = dataset[example_id]
+
+    domain = example_dict["domain"]
+
+    input_actions_path = os.path.join(
+        input_actions_dir,
+        "{}.json".format(domain)
+    )
+
+    input_observations_path = os.path.join(
+        input_observations_dir,
+        "{}.json".format(domain)
+    )
+
+    input_judgment_path = os.path.join(
+        input_judgments_dir,
+        "{}.json".format(domain)
+    )
+
+    valid_example = (
+        os.path.exists(input_actions_path)
+        and os.path.exists(input_observations_path)
+        and os.path.exists(input_judgment_path)
+    )
+
+    if not valid_example:
+
+        return None
+
+    with open(input_actions_path, "r") as file:
+        
+        actions = json.load(
+            file
+        )
+
+    with open(input_observations_path, "r") as file:
+        
+        observations = json.load(
+            file
+        )
+
+    with open(input_judgment_path, "r") as file:
+        
+        judgment = json.load(
+            file
+        )
+
+    instruction = example_dict["task"]
+
+    judgment = judge(
+        observations = [
+            x["processed_text"]
+            for x in observations
+        ],
+        actions = [
+            x["response"]
+            for x in actions
+        ],
+        instruction = instruction
+    )
+
+    judgment_values = {
+        key: judgment.values.get(key)
+        for key in VALUE_KEYS
+    }
+
+    judgment = {
+        **judgment_values,
+        "response": judgment.response,
+        "matched_response": judgment.matched_response,
+    }
+
+    output_judgment_path = os.path.join(
+        input_judgments_dir,
+        "{}.json".format(domain)
+    )
+
+    with open(output_judgment_path, "w") as file:
+        
+        json.dump(
+            judgment,
+            file,
+            indent = 4
+        )
+
+    return domain
 
 
 if __name__ == "__main__":
@@ -103,10 +206,6 @@ if __name__ == "__main__":
         generation_kwargs = generation_kwargs
     )
 
-    judge = BrowserJudge(
-        config = judge_config
-    )
-
     input_actions_dir = os.path.join(
         args.input_data_dir,
         "actions"
@@ -148,93 +247,32 @@ if __name__ == "__main__":
         ])
 
     progress_bar = tqdm.tqdm(
-        out_dataset_ids, desc = "Processing",
-        dynamic_ncols = True
+        desc = "Processing",
+        dynamic_ncols = True,
+        total = len(out_dataset_ids),
     )
 
-    for example_id in progress_bar:
+    worker_fn = partial(
+        relabel_judgments,
+        dataset = dataset,
+        input_actions_dir = input_actions_dir,
+        input_observations_dir = input_observations_dir,
+        input_judgments_dir = input_judgments_dir,
+        judge_config = judge_config
+    )
+    
+    with Pool(processes = args.num_agents) as pool:
 
-        example_dict = dataset[example_id]
-
-        domain = example_dict["domain"]
-
-        input_actions_path = os.path.join(
-            input_actions_dir,
-            "{}.json".format(domain)
-        )
-
-        input_observations_path = os.path.join(
-            input_observations_dir,
-            "{}.json".format(domain)
-        )
-
-        input_judgment_path = os.path.join(
-            input_judgments_dir,
-            "{}.json".format(domain)
-        )
-
-        valid_example = (
-            os.path.exists(input_actions_path)
-            and os.path.exists(input_observations_path)
-            and os.path.exists(input_judgment_path)
-        )
-
-        if not valid_example:
-
-            continue
-
-        with open(input_actions_path, "r") as file:
+        for domain in pool.imap_unordered(
+            worker_fn,
+            out_dataset_ids
+        ):
             
-            actions = json.load(
-                file
-            )
+            progress_bar.update()
 
-        with open(input_observations_path, "r") as file:
-            
-            observations = json.load(
-                file
-            )
+            if domain is not None:
 
-        with open(input_judgment_path, "r") as file:
-            
-            judgment = json.load(
-                file
-            )
-
-        instruction = example_dict["task"]
-
-        judgment = judge(
-            observations = [
-                x["processed_text"]
-                for x in observations
-            ],
-            actions = [
-                x["response"]
-                for x in actions
-            ],
-            instruction = instruction
-        )
-
-        judgment_values = {
-            key: judgment.values.get(key)
-            for key in VALUE_KEYS
-        }
-
-        judgment = {
-            **judgment_values,
-            "response": judgment.response,
-            "matched_response": judgment.matched_response,
-        }
-
-        output_judgment_path = os.path.join(
-            input_judgments_dir,
-            "{}.json".format(domain)
-        )
-
-        with open(output_judgment_path, "w") as file:
-            
-            json.dump(
-                judgment,
-                file,
-                indent = 4
-            )
+                progress_bar.set_description(
+                    "Processing {}"
+                    .format(domain)
+                )
