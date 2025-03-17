@@ -53,7 +53,19 @@ def get_function_calls(
             )
         )
         
-    if action_key == "click":
+    if action_key == "click" and "x" in action_kwargs and "y" in action_kwargs:
+
+        function_calls.append(
+            FunctionCall(
+                dotpath = "page.mouse.click",
+                args = "{},{}".format(
+                    action_kwargs.get("x", 0),
+                    action_kwargs.get("y", 0)
+                )
+            )
+        )
+        
+    elif action_key == "click" and target_element_id is not None:
 
         function_calls.append(
             FunctionCall(
@@ -62,7 +74,7 @@ def get_function_calls(
             )
         )
         
-    elif action_key == "hover":
+    elif action_key == "hover" and target_element_id is not None:
 
         function_calls.append(
             FunctionCall(
@@ -83,7 +95,7 @@ def get_function_calls(
             )
         )
 
-    elif action_key == "fill":
+    elif action_key == "fill" and target_element_id is not None:
 
         function_calls.append(
             FunctionCall(
@@ -94,7 +106,7 @@ def get_function_calls(
             )
         )
 
-    elif action_key == "select_option":
+    elif action_key == "select_option" and target_element_id is not None:
         
         function_calls.append(
             FunctionCall(
@@ -105,7 +117,7 @@ def get_function_calls(
             )
         )
 
-    elif action_key == "set_checked":
+    elif action_key == "set_checked" and target_element_id is not None:
 
         function_calls.append(
             FunctionCall(
@@ -121,6 +133,15 @@ def get_function_calls(
         function_calls.append(
             FunctionCall(
                 dotpath = "page.goBack",
+                args = ""
+            )
+        )
+
+    elif action_key == "go_forward":
+
+        function_calls.append(
+            FunctionCall(
+                dotpath = "page.goForward",
                 args = ""
             )
         )
