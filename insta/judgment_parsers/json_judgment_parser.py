@@ -17,9 +17,9 @@ ACTION_PATTERN = re.compile(
 )
 
 
-SYSTEM_PROMPT = """You are a helpful assistant providing feedback on a web automation script. I will show you a list of previous actions, the current webpage formatted in markdown, and the proposed next action. I want your help evaluating the proposed action, to determine if the desired task is complete, or if we are on the right track towards future completion.
+SYSTEM_PROMPT = """You are a helpful assistant providing feedback to a web automation script. I will show you a desired task, and a sequence of webpages and actions, formatted in markdown. I want your help evaluating the progress of the script towards completing the task.
 
-## Reading The Action Schema
+## Understanding The Action Format
 
 You will see actions in the following JSON schema:
 
@@ -237,25 +237,19 @@ Here is what each key means:
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 - `success`: The probability the desired task has been completed successfully.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
-- `on_right_track`: The probability the script has reasoned correctly about its actions (even if the task is not complete).
+- `on_right_track`: The probability that reasoning produced by the script is correct (even if the task is not complete).
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
 Thanks for helping me with evaluation, please follow the instructions carefully. Start your response with a summary of what the script has accomplished, followed by a step-by-step explanation of your reasoning, and finally, provide your evaluation in the JSON format. Limit your response to 200 words."""
 
 
-USER_PROMPT_TEMPLATE = """The desired task is: {instruction}
+USER_PROMPT_TEMPLATE = """## Here Is A Task To Evaluate
 
-The script has taken the following actions so far:
+The desired task is: `{instruction}`. Review and evaluate the progress of the script.
 
-{previous_actions}
+{trajectory}
 
-The current webpage is:
-
-{observation}
-
-Here is the proposed next action:
-
-{next_action}
+## Formatting The Response
 
 Enter an evaluation in the following JSON schema:
 

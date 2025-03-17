@@ -158,7 +158,7 @@ stop("I'm done!")
 
 ## Formatting The Response
 
-Think step by step, and start your response with an explanation of your reasoning in 50 words. Then, provide an evaluation in the following JSON schema:
+Format your evaluation in the following JSON schema:
 
 ```json
 {
@@ -170,26 +170,23 @@ Think step by step, and start your response with an explanation of your reasonin
 
 Here is what each key means:
 
-- `task_is_feasible`: What is the probability the desired task is feasible, rated from 0.0 (not possible) to 1.0 (absolutely certain)?
-- `success`: What is the probability the desired task has been completed successfully, rated from 0.0 (not possible) to 1.0 (absolutely certain)?
-- `on_right_track`: What is the probability the script is on the right track towards a future success, rated from 0.0 (not possible) to 1.0 (absolutely certain)?
+- `task_is_feasible`: The probability the desired task is feasible
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+- `success`: The probability the desired task has been completed successfully.
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+- `on_right_track`: The probability that reasoning produced by the script is correct (even if the task is not complete).
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-Thanks for helping me evaluate the script, please follow the instructions carefully. Format your response with a summary of what the script has done so far, a step-by-step explanation of your reasoning, and exactly one evaluation following the JSON schema provided above."""
+Thanks for helping me with evaluation, please follow the instructions carefully. Start your response with a summary of what the script has accomplished, followed by a step-by-step explanation of your reasoning, and finally, provide your evaluation in the JSON format. Limit your response to 200 words."""
 
 
-USER_PROMPT_TEMPLATE = """The desired task is: {instruction}
+USER_PROMPT_TEMPLATE = """## Here Is A Task To Evaluate
 
-My script has taken the following actions so far:
+The desired task is: `{instruction}`. Review and evaluate the progress of the script.
 
-{previous_actions}
+{trajectory}
 
-The current webpage is:
-
-{observation}
-
-Here is the proposed next action:
-
-{next_action}
+## Formatting The Response
 
 Enter an evaluation in the following JSON schema:
 
@@ -199,7 +196,9 @@ Enter an evaluation in the following JSON schema:
     "success": float,
     "on_right_track": float
 }}
-```"""
+```
+
+Start your response with a summary of what the script has accomplished, followed by a step-by-step explanation of your reasoning, and finally, provide your evaluation in the JSON format. Limit your response to 200 words."""
 
 
 class JavascriptJudgmentParser(BaseJudgmentParser):

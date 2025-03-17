@@ -98,8 +98,8 @@ class BrowserJudge(Callable):
         self, observations: List[str], 
         actions: List[str],
         instruction: str,
-        last_actions: int = 10,
-        last_obs: int = 1
+        last_actions: int = 5,
+        last_obs: int = 5
     ) -> BrowserJudgment | BrowserStatus:
         """Queries the LLM a judgment that estimates the agent's performance
         given the instruction, observations, and actions.
@@ -212,8 +212,8 @@ class BrowserJudge(Callable):
         self, observations: List[str], 
         actions: List[str],
         instruction: str,
-        last_actions: int = 10,
-        last_obs: int = 1
+        last_actions: int = 5,
+        last_obs: int = 5
     ) -> List[dict]:
         """Select the `last_actions` most recent actions from the context,
         and return a formatted user prompt that will be passed to an 
@@ -241,39 +241,57 @@ class BrowserJudge(Callable):
         
         """
 
-        *previous_observations, last_observation = observations
-        *previous_actions, next_action = actions
+        outputs = []
 
-        last_observation = self.tokenizer.encode(
-            last_observation,
-            max_length = self.config.max_obs_tokens,
-            truncation = True
-        )
+        for step, (observation, action) in \
+                enumerate(zip(observations, actions)):
 
-        last_observation = self.tokenizer.decode(
-            last_observation,
-            skip_special_tokens = True
-        )
+            observation = self.tokenizer.encode(
+                observation,
+                max_length = self.config.max_obs_tokens,
+                truncation = True
+            )
 
+            observation = self.tokenizer.decode(
+                observation,
+                skip_special_tokens = True
+            )
 
-        previous_actions = "\n\n".join([
-            "* {}".format(x)
-            for x in previous_actions[-last_actions:]
-        ])
+            time_left = (
+                len(actions) - step - 1
+            )
+
+            if time_left < last_obs:
+
+                outputs.append("### {} Webpage:\n\n{}".format(
+                    "Previous" 
+                    if time_left > 0 else 
+                    "Last",
+                    observation
+                ))
+
+            if time_left < last_actions:
+    
+                outputs.append("### {} Action:\n\n{}".format(
+                    "Previous" 
+                    if time_left > 0 else 
+                    "Next",
+                    action
+                ))
+
+        trajectory = "\n\n".join(outputs)
         
         return self.user_prompt_template.format(
-            observation = last_observation,
-            instruction = instruction,
-            previous_actions = previous_actions,
-            next_action = next_action
+            trajectory = trajectory,
+            instruction = instruction
         )
 
     def get_context(
         self, observations: List[str], 
         actions: List[str],
         instruction: str,
-        last_actions: int = 10,
-        last_obs: int = 1
+        last_actions: int = 5,
+        last_obs: int = 5
     ) -> List[dict]:
         """Construct a series of messages for querying an LLM via the
         OpenAI API to produce a judgment that estimates the

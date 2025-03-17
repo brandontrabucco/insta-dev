@@ -1,10 +1,19 @@
-import os
-import shutil
+from insta import (
+    get_judge_config,
+    BrowserJudge
+)
+
+from insta.utils import (
+    VALUE_KEYS
+)
+
+from datasets import load_dataset
+
 import argparse
 import random
 import tqdm
-
-from datasets import load_dataset
+import json
+import os
 
 
 if __name__ == "__main__":
@@ -12,13 +21,25 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--input_data_dir",
+        "--model_name",
         type = str,
-        default = "old-data"
+        default = "meta-llama/Llama-3.3-70B-Instruct",
     )
 
     parser.add_argument(
-        "--output_data_dir",
+        "--api_key",
+        type = str,
+        default = "token-abc123",
+    )
+
+    parser.add_argument(
+        "--llm_endpoint",
+        type = str,
+        default = "http://localhost:8000/v1",
+    )
+
+    parser.add_argument(
+        "--input_data_dir",
         type = str,
         default = "data"
     )
@@ -65,6 +86,27 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    client_kwargs = {
+        "api_key": args.api_key,
+        "base_url": args.llm_endpoint
+    }
+
+    generation_kwargs = {
+        "model": args.model_name,
+        "max_tokens": 2048,
+        "top_p": 1.0,
+        "temperature": 0.5
+    }
+
+    judge_config = get_judge_config(
+        client_kwargs = client_kwargs,
+        generation_kwargs = generation_kwargs
+    )
+
+    judge = BrowserJudge(
+        config = judge_config
+    )
+
     input_actions_dir = os.path.join(
         args.input_data_dir,
         "actions"
@@ -82,26 +124,6 @@ if __name__ == "__main__":
 
     input_screenshots_dir = os.path.join(
         args.input_data_dir,
-        "screenshots"
-    )
-
-    output_actions_dir = os.path.join(
-        args.output_data_dir,
-        "actions"
-    )
-
-    output_observations_dir = os.path.join(
-        args.output_data_dir,
-        "observations"
-    )
-
-    output_judgments_dir = os.path.join(
-        args.output_data_dir,
-        "judgments"
-    )
-
-    output_screenshots_dir = os.path.join(
-        args.output_data_dir,
         "screenshots"
     )
 
@@ -151,62 +173,68 @@ if __name__ == "__main__":
             "{}.json".format(domain)
         )
 
-        input_screenshots_path = os.path.join(
-            input_screenshots_dir,
-            "{}".format(domain)
+        valid_example = (
+            os.path.exists(input_actions_path)
+            and os.path.exists(input_observations_path)
+            and os.path.exists(input_judgment_path)
         )
 
-        output_actions_path = os.path.join(
-            output_actions_dir,
-            "{}.json".format(domain)
+        if not valid_example:
+
+            continue
+
+        with open(input_actions_path, "r") as file:
+            
+            actions = json.load(
+                file
+            )
+
+        with open(input_observations_path, "r") as file:
+            
+            observations = json.load(
+                file
+            )
+
+        with open(input_judgment_path, "r") as file:
+            
+            judgment = json.load(
+                file
+            )
+
+        instruction = example_dict["task"]
+
+        judgment = judge(
+            observations = [
+                x["processed_text"]
+                for x in observations
+            ],
+            actions = [
+                x["response"]
+                for x in actions
+            ],
+            instruction = instruction
         )
 
-        output_observations_path = os.path.join(
-            output_observations_dir,
-            "{}.json".format(domain)
-        )
+        judgment_values = {
+            key: judgment.values.get(key)
+            for key in VALUE_KEYS
+        }
+
+        judgment = {
+            **judgment_values,
+            "response": judgment.response,
+            "matched_response": judgment.matched_response,
+        }
 
         output_judgment_path = os.path.join(
-            output_judgments_dir,
+            input_judgments_dir,
             "{}.json".format(domain)
         )
 
-        output_screenshots_path = os.path.join(
-            output_screenshots_dir,
-            "{}".format(domain)
-        )
-
-        # check if the target path exists in output
-        # if not copy from input to output
-
-        if not os.path.exists(output_actions_path) \
-                and os.path.exists(input_actions_path):
-
-            shutil.copy(
-                input_actions_path,
-                output_actions_path
-            )
-
-        if not os.path.exists(output_observations_path) \
-                and os.path.exists(input_observations_path):
-
-            shutil.copy(
-                input_observations_path,
-                output_observations_path
-            )
-
-        if not os.path.exists(output_judgment_path) \
-                and os.path.exists(input_judgment_path):
-
-            shutil.copy(
-                input_judgment_path,
-                output_judgment_path
-            )
-
-        if not os.path.exists(output_screenshots_path) \
-                and os.path.exists(input_screenshots_path):
-
-            shutil.copytree(
-                input_screenshots_path,
-                output_screenshots_path
+        with open(output_judgment_path, "w") as file:
+            
+            json.dump(
+                judgment,
+                file,
+                indent = 4
             )

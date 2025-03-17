@@ -100,6 +100,6 @@ if __name__ == "__main__":
         json.dumps(average_values, indent = 4)
     ))
 
-    print('Fration conf = 1: {}'.format(
+    print('Fraction conf = 1: {}'.format(
         json.dumps(fraction_eq_1, indent = 4)
     ))

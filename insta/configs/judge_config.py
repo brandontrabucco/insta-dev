@@ -10,7 +10,7 @@ class JudgeConfig:
     generation_kwargs: Dict = None
 
     last_actions: int = 5
-    last_obs: int = 1
+    last_obs: int = 5
     max_obs_tokens: int = 4096
 
     catch_errors: bool = True
@@ -36,7 +36,7 @@ DEFAULT_GENERATION_KWARGS = {
 
 
 DEFAULT_LAST_ACTIONS = 5
-DEFAULT_LAST_OBS = 1
+DEFAULT_LAST_OBS = 5
 DEFAULT_MAX_OBS_TOKENS = 4096
 
 
