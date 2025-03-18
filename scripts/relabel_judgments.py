@@ -45,15 +45,9 @@ def relabel_judgments(
         "{}.json".format(domain)
     )
 
-    input_judgment_path = os.path.join(
-        input_judgments_dir,
-        "{}.json".format(domain)
-    )
-
     valid_example = (
         os.path.exists(input_actions_path)
         and os.path.exists(input_observations_path)
-        and os.path.exists(input_judgment_path)
     )
 
     if not valid_example:
@@ -69,12 +63,6 @@ def relabel_judgments(
     with open(input_observations_path, "r") as file:
         
         observations = json.load(
-            file
-        )
-
-    with open(input_judgment_path, "r") as file:
-        
-        judgment = json.load(
             file
         )
 
