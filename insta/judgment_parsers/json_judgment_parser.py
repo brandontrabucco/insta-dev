@@ -271,6 +271,21 @@ Enter an evaluation in the following JSON schema:
 }}
 ```
 
+Here is what each key means:
+
+- `task_is_feasible`: The probability the desired task is feasible on this website.
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+- `is_blocked`: The probability the website has blocked the script.
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+
+- `success`: The probability the desired task has been completed successfully.
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+- `future_success`: The probability the script would complete its task if given more time.
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+
+- `reasoning_is_correct`: The probability that all steps of reasoning produced by the script are correct.
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+
 Start your response with a summary of what the script has accomplished, followed by a step-by-step justification of your scores, and finally, provide your evaluation in the JSON format. Limit your response to 500 words."""
 
 
