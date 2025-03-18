@@ -228,7 +228,7 @@ Format your evaluation in the following JSON schema:
     "task_is_feasible": float,
     "is_blocked": float,
     "success": float,
-    "on_right_track": float,
+    "future_success": float,
     "reasoning_is_correct": float
 }
 ```
@@ -242,7 +242,7 @@ Here is what each key means:
 
 - `success`: The probability the desired task has been completed successfully.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
-- `on_right_track`: The probability the script would complete its task if given more time.
+- `future_success`: The probability the script would complete its task if given more time.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
 - `reasoning_is_correct`: The probability that all steps of reasoning produced by the script are correct.
@@ -266,7 +266,7 @@ Enter an evaluation in the following JSON schema:
     "task_is_feasible": float,
     "is_blocked": float,
     "success": float,
-    "on_right_track": float,
+    "future_success": float,
     "reasoning_is_correct": float
 }}
 ```
@@ -337,7 +337,7 @@ class JsonJudgmentParser(BaseJudgmentParser):
             "task_is_feasible" in response_dict and
             "is_blocked" in response_dict and
             "success" in response_dict and
-            "on_right_track" in response_dict and
+            "future_success" in response_dict and
             "reasoning_is_correct" in response_dict
         )
 
@@ -348,14 +348,14 @@ class JsonJudgmentParser(BaseJudgmentParser):
         task_is_feasible = response_dict["task_is_feasible"]
         is_blocked = response_dict["is_blocked"]
         success = response_dict["success"]
-        on_right_track = response_dict["on_right_track"]
+        future_success = response_dict["future_success"]
         reasoning_is_correct = response_dict["reasoning_is_correct"]
         
         keys_right_type = (
             (isinstance(task_is_feasible, float) or isinstance(task_is_feasible, int)) and
             (isinstance(is_blocked, float) or isinstance(is_blocked, int)) and
             (isinstance(success, float) or isinstance(success, int)) and
-            (isinstance(on_right_track, float) or isinstance(on_right_track, int)) and
+            (isinstance(future_success, float) or isinstance(future_success, int)) and
             (isinstance(reasoning_is_correct, float) or isinstance(reasoning_is_correct, int))
         )
 
@@ -367,7 +367,7 @@ class JsonJudgmentParser(BaseJudgmentParser):
             "task_is_feasible": float(task_is_feasible),
             "is_blocked": float(is_blocked),
             "success": float(success),
-            "on_right_track": float(on_right_track),
+            "future_success": float(future_success),
             "reasoning_is_correct": float(reasoning_is_correct)
         }
         

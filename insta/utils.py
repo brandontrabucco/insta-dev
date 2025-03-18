@@ -167,7 +167,7 @@ VALUE_KEYS = [
     "task_is_feasible",
     "is_blocked",
     "success",
-    "on_right_track",
+    "future_success",
     "reasoning_is_correct",
 ]
 
