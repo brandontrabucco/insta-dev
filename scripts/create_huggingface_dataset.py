@@ -79,7 +79,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--remove_html",
+        "--keep_html",
         action = "store_true"
     )
 
@@ -99,6 +99,12 @@ if __name__ == "__main__":
         "--dataset_split",
         type = str,
         default = "train",
+    )
+
+    parser.add_argument(
+        "--push_to_hub",
+        type = str,
+        default = None
     )
 
     args = parser.parse_args()
@@ -186,7 +192,7 @@ if __name__ == "__main__":
                     (observation["metadata"] or {}).values()
                 )
 
-                if args.remove_html:
+                if not args.keep_html:
 
                     observation.pop("raw_html")
 
@@ -230,3 +236,9 @@ if __name__ == "__main__":
         num_proc = args.num_workers,
         features = DATASET_SCHEMA
     )
+
+    if args.push_to_hub is not None:
+
+        dataset.push_to_hub(
+            args.push_to_hub
+        )

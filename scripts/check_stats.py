@@ -86,6 +86,14 @@ if __name__ == "__main__":
         for key in VALUE_KEYS
     }
 
+    fraction_ge_0_9 = {
+        key: sum(
+            (judgment[key] or 0) >= 0.9
+            for judgment in all_judgments
+        ) / len(all_judgments)
+        for key in VALUE_KEYS
+    }
+
     print("Number of actions: {}".format(
         total_num_actions
     ))
@@ -102,6 +110,10 @@ if __name__ == "__main__":
         json.dumps(average_values, indent = 4)
     ))
 
-    print('Fraction conf = 1: {}'.format(
+    print('Fraction conf = 1: {}\n'.format(
         json.dumps(fraction_eq_1, indent = 4)
+    ))
+
+    print('Fraction conf >= 0.9: {}\n'.format(
+        json.dumps(fraction_ge_0_9, indent = 4)
     ))

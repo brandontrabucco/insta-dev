@@ -2,6 +2,8 @@ from insta.markdown.schemas import (
     register_schema,
     remove_newlines,
     DEFAULT_INDENT_VALUE,
+    ALL_SCHEMA_NAMES,
+    EMPTY_TEXT,
     clean_label,
 )
 
@@ -20,6 +22,14 @@ from insta.utils import (
 from typing import List
 
 
+BUTTON_TYPES = [
+    "button",
+    "reset",
+    "submit",
+    "image"
+]
+
+
 @register_schema(
     "insta_input",
     priority = 1,
@@ -28,6 +38,18 @@ from typing import List
     ]
 )
 class InSTAInputSchema(InSTABaseSchema):
+
+    transitions = [
+        "insta_button",
+        "insta_checkbox",
+        "insta_image",
+        "insta_input",
+        "insta_link",
+        "insta_range",
+        "insta_select",
+        "insta_textarea",
+        *ALL_SCHEMA_NAMES
+    ]
 
     attributes = {"role": [
         'input',
@@ -60,6 +82,10 @@ class InSTAInputSchema(InSTABaseSchema):
         indent_level: int = 0,
         indent_value: str = DEFAULT_INDENT_VALUE,
     ) -> str:
+        
+        inner_text = clean_label(" ".join(
+            child_representations
+        ))
 
         value = str(
             node.metadata.get("editable_value") or
@@ -91,6 +117,47 @@ class InSTAInputSchema(InSTABaseSchema):
         candidate_id = node.metadata[
             "candidate_id"
         ]
+
+        input_type = node.html_element.attrib.get(
+            "type", None
+        )
+
+        is_button_input = (
+            node.html_element.tag == "button" or 
+            input_type in BUTTON_TYPES
+        )
+
+        if is_button_input:
+
+            button_title = (
+                clean_label(node.html_element.attrib.get("name")) or 
+                clean_label(node.html_element.attrib.get("title")) or 
+                clean_label(node.html_element.attrib.get("aria-label")) or 
+                (inner_text if inner_text not in EMPTY_TEXT else "")
+            )
+
+            button_title_outputs = []
+
+            if len(button_title) > 0:
+
+                button_title_outputs.append(
+                    button_title
+                )
+
+            if input_type is not None and input_type != "button":
+
+                button_title_outputs.append(
+                    input_type
+                )
+
+            title = " ".join(
+                button_title_outputs
+            ) or "#"
+
+            return "[id: {id}] {title} button".format(
+                id = candidate_id,
+                title = title
+            )
 
         return '[id: {id}] "{value}" ({title} input)'.format(
             id = candidate_id,

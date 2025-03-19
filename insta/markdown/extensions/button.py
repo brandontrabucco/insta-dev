@@ -62,15 +62,38 @@ class InSTAButtonSchema(InSTABaseSchema):
             child_representations
         ))
 
-        title = (
-            clean_label(node.html_element.attrib.get("title")) or 
-            clean_label(node.html_element.attrib.get("aria-label")) or 
-            (inner_text if inner_text not in EMPTY_TEXT else "#")
-        )
-        
         candidate_id = node.metadata[
             "candidate_id"
         ]
+
+        button_title = (
+            clean_label(node.html_element.attrib.get("name")) or 
+            clean_label(node.html_element.attrib.get("title")) or 
+            clean_label(node.html_element.attrib.get("aria-label")) or 
+            (inner_text if inner_text not in EMPTY_TEXT else "")
+        )
+
+        button_type = node.html_element.attrib.get(
+            "type", None
+        )
+
+        button_title_outputs = []
+
+        if len(button_title) > 0:
+
+            button_title_outputs.append(
+                button_title
+            )
+
+        if button_type is not None and button_type != "button":
+
+            button_title_outputs.append(
+                button_type
+            )
+
+        title = " ".join(
+            button_title_outputs
+        ) or "#"
 
         return "[id: {id}] {title} button".format(
             id = candidate_id,
