@@ -255,7 +255,7 @@ Suppose you want to scroll down the page by 300 pixels:
 
 ### Example Fill Action (Text Input)
 
-Suppose you want to fill the input `[id: 13] "Name..." (Enter your name text field)` with the text `John Doe`:
+Suppose you want to fill the input `[id: 13] "Name..." (Enter your name text input)` with the text `John Doe`:
 
 ```json
 {

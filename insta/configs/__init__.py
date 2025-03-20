@@ -15,3 +15,10 @@ from insta.configs.judge_config import (
     get_judge_config,
     DEFAULT_JUDGE_CONFIG
 )
+
+from insta.configs.task_proposer_config import (
+    TaskProposerConfig,
+    get_task_proposer_config,
+    DEFAULT_TASK_PROPOSER_CONFIG,
+    BrowserTaskProposal
+)

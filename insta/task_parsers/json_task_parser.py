@@ -1,9 +1,13 @@
 from insta.utils import (
-    BrowserJudgment,
     BrowserStatus
 )
-from insta.judgment_parsers.base_judgement_parser import (
-    BaseJudgmentParser
+
+from insta.configs.task_proposer_config import (
+    BrowserTaskProposal
+)
+
+from insta.task_parsers.base_task_parser import (
+    BaseTaskParser
 )
 
 from typing import List
@@ -11,13 +15,13 @@ import re
 import json
 
 
-ACTION_PATTERN = re.compile(
+TASK_PATTERN = re.compile(
     r"```json\n(?P<json>.*)\n```",
     re.DOTALL
 )
 
 
-SYSTEM_PROMPT = """You are a helpful assistant providing feedback to a web automation script. I will show you a desired task, and a sequence of webpages and actions, formatted in markdown. I want your help evaluating the progress of the script towards completing the task.
+SYSTEM_PROMPT = """You are a helpful assistant directing a web automation script. I will show you previous runs of the script, including previous tasks, webpages, actions, and performance reviews, formatted in markdown. I want your help assigning new tasks to the script.
 
 ## Understanding The Action Format
 
@@ -219,9 +223,9 @@ Here is an example where the script stops and reports `I'm done!`:
 }
 ```
 
-## Formatting The Response
+## Understanding The Review Format
 
-Format your evaluation in the following JSON schema:
+You will see performance reviews in the following JSON schema:
 
 ```json
 {
@@ -248,90 +252,130 @@ Here is what each key means:
 - `reasoning_is_correct`: The probability that all steps of reasoning produced by the script are correct.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-Thanks for helping me with evaluation, please follow the instructions carefully. Start your response with a summary of what the script has accomplished, followed by a step-by-step justification of your scores, and finally, provide your evaluation in the JSON format. Limit your response to 500 words."""
+## Formatting The Response
+
+Format your task in the following JSON schema:
+
+```json
+{
+    "proposed_task": str,
+    "task_is_feasible": float,
+    "estimated_difficulty": float,
+    "estimated_steps": int
+}
+```
+
+Here is what each key means:
+
+- `proposed_task`: The task you are proposing for the script to complete, subject to the following guidelines:
+    - guideline (1): must be a realistic task that a hypothetical user might want to accomplish on this website in a single session.
+    - guideline (2): must not require making an account, logging in, or submitting personal information.
+    - guideline (3): must not require external knowledge, beyond what a typical user might know.
+    - guideline (4): must not involve any illegal, harmful, or unethical activities.
+    - guideline (5): must not involve any content that is inappropriate, offensive, or adult in nature.
+
+- `task_is_feasible`: The probability the proposed task is feasible on this website using the script.
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+- `estimated_difficulty`: The estimated difficulty of the proposed task for the script.
+    - range: 0.0 (easy) to 1.0 (difficult).
+- `estimated_steps`: The estimated number of actions to complete the task.
+
+Here are some example tasks that satisfy the guidelines:
+
+- `wiktionary.org`: What is the definition and etymology of the word 'serendipity'?
+- `biodiversitylibrary.org`: Open a scanned copy of 'The Angora cat; how to breed train and keep it'.
+- `scholar.google.com`: How many citations does the Generative adversarial nets paper have?
+- `awg-fittings.com`: Find the dimensions of a Hose-Shut-Off Valve.
+
+Thanks for helping me direct the script, please follow the instructions carefully. Start your response with a summary of what the script has accomplished in previous runs, followed by a step-by-step breakdown of your proposed task and associated scores, and finally, provide your task in the JSON format. Limit your response to 500 words."""
 
 
-USER_PROMPT_TEMPLATE = """## Here Is A Task To Evaluate
+USER_PROMPT_TEMPLATE = """## Summary Of Previous Runs 
 
-The desired task is: `{instruction}`. Review and evaluate the progress of the script.
+Here are previous runs of the script, including tasks, webpages, actions, and performance reviews, formatted in markdown:
 
-{trajectory}
+{annotations}
 
 ## Formatting The Response
 
-Enter an evaluation in the following JSON schema:
+Enter a task in the following JSON schema:
 
 ```json
 {{
+    "proposed_task": str,
     "task_is_feasible": float,
-    "is_blocked": float,
-    "success": float,
-    "future_success": float,
-    "reasoning_is_correct": float
+    "estimated_difficulty": float,
+    "estimated_steps": int
 }}
 ```
 
 Here is what each key means:
 
-- `task_is_feasible`: The probability the desired task is feasible on this website.
-    - range: 0.0 (not possible) to 1.0 (absolutely certain).
-- `is_blocked`: The probability the website has blocked the script.
-    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+- `proposed_task`: The task you are proposing for the script to complete, subject to the following guidelines:
+    - guideline (1): must be a realistic task that a hypothetical user might want to accomplish at {target_url} in a single session.
+    - guideline (2): must not require making an account, logging in, or submitting personal information.
+    - guideline (3): must not require external knowledge, beyond what a typical user might know.
+    - guideline (4): must not involve any illegal, harmful, or unethical activities.
+    - guideline (5): must not involve any content that is inappropriate, offensive, or adult in nature.
 
-- `success`: The probability the desired task has been completed successfully.
+- `task_is_feasible`: The probability the proposed task is feasible at {target_url} using the script.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
-- `future_success`: The probability the script would complete its task if given more time.
-    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+- `estimated_difficulty`: The estimated difficulty of the proposed task for the script.
+    - range: 0.0 (easy) to 1.0 (difficult).
+- `estimated_steps`: The estimated number of actions to complete the task.
 
-- `reasoning_is_correct`: The probability that all steps of reasoning produced by the script are correct.
-    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+Here are some example tasks that satisfy the guidelines:
 
-Start your response with a summary of what the script has accomplished, followed by a step-by-step justification of your scores, and finally, provide your evaluation in the JSON format. Limit your response to 500 words."""
+- `wiktionary.org`: What is the definition and etymology of the word 'serendipity'?
+- `biodiversitylibrary.org`: Open a scanned copy of 'The Angora cat; how to breed train and keep it'.
+- `scholar.google.com`: How many citations does the Generative adversarial nets paper have?
+- `awg-fittings.com`: Find the dimensions of a Hose-Shut-Off Valve.
+
+Start your response with a summary of what the script has accomplished in previous runs, followed by a step-by-step breakdown of your proposed task and associated scores, and finally, provide your task in the JSON format. Limit your response to 500 words."""
 
 
-class JsonJudgmentParser(BaseJudgmentParser):
+class JsonTaskParser(BaseTaskParser):
     """Implements a parser for converting text generated by an LLM into a
-    judgment of whether a web browsing task has been successfully completed,
+    task for an LLM agent to attempt to complete using a web browser,
     returns a BrowserJudgment instance parsed from the response.
 
     Attributes:
 
     system_prompt: str
-        Depending on the judgment representation, this system prompt
-        instructs the LLM on how to generate judgments in the corresponding format,
-        such as JSON-based judgments, python code, etc.
+        Depending on the task representation, this system prompt
+        instructs the LLM on how to generate tasks in the corresponding format,
+        such as JSON-based tasks, YAML format, etc.
 
     user_prompt_template: str
         A template string that is used to generate a user prompt for the LLM,
-        and had format keys for `observation` and `instruction`.
+        and has format keys for `annotations` which represents
+        previous task runs and judgments produced by the LLM judge.
 
     """
 
     system_prompt = SYSTEM_PROMPT
     user_prompt_template = USER_PROMPT_TEMPLATE
 
-    def parse_judgment(self, response: str) -> BrowserJudgment | BrowserStatus:
-        """Parse a judgment string produced by an LLM, and return a
-        BrowserJudgment object that contains a sequence of function calls
-        to perform in a web browsing session.
+    def parse_task(self, response: str) -> BrowserTaskProposal | BrowserStatus:
+        """Parse a task proposal string produced by an LLM, and return a
+        BrowserTaskProposal object that contains the proposed task,
+        and additional metadata about the task feasibility, and difficulty.
 
         Arguments:
 
         response: str
-            The response from an LLM that contains a judgment in a code block,
-            which will be parsed into a BrowserJudgment object.
+            The response from an LLM that contains a task proposal in a code block,
+            which will be parsed into a BrowserTaskProposal object.
         
         Returns:
 
-        BrowserJudgment | PlaywrightStatus
-            The parser judgment object that contains a dictionary of parsed 
-            judgment values, and the text values were parsed from.
+        BrowserTaskProposal | PlaywrightStatus
+            The parsed task proposal, or a BrowserStatus object that
+            represents a failed parsing attempt.
         
         """
         
-        match = ACTION_PATTERN.search(
-            response
-        )
+        match = TASK_PATTERN.search(response)
 
         has_required_field = (
             match is not None and 
@@ -349,47 +393,43 @@ class JsonJudgmentParser(BaseJudgmentParser):
             return BrowserStatus.ERROR
         
         has_required_keys = (
+            "proposed_task" in response_dict and
             "task_is_feasible" in response_dict and
-            "is_blocked" in response_dict and
-            "success" in response_dict and
-            "future_success" in response_dict and
-            "reasoning_is_correct" in response_dict
+            "estimated_difficulty" in response_dict and
+            "estimated_steps" in response_dict
         )
 
         if not has_required_keys:
 
             return BrowserStatus.ERROR
         
+        proposed_task = response_dict["proposed_task"]
         task_is_feasible = response_dict["task_is_feasible"]
-        is_blocked = response_dict["is_blocked"]
-        success = response_dict["success"]
-        future_success = response_dict["future_success"]
-        reasoning_is_correct = response_dict["reasoning_is_correct"]
+        estimated_difficulty = response_dict["estimated_difficulty"]
+        estimated_steps = response_dict["estimated_steps"]
         
         keys_right_type = (
+            (isinstance(proposed_task, str) and (len(proposed_task) > 0)) and
             (isinstance(task_is_feasible, float) or isinstance(task_is_feasible, int)) and
-            (isinstance(is_blocked, float) or isinstance(is_blocked, int)) and
-            (isinstance(success, float) or isinstance(success, int)) and
-            (isinstance(future_success, float) or isinstance(future_success, int)) and
-            (isinstance(reasoning_is_correct, float) or isinstance(reasoning_is_correct, int))
+            (isinstance(estimated_difficulty, float) or isinstance(estimated_difficulty, int)) and
+            (isinstance(estimated_steps, float) or isinstance(estimated_steps, int))
         )
 
         if not keys_right_type:
 
             return BrowserStatus.ERROR
         
-        values = {
+        task_dict = {
+            "proposed_task": str(proposed_task),
             "task_is_feasible": float(task_is_feasible),
-            "is_blocked": float(is_blocked),
-            "success": float(success),
-            "future_success": float(future_success),
-            "reasoning_is_correct": float(reasoning_is_correct)
+            "estimated_difficulty": float(estimated_difficulty),
+            "estimated_steps": int(estimated_steps)
         }
         
-        browser_judgment = BrowserJudgment(
-            values = values,
+        browser_task = BrowserTaskProposal(
+            **task_dict,
             response = response,
             matched_response = matched_response
         )
 
-        return browser_judgment
+        return browser_task

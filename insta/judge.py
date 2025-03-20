@@ -263,7 +263,7 @@ class BrowserJudge(Callable):
 
             if time_left < last_obs:
 
-                outputs.append("### {} Webpage:\n\n{}".format(
+                outputs.append("## {} Webpage:\n\n{}".format(
                     "Previous" 
                     if time_left > 0 else 
                     "Last",
@@ -272,7 +272,7 @@ class BrowserJudge(Callable):
 
             if time_left < last_actions:
     
-                outputs.append("### {} Action:\n\n{}".format(
+                outputs.append("## {} Action:\n\n{}".format(
                     "Previous" 
                     if time_left > 0 else 
                     "Next",

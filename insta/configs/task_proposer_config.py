@@ -3,11 +3,15 @@ from typing import Dict
 
 
 @dataclass
-class JudgeConfig:
+class TaskProposerConfig:
 
     tokenizer: str = "meta-llama/Llama-3.3-70B-Instruct"
     client_kwargs: Dict = None
     generation_kwargs: Dict = None
+
+    last_judgments: int = 5
+    last_tasks: int = 5
+    last_trajectories: int = 1
 
     last_actions: int = 5
     last_obs: int = 5
@@ -16,6 +20,18 @@ class JudgeConfig:
     catch_errors: bool = True
     max_errors: int = 5
     log_errors: bool = True
+
+
+@dataclass
+class BrowserTaskProposal:
+
+    proposed_task: str = None
+    task_is_feasible: float = None
+    estimated_difficulty: float = None
+    estimated_steps: float = None
+
+    response: str = None
+    matched_response: str = None
 
 
 DEFAULT_TOKENIZER = "meta-llama/Llama-3.3-70B-Instruct"
@@ -35,6 +51,11 @@ DEFAULT_GENERATION_KWARGS = {
 }
 
 
+DEFAULT_LAST_JUDGMENTS = 5
+DEFAULT_LAST_TASKS = 5
+DEFAULT_LAST_TRAJECTORIES = 1
+
+
 DEFAULT_LAST_ACTIONS = 5
 DEFAULT_LAST_OBS = 5
 DEFAULT_MAX_OBS_TOKENS = 4096
@@ -45,10 +66,13 @@ DEFAULT_MAX_ERRORS = 5
 DEFAULT_LOG_ERRORS = False
 
 
-DEFAULT_JUDGE_CONFIG = JudgeConfig(
+DEFAULT_TASK_PROPOSER_CONFIG = TaskProposerConfig(
     tokenizer = DEFAULT_TOKENIZER,
     client_kwargs = DEFAULT_CLIENT_KWARGS,
     generation_kwargs = DEFAULT_GENERATION_KWARGS,
+    last_judgments = DEFAULT_LAST_JUDGMENTS,
+    last_tasks = DEFAULT_LAST_TASKS,
+    last_trajectories = DEFAULT_LAST_TRAJECTORIES,
     last_actions = DEFAULT_LAST_ACTIONS,
     last_obs = DEFAULT_LAST_OBS,
     max_obs_tokens = DEFAULT_MAX_OBS_TOKENS,
@@ -58,13 +82,13 @@ DEFAULT_JUDGE_CONFIG = JudgeConfig(
 )
 
 
-def get_judge_config(
-    **judge_kwargs
-) -> JudgeConfig:
+def get_task_proposer_config(
+    **task_proposer_kwargs
+) -> TaskProposerConfig:
     
-    default_judge_kwargs = asdict(DEFAULT_JUDGE_CONFIG)
-    default_judge_kwargs.update(judge_kwargs)
-    
-    return JudgeConfig(
-        **default_judge_kwargs
+    default_task_proposer_kwargs = asdict(DEFAULT_TASK_PROPOSER_CONFIG)
+    default_task_proposer_kwargs.update(task_proposer_kwargs)
+
+    return TaskProposerConfig(
+        **default_task_proposer_kwargs
     )

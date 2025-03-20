@@ -16,6 +16,13 @@ from insta.configs.judge_config import (
     DEFAULT_JUDGE_CONFIG
 )
 
+from insta.configs.task_proposer_config import (
+    TaskProposerConfig,
+    get_task_proposer_config,
+    DEFAULT_TASK_PROPOSER_CONFIG,
+    BrowserTaskProposal
+)
+
 from insta.client import (
     BrowserClient
 )
@@ -34,6 +41,11 @@ from insta.agent import (
 from insta.judge import (
     BrowserJudge,
     NULL_JUDGMENT
+)
+
+from insta.task_proposer import (
+    BrowserTaskProposer,
+    NULL_TASK_PROPOSAL
 )
 
 from insta.utils import (
@@ -56,6 +68,10 @@ from insta.action_parsers import (
 
 from insta.judgment_parsers import (
     JUDGMENT_PARSERS
+)
+
+from insta.task_parsers import (
+    TASK_PARSERS
 )
 
 from insta.candidates import (

@@ -30,7 +30,7 @@ DEFAULT_GENERATION_KWARGS = {
     "model": "meta-llama/Llama-3.3-70B-Instruct",
     "max_tokens": 2048,
     "top_p": 1.0,
-    "temperature": 0.0
+    "temperature": 0.5
 }
 
 

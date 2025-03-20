@@ -97,10 +97,6 @@ def plot_judgments(judgments_dir, output_plot_name,output_dir):
         axis.set(xlabel = None)
         axis.set(ylabel = None)
 
-        axis.set_ylim(
-            0, 40_000
-        )
-
         axis.spines['right'].set_visible(False)
         axis.spines['top'].set_visible(False)
 
