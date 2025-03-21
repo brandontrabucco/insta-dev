@@ -258,21 +258,22 @@ Format your task in the following JSON schema:
 
 ```json
 {
-    "proposed_task": str,
-    "task_is_feasible": float,
-    "estimated_difficulty": float,
-    "estimated_steps": int
+    "proposed_task": str | null,
+    "task_is_feasible": float | null,
+    "estimated_difficulty": float | null,
+    "estimated_steps": int | null
 }
 ```
 
 Here is what each key means:
 
-- `proposed_task`: The task you are proposing for the script to complete, subject to the following guidelines:
-    - guideline (1): must be a realistic task that a hypothetical user might want to accomplish on this website in a single session.
-    - guideline (2): must not require making an account, logging in, or submitting personal information.
-    - guideline (3): must not require external knowledge, beyond what a typical user might know.
-    - guideline (4): must not involve any illegal, harmful, or unethical activities.
-    - guideline (5): must not involve any content that is inappropriate, offensive, or adult in nature.
+- `proposed_task`: Next task to assign the script, subject to the following guidelines:
+    1. Provide a realistic, and specific task that a hypothetical user might want to accomplish on this website.
+    2. Must not require making an account, logging in, or submitting personal information.
+    3. Must not require external knowledge, beyond what a typical user might know.
+    4. Must not involve illegal, harmful, or unethical activities.
+    5. Must not involve any inappropriate, offensive, or mature content.
+    6. If you are unable to satisfy all the guidelines, set all keys to `null`.
 
 - `task_is_feasible`: The probability the proposed task is feasible on this website using the script.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
@@ -280,14 +281,14 @@ Here is what each key means:
     - range: 0.0 (easy) to 1.0 (difficult).
 - `estimated_steps`: The estimated number of actions to complete the task.
 
-Here are some example tasks that satisfy the guidelines:
+Here are some example tasks for inspiration:
 
-- `wiktionary.org`: What is the definition and etymology of the word 'serendipity'?
+- `awg-fittings.com`: What is the C-to-C Hose-Shut-Off Valve length in mm?
 - `biodiversitylibrary.org`: Open a scanned copy of 'The Angora cat; how to breed train and keep it'.
 - `scholar.google.com`: How many citations does the Generative adversarial nets paper have?
-- `awg-fittings.com`: Find the dimensions of a Hose-Shut-Off Valve.
+- `wiktionary.org`: What is the definition and etymology of the word 'serendipity'?
 
-Thanks for helping me direct the script, please follow the instructions carefully. Start your response with a summary of what the script has accomplished in previous runs, followed by a step-by-step breakdown of your proposed task and associated scores, and finally, provide your task in the JSON format. Limit your response to 500 words."""
+Thanks for helping me direct the script, please follow the instructions carefully. Start your response with an analysis for how previous runs can be improved, followed by a step-by-step breakdown of your proposed task and associated scores, and finally, provide your task in the JSON format. Limit your response to 500 words."""
 
 
 USER_PROMPT_TEMPLATE = """## Summary Of Previous Runs 
@@ -302,21 +303,22 @@ Enter a task in the following JSON schema:
 
 ```json
 {{
-    "proposed_task": str,
-    "task_is_feasible": float,
-    "estimated_difficulty": float,
-    "estimated_steps": int
+    "proposed_task": str | null,
+    "task_is_feasible": float | null,
+    "estimated_difficulty": float | null,
+    "estimated_steps": int | null
 }}
 ```
 
 Here is what each key means:
 
-- `proposed_task`: The task you are proposing for the script to complete, subject to the following guidelines:
-    - guideline (1): must be a realistic task that a hypothetical user might want to accomplish at {target_url} in a single session.
-    - guideline (2): must not require making an account, logging in, or submitting personal information.
-    - guideline (3): must not require external knowledge, beyond what a typical user might know.
-    - guideline (4): must not involve any illegal, harmful, or unethical activities.
-    - guideline (5): must not involve any content that is inappropriate, offensive, or adult in nature.
+- `proposed_task`: Next task to assign the script, subject to the following guidelines:
+    1. Provide a realistic, and specific task that a hypothetical user might want to accomplish at {target_url}.
+    2. Must not require making an account, logging in, or submitting personal information.
+    3. Must not require external knowledge, beyond what a typical user might know.
+    4. Must not involve illegal, harmful, or unethical activities.
+    5. Must not involve any inappropriate, offensive, or mature content.
+    6. If you are unable to satisfy all the guidelines, set all keys to `null`.
 
 - `task_is_feasible`: The probability the proposed task is feasible at {target_url} using the script.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
@@ -324,14 +326,14 @@ Here is what each key means:
     - range: 0.0 (easy) to 1.0 (difficult).
 - `estimated_steps`: The estimated number of actions to complete the task.
 
-Here are some example tasks that satisfy the guidelines:
+Here are some example tasks for inspiration:
 
-- `wiktionary.org`: What is the definition and etymology of the word 'serendipity'?
+- `awg-fittings.com`: What is the C-to-C Hose-Shut-Off Valve length in mm?
 - `biodiversitylibrary.org`: Open a scanned copy of 'The Angora cat; how to breed train and keep it'.
 - `scholar.google.com`: How many citations does the Generative adversarial nets paper have?
-- `awg-fittings.com`: Find the dimensions of a Hose-Shut-Off Valve.
+- `wiktionary.org`: What is the definition and etymology of the word 'serendipity'?
 
-Start your response with a summary of what the script has accomplished in previous runs, followed by a step-by-step breakdown of your proposed task and associated scores, and finally, provide your task in the JSON format. Limit your response to 500 words."""
+Start your response with an analysis for how previous runs can be improved, followed by a step-by-step breakdown of your proposed task and associated scores, and finally, provide your task in the JSON format. Limit your response to 500 words."""
 
 
 class JsonTaskParser(BaseTaskParser):
