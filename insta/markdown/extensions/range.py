@@ -13,7 +13,7 @@ from insta.markdown.extensions.base import (
     InSTABaseSchema
 )
 
-from insta.utils import (
+from insta.configs.browser_config import (
     NodeMetadata
 )
 
@@ -102,20 +102,20 @@ class InSTARangeSchema(InSTABaseSchema):
             node.html_element.attrib.get("aria-valuetext")
         )
 
-        candidate_id = node.metadata[
-            "candidate_id"
+        backend_node_id = node.metadata[
+            "backend_node_id"
         ]
 
         if display_value is None:
 
             return '[id: {id}] "{real_value}" ({title})'.format(
-                id = candidate_id,
+                id = backend_node_id,
                 real_value = real_value,
                 title = title
             )
 
         return '[id: {id}] "{display_value} ({real_value})" ({title})'.format(
-            id = candidate_id,
+            id = backend_node_id,
             display_value = display_value,
             real_value = real_value,
             title = title

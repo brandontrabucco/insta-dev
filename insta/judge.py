@@ -7,13 +7,10 @@ from insta.utils import (
     BrowserStatus
 )
 
-from insta.utils import (
-    BrowserJudgment
-)
-
 from insta.configs.judge_config import (
     JudgeConfig,
-    DEFAULT_JUDGE_CONFIG
+    DEFAULT_JUDGE_CONFIG,
+    BrowserJudgment
 )
 
 from typing import List, Callable

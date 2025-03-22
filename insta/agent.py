@@ -7,13 +7,10 @@ from insta.utils import (
     BrowserStatus
 )
 
-from insta.utils import (
-    BrowserAction
-)
-
 from insta.configs.agent_config import (
     AgentConfig,
-    DEFAULT_AGENT_CONFIG
+    DEFAULT_AGENT_CONFIG,
+    BrowserAction
 )
 
 from typing import List, Callable
@@ -80,11 +77,15 @@ class BrowserAgent(Callable):
         super(BrowserAgent, self).__init__()
 
         self.config = config
+
+        self.action_parser = ACTION_PARSERS[
+            action_parser
+        ]()
+
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.config.tokenizer
         )
 
-        self.action_parser = ACTION_PARSERS[action_parser]()
         self.llm_client = openai.OpenAI(
             **self.config.client_kwargs
         )
@@ -117,7 +118,7 @@ class BrowserAgent(Callable):
         
         """
         
-        messages = self.get_partial_context(
+        messages = self.get_prompts(
             context = context,
             max_history = max_history
         )
@@ -336,7 +337,6 @@ class BrowserAgent(Callable):
 
         previous_context = self.context
         self.reset()
-
         return previous_context
     
     def get_context(self) -> List[dict]:
@@ -369,7 +369,7 @@ class BrowserAgent(Callable):
 
         self.context = context
 
-    def get_partial_context(
+    def get_prompts(
         self, context: List[dict],
         max_history: int = 0
     ) -> List[dict]:

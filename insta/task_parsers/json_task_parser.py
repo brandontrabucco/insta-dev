@@ -10,7 +10,6 @@ from insta.task_parsers.base_task_parser import (
     BaseTaskParser
 )
 
-from typing import List
 import re
 import json
 

@@ -18,6 +18,14 @@ class JudgeConfig:
     log_errors: bool = True
 
 
+@dataclass
+class BrowserJudgment:
+
+    values: Dict[str, float] = None
+    response: str = None
+    matched_response: str = None
+
+
 DEFAULT_TOKENIZER = "meta-llama/Llama-3.3-70B-Instruct"
 
 

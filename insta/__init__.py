@@ -1,19 +1,25 @@
 from insta.configs.browser_config import (
     BrowserConfig,
     get_browser_config,
-    DEFAULT_BROWSER_CONFIG
+    DEFAULT_BROWSER_CONFIG,
+    BrowserObservation,
+    FunctionCall,
+    NodeToMetadata,
+    NodeMetadata,
 )
 
 from insta.configs.agent_config import (
     AgentConfig,
     get_agent_config,
-    DEFAULT_AGENT_CONFIG
+    DEFAULT_AGENT_CONFIG,
+    BrowserAction
 )
 
 from insta.configs.judge_config import (
     JudgeConfig,
     get_judge_config,
-    DEFAULT_JUDGE_CONFIG
+    DEFAULT_JUDGE_CONFIG,
+    BrowserJudgment
 )
 
 from insta.configs.task_proposer_config import (
@@ -50,32 +56,32 @@ from insta.task_proposer import (
 
 from insta.utils import (
     BrowserStatus,
-    BrowserObservation,
-    BrowserAction,
-    NodeToMetadata,
-    NodeMetadata,
     EnvError,
     ERROR_TO_MESSAGE
 )
 
 from insta.observation_processors import (
-    OBSERVATION_PROCESSORS
+    OBSERVATION_PROCESSORS,
+    BaseProcessor,
+    MarkdownProcessor
 )
 
 from insta.action_parsers import (
-    ACTION_PARSERS
+    ACTION_PARSERS,
+    BaseActionParser,
+    JsonActionParser
 )
 
 from insta.judgment_parsers import (
-    JUDGMENT_PARSERS
+    JUDGMENT_PARSERS,
+    BaseJudgmentParser,
+    JsonJudgmentParser
 )
 
 from insta.task_parsers import (
-    TASK_PARSERS
-)
-
-from insta.candidates import (
-    CANDIDATES
+    TASK_PARSERS,
+    BaseTaskParser,
+    JsonTaskParser
 )
 
 from insta.tools import (

@@ -1,12 +1,12 @@
 from insta.configs.browser_config import (
     BrowserConfig,
-    DEFAULT_BROWSER_CONFIG
+    DEFAULT_BROWSER_CONFIG,
+    BrowserObservation,
+    FunctionCall,
 )
 
 from insta.utils import (
-    BrowserObservation,
     BrowserStatus,
-    FunctionCall,
     safe_call,
     ServerError
 )

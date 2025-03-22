@@ -1,7 +1,5 @@
 from insta.utils import (
     BrowserStatus,
-    BrowserObservation,
-    BrowserAction,
     EnvError,
     ServerError,
     ERROR_TO_MESSAGE
@@ -10,6 +8,11 @@ from insta.utils import (
 from insta.configs.browser_config import (
     BrowserConfig,
     DEFAULT_BROWSER_CONFIG,
+    BrowserObservation,
+)
+
+from insta.configs.agent_config import (
+    BrowserAction
 )
 
 from insta.client import (
@@ -18,10 +21,6 @@ from insta.client import (
 
 from insta.observation_processors import (
     OBSERVATION_PROCESSORS
-)
-
-from insta.candidates import (
-    CANDIDATES
 )
 
 from typing import Tuple, Any
@@ -156,8 +155,7 @@ class InstaEnv(gymnasium.Env):
     """
 
     def __init__(self, config: BrowserConfig = DEFAULT_BROWSER_CONFIG,
-                 observation_processor: str = "markdown",
-                 candidates: str = "all"):
+                 observation_processor: str = "markdown"):
         """Initialize a web browsing environment for training LLM agents, this
         environment provides a clean interface for LLM agents to control a browser
         and actions are taken on webpages using Playwright API function calls.
@@ -172,10 +170,6 @@ class InstaEnv(gymnasium.Env):
             The observation processor to use for converting HTML to text,
             currently you can select from: ["markdown"].
 
-        candidates: str
-            The candidates to use for identifying interactive elements,
-            currently you can select from: ["all"]
-
         """
         
         super(InstaEnv, self).__init__()
@@ -187,10 +181,6 @@ class InstaEnv(gymnasium.Env):
 
         self.observation_processor = OBSERVATION_PROCESSORS[
             observation_processor
-        ]()
-
-        self.candidates = CANDIDATES[
-            candidates
         ]()
 
     def get_obs(self) -> BrowserObservation:
@@ -224,8 +214,6 @@ class InstaEnv(gymnasium.Env):
                 processed_text = 
                 obs.message
             )
-        
-        self.candidates.update(obs)
         
         return self.observation_processor.process(
             obs, restrict_viewport = self.config.restrict_viewport,

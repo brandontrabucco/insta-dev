@@ -12,7 +12,7 @@ from insta.markdown.build import (
     MarkdownNode
 )
 
-from insta.utils import (
+from insta.configs.browser_config import (
     NodeMetadata
 )
 

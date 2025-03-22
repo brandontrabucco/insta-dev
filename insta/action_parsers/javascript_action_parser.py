@@ -1,10 +1,17 @@
-from insta.utils import (
-    BrowserAction,
-    BrowserStatus,
-    FunctionCall
-)
 from insta.action_parsers.base_action_parser import (
     BaseActionParser
+)
+
+from insta.utils import (
+    BrowserStatus
+)
+
+from insta.configs.browser_config import (
+    FunctionCall
+)
+
+from insta.configs.agent_config import (
+    BrowserAction
 )
 
 from typing import List

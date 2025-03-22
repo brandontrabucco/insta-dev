@@ -13,7 +13,7 @@ from insta.markdown.extensions.base import (
     InSTABaseSchema
 )
 
-from insta.utils import (
+from insta.configs.browser_config import (
     NodeMetadata
 )
 
@@ -90,12 +90,12 @@ class InSTASelectSchema(InSTABaseSchema):
             title_outputs
         )
 
-        candidate_id = node.metadata[
-            "candidate_id"
+        backend_node_id = node.metadata[
+            "backend_node_id"
         ]
 
         return '[id: {id}] "{value}" ({title} from: {options})'.format(
-            id = candidate_id,
+            id = backend_node_id,
             value = selected_label,
             title = title,
             options = options_text

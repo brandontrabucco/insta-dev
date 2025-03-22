@@ -1,5 +1,6 @@
 from dataclasses import dataclass, asdict
-from typing import Tuple
+from typing import Tuple, Dict
+from PIL import Image
 
 
 @dataclass
@@ -25,6 +26,46 @@ class BrowserConfig:
     max_errors: int = 5
 
     delays: dict = None
+
+
+@dataclass
+class NodeMetadata:
+
+    backend_node_id: str = None
+
+    bounding_client_rect: dict = None
+    computed_style: dict = None
+
+    scroll_left: int = None
+    scroll_top: int = None
+
+    editable_value: str = None
+
+    is_visible: bool = None
+    is_frontmost: bool = None
+
+
+NodeToMetadata = Dict[str, NodeMetadata]
+
+
+@dataclass
+class BrowserObservation:
+
+    processed_text: str = None
+    raw_html: str = None
+
+    processed_image: Image.Image = None
+    screenshot: Image.Image = None
+
+    metadata: NodeToMetadata = None
+    current_url: str = None
+
+
+@dataclass
+class FunctionCall:
+
+    dotpath: str = None
+    args: str = None
 
 
 DEFAULT_BROWSER_CONFIG = BrowserConfig(

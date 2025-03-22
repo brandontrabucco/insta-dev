@@ -1,6 +1,9 @@
 from insta.utils import (
-    BrowserJudgment,
     BrowserStatus
+)
+
+from insta.configs.judge_config import (
+    BrowserJudgment
 )
 
 import abc

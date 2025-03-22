@@ -1,6 +1,9 @@
 from insta.utils import (
-    BrowserAction,
     BrowserStatus
+)
+
+from insta.configs.agent_config import (
+    BrowserAction
 )
 
 import abc

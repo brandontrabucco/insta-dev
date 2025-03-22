@@ -5,7 +5,7 @@ from insta.markdown.schemas import (
     TYPE_TO_SCHEMA,
 )
 
-from insta.utils import (
+from insta.configs.browser_config import (
     NodeToMetadata,
     NodeMetadata
 )

@@ -1,12 +1,15 @@
 from insta.utils import (
-    BrowserJudgment,
     BrowserStatus
 )
+
 from insta.judgment_parsers.base_judgement_parser import (
     BaseJudgmentParser
 )
 
-from typing import List
+from insta.configs.judge_config import (
+    BrowserJudgment
+)
+
 import re
 import json
 

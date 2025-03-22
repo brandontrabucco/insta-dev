@@ -7,9 +7,12 @@ from insta.observation_processors.pii_tools import (
 )
 
 from insta.utils import (
-    BrowserObservation,
     BrowserStatus,
     safe_call
+)
+
+from insta.configs.browser_config import (
+    BrowserObservation
 )
 
 from insta.markdown import (

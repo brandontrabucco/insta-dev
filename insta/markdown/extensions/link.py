@@ -17,7 +17,7 @@ from insta.markdown.extensions.base import (
     InSTABaseSchema
 )
 
-from insta.utils import (
+from insta.configs.browser_config import (
     NodeMetadata
 )
 
@@ -77,12 +77,12 @@ class InSTALinkSchema(InSTABaseSchema):
             "link" if not has_popup else "dropdown"
         )
         
-        candidate_id = node.metadata[
-            "candidate_id"
+        backend_node_id = node.metadata[
+            "backend_node_id"
         ]
 
         return "[id: {id}] {title} {link_type}".format(
-            id = candidate_id,
+            id = backend_node_id,
             title = title,
             link_type = link_type
         )

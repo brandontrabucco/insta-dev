@@ -1,4 +1,4 @@
-from insta.utils import (
+from insta.configs.browser_config import (
     BrowserObservation
 )
 

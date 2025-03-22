@@ -1,13 +1,11 @@
 from insta.markdown.schemas import (
     TYPE_TO_SCHEMA,
-    DEFAULT_INDENT_VALUE
-)
-from insta.markdown.build import (
-    MarkdownNode
+    DEFAULT_INDENT_VALUE,
+    MarkdownSchema
 )
 
-from insta.utils import (
-    NodeToMetadata
+from insta.markdown.build import (
+    MarkdownNode
 )
 
 from typing import List
@@ -44,9 +42,9 @@ def render_markdown_tree(
 
     for node in markdown_nodes:
         
-        node_schema = TYPE_TO_SCHEMA[
-            node.type
-        ]
+        schema: MarkdownSchema = (
+            TYPE_TO_SCHEMA[node.type]
+        )
 
         child_representations = []
 
@@ -54,7 +52,7 @@ def render_markdown_tree(
 
             next_indent_level = (
                 indent_level +
-                node_schema.increment_indent
+                schema.increment_indent
             )
 
             child_representations = render_markdown_tree(
@@ -63,7 +61,7 @@ def render_markdown_tree(
                 indent_value = indent_value,
             )
 
-        output_text = node_schema.format(
+        output_text = schema.format(
             node = node, child_representations = child_representations,
             indent_level = indent_level,
             indent_value = indent_value,

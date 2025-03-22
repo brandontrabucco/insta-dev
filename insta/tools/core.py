@@ -23,10 +23,6 @@ from insta.action_parsers import (
     ACTION_PARSERS
 )
 
-from insta.candidates import (
-    CANDIDATES
-)
-
 from typing import Dict, Tuple
 from PIL import Image
 
@@ -142,7 +138,6 @@ def create_new_session(
 
     observation_processor = OBSERVATION_PROCESSORS[observation_processor]()
     action_parser = ACTION_PARSERS[action_parser]()
-    candidates = CANDIDATES[candidates]()
 
     start_status = client.start(
         browser_kwargs = browser_kwargs,
@@ -163,8 +158,7 @@ def create_new_session(
         "observation_type": observation_type,
         "action_type": action_type,
         "observation_processor": observation_processor,
-        "action_parser": action_parser,
-        "candidates": candidates
+        "action_parser": action_parser
     }
 
 
@@ -275,7 +269,6 @@ def interact_with_browser(
 
         observation_processor = session_data["observation_processor"]
         action_parser = session_data["action_parser"]
-        candidates = session_data["candidates"]
 
     # handle case when a new session is requested
     elif len(session_id) == 0:
@@ -287,7 +280,6 @@ def interact_with_browser(
             playwright_workers = playwright_workers,
             observation_processor = observation_processor,
             action_parser = action_parser,
-            candidates = candidates,
             browser_kwargs = browser_kwargs,
             context_kwargs = context_kwargs
         )
@@ -309,7 +301,6 @@ def interact_with_browser(
 
             observation_processor = session_data["observation_processor"]
             action_parser = session_data["action_parser"]
-            candidates = session_data["candidates"]
 
         session_id = client.session_id
         if shorter_session_id:
@@ -361,8 +352,6 @@ def interact_with_browser(
     if isinstance(obs, ServerError):
         
         return return_error(obs)
-    
-    candidates.update(obs)
     
     obs = observation_processor.process(
         obs, restrict_viewport = config.restrict_viewport,

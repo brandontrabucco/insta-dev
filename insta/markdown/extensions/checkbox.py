@@ -13,7 +13,7 @@ from insta.markdown.extensions.base import (
     InSTABaseSchema
 )
 
-from insta.utils import (
+from insta.configs.browser_config import (
     NodeMetadata
 )
 
@@ -68,12 +68,12 @@ class InSTACheckboxSchema(InSTABaseSchema):
             node.metadata.get("editable_value")
         )
         
-        candidate_id = node.metadata[
-            "candidate_id"
+        backend_node_id = node.metadata[
+            "backend_node_id"
         ]
 
         return '[id: {id}] "{is_checked}" ({title})'.format(
-            id = candidate_id,
+            id = backend_node_id,
             is_checked = is_checked,
             title = title
         )

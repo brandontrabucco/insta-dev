@@ -2,7 +2,7 @@ from insta.markdown.schemas import (
     MarkdownSchema
 )
 
-from insta.utils import (
+from insta.configs.browser_config import (
     NodeMetadata
 )
 
@@ -25,6 +25,5 @@ class InSTABaseSchema(MarkdownSchema):
 
         return (
             is_match and node_metadata is not None and 
-            'backend_node_id' in node_metadata and
-            'candidate_id' in node_metadata
+            'backend_node_id' in node_metadata 
         )

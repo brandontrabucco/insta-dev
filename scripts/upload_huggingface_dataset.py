@@ -1,15 +1,22 @@
 from PIL import Image
 from typing import Dict, List, Generator
 
+from insta import (
+    OBSERVATION_PROCESSORS,
+    BaseProcessor,
+    BrowserObservation
+)
+
+from insta.observation_processors.markdown_processor import (
+    FAILED_MESSAGE
+)
+
 import datasets
 import json
 import os
 
-import pyarrow as pa
-
 import argparse
 import copy
-import tree
 
 
 GeneratorType = Generator[
@@ -19,15 +26,21 @@ GeneratorType = Generator[
 
 
 DATASET_SCHEMA = datasets.Features({
+
     "domain": datasets.Value("string"),
     "task": datasets.Value("string"),
+
     "observations": datasets.Sequence(feature = datasets.Features({
+
         "current_url": datasets.Value("string"),
         "processed_text": datasets.Value("string"),
         "raw_html": datasets.Value("string"),
         "screenshot": datasets.Image(),
+
         "metadata": datasets.Sequence(feature = datasets.Features({
+
             "backend_node_id": datasets.Value("int32"),
+
             "bounding_client_rect": {
                 "x": datasets.Value("float32"),
                 "y": datasets.Value("float32"),
@@ -38,30 +51,44 @@ DATASET_SCHEMA = datasets.Features({
                 "bottom": datasets.Value("float32"),
                 "left": datasets.Value("float32")
             },
+
             "computed_style": {
                 "display": datasets.Value("string")
             },
+
             "scroll_left": datasets.Value("float32"),
             "scroll_top": datasets.Value("float32"),
+
             "editable_value": datasets.Value("string"),
+
             "is_visible": datasets.Value("bool"),
             "is_frontmost": datasets.Value("bool")
+
         }))
+
     })),
+
     "actions": datasets.Sequence(feature = datasets.Features({
+
         "function_calls": datasets.Sequence(feature = datasets.Features({
             "dotpath": datasets.Value("string"),
             "args": datasets.Value("string")
         })),
+
         "response": datasets.Value("string"),
         "matched_response": datasets.Value("string")
+
     })),
+
     "judgment": {
+        
         "task_is_feasible": datasets.Value("float32"),
         "success": datasets.Value("float32"),
         "on_right_track": datasets.Value("float32"),
+
         "response": datasets.Value("string"),
         "matched_response": datasets.Value("string")
+
     }
 })
 
@@ -70,6 +97,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description = 'Create Huggingface dataset'
+    )
+
+    parser.add_argument(
+        "--hub_identifier",
+        type = str,
+        required = True
     )
 
     parser.add_argument(
@@ -102,9 +135,35 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--push_to_hub",
+        "--observation_processor",
         type = str,
-        default = None
+        default = "markdown",
+    )
+
+    parser.add_argument(
+        "--restrict_viewport",
+        type = int, nargs = "+",
+        default = (0, 0, 1920, 1080),
+    )
+
+    parser.add_argument(
+        "--not_require_visible",
+        action = "store_true",
+    )
+
+    parser.add_argument(
+        "--not_require_frontmost",
+        action = "store_true",
+    )
+
+    parser.add_argument(
+        "--remove_pii",
+        action = "store_true",
+    )
+
+    parser.add_argument(
+        "--reprocess_observations",
+        action = "store_true",
     )
 
     args = parser.parse_args()
@@ -119,24 +178,27 @@ if __name__ == "__main__":
         for x in dataset
     }
 
-    base_dataset_dir = args.base_dataset_dir
-
     observations_dir = os.path.join(
-        base_dataset_dir,
+        args.base_dataset_dir,
         "observations"
     )
 
     actions_dir = os.path.join(
-        base_dataset_dir,
+        args.base_dataset_dir,
         "actions"
     )
 
     judgments_dir = os.path.join(
-        base_dataset_dir,
+        args.base_dataset_dir,
         "judgments"
     )
 
     all_judgment_files = os.listdir(judgments_dir)
+
+    observation_processor: BaseProcessor = (
+        OBSERVATION_PROCESSORS[
+            args.observation_processor]()
+    )
 
     def generate_examples(
         sharded_examples: List[str]
@@ -188,13 +250,49 @@ if __name__ == "__main__":
 
                 observation = copy.deepcopy(observation)
 
+                if args.reprocess_observations and (
+                    observation["raw_html"] is not None and 
+                    observation["metadata"] is not None
+                ):
+
+                    updated_metadata = copy.deepcopy(
+                        observation["metadata"]
+                    )
+
+                    browser_obs = BrowserObservation(
+                        raw_html = observation["raw_html"],
+                        metadata = updated_metadata,
+                        current_url = observation["current_url"]
+                    )
+
+                    updated_obs = observation_processor.process(
+                        observation = browser_obs,
+                        restrict_viewport = args.restrict_viewport,
+                        require_visible = not args.not_require_visible,
+                        require_frontmost = not args.not_require_frontmost,
+                        remove_pii = args.remove_pii
+                    )
+
+                    processing_failed = (
+                        updated_obs.processed_text ==
+                        FAILED_MESSAGE
+                    )
+
+                    if not processing_failed:
+
+                        observation["processed_text"] = (
+                            updated_obs.processed_text
+                        )
+
                 observation["metadata"] = list(
                     (observation["metadata"] or {}).values()
                 )
 
                 if not args.keep_html:
 
-                    observation.pop("raw_html")
+                    observation.pop(
+                        "raw_html", None
+                    )
 
                 observation.pop(
                     "screenshot", None
@@ -237,8 +335,6 @@ if __name__ == "__main__":
         features = DATASET_SCHEMA
     )
 
-    if args.push_to_hub is not None:
-
-        dataset.push_to_hub(
-            args.push_to_hub
-        )
+    dataset.push_to_hub(
+        args.hub_identifier
+    )

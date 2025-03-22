@@ -1,5 +1,6 @@
 from dataclasses import dataclass, asdict
-from typing import Dict
+from typing import Dict, List
+from insta.configs.browser_config import FunctionCall
 
 
 @dataclass
@@ -15,6 +16,14 @@ class AgentConfig:
     catch_errors: bool = True
     log_errors: bool = True
     max_errors: int = 5
+
+
+@dataclass
+class BrowserAction:
+
+    function_calls: List[FunctionCall] = None
+    response: str = None
+    matched_response: str = None
 
 
 DEFAULT_TOKENIZER = "meta-llama/Llama-3.3-70B-Instruct"

@@ -15,7 +15,7 @@ from insta.markdown.extensions.base import (
     InSTABaseSchema
 )
 
-from insta.utils import (
+from insta.configs.browser_config import (
     NodeMetadata
 )
 
@@ -114,8 +114,8 @@ class InSTAInputSchema(InSTABaseSchema):
             title_outputs
         )
     
-        candidate_id = node.metadata[
-            "candidate_id"
+        backend_node_id = node.metadata[
+            "backend_node_id"
         ]
 
         input_type = node.html_element.attrib.get(
@@ -155,12 +155,12 @@ class InSTAInputSchema(InSTABaseSchema):
             ) or "#"
 
             return "[id: {id}] {title} button".format(
-                id = candidate_id,
+                id = backend_node_id,
                 title = title
             )
 
         return '[id: {id}] "{value}" ({title} input)'.format(
-            id = candidate_id,
+            id = backend_node_id,
             value = value,
             title = title
         )

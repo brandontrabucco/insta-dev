@@ -1,17 +1,51 @@
 from dataclasses import dataclass
-from typing import Dict, Any, Callable, List
+from typing import Any, Callable
 from enum import Enum
-from PIL import Image
 
 import time
 import traceback
 
 
-BrowserStatus = Enum("PlaywrightStatus", [
-    "SUCCESS",
-    "NOOP",
-    "ERROR",
-])
+SKIP_TAGS = [
+    'HTML',
+    'HEAD',
+    'TITLE',
+    'BODY',
+    'SCRIPT',
+    'STYLE',
+    'LINK',
+    'META',
+    'NOSCRIPT',
+    'IFRAME',
+    'FRAME',
+    'FRAMESET'
+]
+
+
+METADATA_KEYS = [
+    'backend_node_id',
+    'bounding_client_rect',
+    'computed_style',
+    'scroll_left',
+    'scroll_top',
+    'editable_value',
+    'is_visible',
+    'is_frontmost'
+]
+
+
+VALUE_KEYS = [
+    "task_is_feasible",
+    "is_blocked",
+    "success",
+    "future_success",
+    "reasoning_is_correct",
+]
+
+
+MINIMAL_STYLE_KEYS = [
+    'display'
+]
 
 
 EnvError = Enum("EnvError", [
@@ -28,70 +62,6 @@ EnvError = Enum("EnvError", [
     "CANDIDATE_ERROR",
     "URL_ERROR",
 ])
-
-
-@dataclass
-class ServerError:
-
-    status_code: int
-    message: str
-
-
-@dataclass
-class NodeMetadata:
-
-    backend_node_id: str = None
-    candidate_key: str = None
-
-    bounding_client_rect: dict = None
-    computed_style: dict = None
-
-    scroll_left: int = None
-    scroll_top: int = None
-
-    editable_value: str = None
-
-    is_visible: bool = None
-    is_frontmost: bool = None
-
-
-NodeToMetadata = Dict[str, NodeMetadata]
-
-
-@dataclass
-class BrowserObservation:
-
-    processed_text: str = None
-    raw_html: str = None
-
-    processed_image: Image.Image = None
-    screenshot: Image.Image = None
-
-    metadata: NodeToMetadata = None
-    current_url: str = None
-
-
-@dataclass
-class FunctionCall:
-
-    dotpath: str = None
-    args: str = None
-
-
-@dataclass
-class BrowserAction:
-
-    function_calls: List[FunctionCall] = None
-    response: str = None
-    matched_response: str = None
-
-
-@dataclass
-class BrowserJudgment:
-
-    values: Dict[str, float] = None
-    response: str = None
-    matched_response: str = None
 
 
 ERROR_TO_MESSAGE = {
@@ -135,41 +105,18 @@ ERROR_TO_MESSAGE = {
 }
 
 
-SKIP_TAGS = [
-    'HTML',
-    'HEAD',
-    'TITLE',
-    'BODY',
-    'SCRIPT',
-    'STYLE',
-    'LINK',
-    'META',
-    'NOSCRIPT',
-    'IFRAME',
-    'FRAME',
-    'FRAMESET'
-]
+@dataclass
+class ServerError:
+
+    status_code: int
+    message: str
 
 
-METADATA_KEYS = [
-    'backend_node_id',
-    'bounding_client_rect',
-    'computed_style',
-    'scroll_left',
-    'scroll_top',
-    'editable_value',
-    'is_visible',
-    'is_frontmost'
-]
-
-
-VALUE_KEYS = [
-    "task_is_feasible",
-    "is_blocked",
-    "success",
-    "future_success",
-    "reasoning_is_correct",
-]
+BrowserStatus = Enum("PlaywrightStatus", [
+    "SUCCESS",
+    "NOOP",
+    "ERROR",
+])
 
 
 def safe_call(
@@ -256,11 +203,6 @@ def safe_call(
         )
             
     return BrowserStatus.ERROR
-
-
-MINIMAL_STYLE_KEYS = [
-    'display'
-]
 
 
 def prune_observation(observation: dict) -> dict:

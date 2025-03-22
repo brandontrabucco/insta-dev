@@ -1,17 +1,11 @@
+from insta.utils import (
+    VALUE_KEYS
+)
+
 import glob
 import json
 import argparse
-
 import os
-
-
-VALUE_KEYS = [
-    'task_is_feasible',
-    'is_blocked',
-    'success',
-    'future_success',
-    'reasoning_is_correct',
-]
 
 
 if __name__ == "__main__":
