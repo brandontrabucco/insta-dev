@@ -84,20 +84,20 @@ def get_task_proposals(
         )
 
     task_proposal = task_proposer(
-        observations = [[
+        observations = [
             x["processed_text"]
             for x in observations
-        ]],
-        actions = [[
+        ],
+        actions = [
             x["response"]
             for x in actions
-        ]],
-        judgments = [
+        ],
+        judgment = (
             judgment["response"]
-        ],
-        instructions = [
+        ),
+        instruction = (
             task
-        ],
+        ),
         target_url = domain
     )
 
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output_tasks_file",
         type = str,
-        default = "tasks.json"
+        default = "tasks-test.json"
     )
 
     parser.add_argument(
