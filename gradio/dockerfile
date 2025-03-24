@@ -37,6 +37,8 @@ RUN useradd -m -u 1000 user
 WORKDIR /code/insta
 USER user
 
+RUN chown -R 1000:1000 "/home/user/.npm"
+
 # Set the user environment
 ENV HOME=/home/user PATH=/home/user/.local/bin:$PATH
 ENV PATH="/miniconda3/bin:${PATH}"

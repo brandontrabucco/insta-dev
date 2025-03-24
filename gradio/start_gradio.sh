@@ -1,6 +1,5 @@
 #!/bin/bash
 
-export SERVER_DIR=${SERVER_DIR:-"javascript/server"}
 export SERVER_SCRIPT=${SERVER_SCRIPT:-"javascript/server/src/index.js"}
 export SERVER_LOG=${SERVER_LOG:-"playwright.log"}
 
