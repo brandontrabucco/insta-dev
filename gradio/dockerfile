@@ -33,16 +33,25 @@ RUN groupmod -g 1010 ubuntu && \
     usermod -u 1010 -g 1010 ubuntu
 RUN useradd -m -u 1000 user
 
+# allow npm to run in the user's home directory
+RUN mkdir -p "/home/user/.npm"
+RUN chown -R 1000:1000 "/home/user/.npm"
+RUN chmod -R 777 /usr/lib
+
 # Set the working directory
 WORKDIR /code/insta
 USER user
-
-RUN chown -R 1000:1000 "/home/user/.npm"
 
 # Set the user environment
 ENV HOME=/home/user PATH=/home/user/.local/bin:$PATH
 ENV PATH="/miniconda3/bin:${PATH}"
 ARG PATH="/miniconda3/bin:${PATH}"
+
+# Compile the Playwright server
+RUN pushd /code/insta/javascript/server && \
+    rm -rf node_modules package-lock.json && \
+    npm cache clean --force && \
+    npm install && npx tsc && popd
 
 # Expose the Playwright server ports
 ENV SERVER_BASE_PORT=3000

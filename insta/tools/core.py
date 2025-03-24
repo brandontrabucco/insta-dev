@@ -109,8 +109,8 @@ def create_new_session(
     Returns:
 
     Dict[str, any]
-        A dictionary containing the client, configuration, observation
-        processor, action parser, and candidates.
+        A dictionary containing the client, configuration,
+        observation processor, action parser.
     
     """
 

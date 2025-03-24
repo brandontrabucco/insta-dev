@@ -115,10 +115,6 @@ class InstaTool(Callable):
             The action parser to use for converting text to function calls,
             currently you can select from: ["javascript", "json"].
 
-        candidates: str
-            The candidates to use for identifying interactive elements,
-            currently you can select from: ["all"]
-
         browser_kwargs: dict
             Keyword options to use when starting the Browser instance,
             refer to the Playwright docs for more information.
