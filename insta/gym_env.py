@@ -146,9 +146,6 @@ class InstaEnv(gymnasium.Env):
     action_parser: BaseActionParser
         A parser that converts text into function calls for the agent to execute.
 
-    candidates: BaseCandidates
-        A preprocessor that identifies interactive elements on the webpage.
-
     initialized: bool
         Whether the environment has been initialized.
 

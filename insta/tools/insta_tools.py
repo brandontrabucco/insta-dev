@@ -69,9 +69,6 @@ class InstaTool(Callable):
     action_parser: BaseActionParser
         A parser that converts text into function calls for the agent to execute.
 
-    candidates: BaseCandidates
-        A preprocessor that identifies interactive elements on the webpage.
-
     name: str
         The name of the tool.
 
@@ -98,7 +95,6 @@ class InstaTool(Callable):
                  playwright_workers: int = 8,
                  observation_processor: str = "markdown",
                  action_parser: str = "json",
-                 candidates: str = "all",
                  browser_kwargs: dict = None,
                  context_kwargs: dict = None):
         """Initialize a web browsing tool for training LLM agents, this  tool
@@ -145,7 +141,6 @@ class InstaTool(Callable):
 
         self.observation_processor = observation_processor
         self.action_parser = action_parser
-        self.candidates = candidates
 
         self.browser_kwargs = browser_kwargs
         self.context_kwargs = context_kwargs
@@ -188,7 +183,6 @@ class InstaTool(Callable):
             playwright_workers = self.playwright_workers,
             observation_processor = self.observation_processor,
             action_parser = self.action_parser,
-            candidates = self.candidates,
             browser_kwargs = self.browser_kwargs,
             context_kwargs = self.context_kwargs
         )

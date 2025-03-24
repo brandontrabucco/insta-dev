@@ -58,9 +58,6 @@ class InstaTransformersTool(transformers.Tool):
     action_parser: BaseActionParser
         A parser that converts text into function calls for the agent to execute.
 
-    candidates: BaseCandidates
-        A preprocessor that identifies interactive elements on the webpage.
-
     name: str
         The name of the tool.
 
@@ -98,10 +95,6 @@ class InstaTransformersTool(transformers.Tool):
         action_parser: str
             The action parser to use for converting text to function calls,
             currently you can select from: ["javascript", "json"].
-
-        candidates: str
-            The candidates to use for identifying interactive elements,
-            currently you can select from: ["all"]
 
         browser_kwargs: dict
             Keyword options to use when starting the Browser instance,
@@ -178,9 +171,6 @@ class InstaTransformersGradioTool(transformers.Tool):
     action_parser: BaseActionParser
         A parser that converts text into function calls for the agent to execute.
 
-    candidates: BaseCandidates
-        A preprocessor that identifies interactive elements on the webpage.
-
     name: str
         The name of the tool.
 
@@ -218,10 +208,6 @@ class InstaTransformersGradioTool(transformers.Tool):
         action_parser: str
             The action parser to use for converting text to function calls,
             currently you can select from: ["javascript", "json"].
-
-        candidates: str
-            The candidates to use for identifying interactive elements,
-            currently you can select from: ["all"]
 
         browser_kwargs: dict
             Keyword options to use when starting the Browser instance,
