@@ -6,7 +6,7 @@ SHELL ["/bin/bash", "-c"]
 ENV PATH="/miniconda3/bin:${PATH}"
 ARG PATH="/miniconda3/bin:${PATH}"
 
-ENV CODE_URL="http://github.com/brandontrabucco/insta-private"
+ENV CODE_URL="http://github.com/brandontrabucco/insta-dev"
 
 # Install wget to fetch Miniconda
 RUN apt-get update && \
@@ -26,7 +26,7 @@ RUN chmod -R 777 /miniconda3
 RUN source /miniconda3/bin/activate && \
     conda create -n insta python=3.10 -y && \
     conda activate insta && \
-    pip install -e /code/insta[gradio]
+    pip install -e /code/insta
 
 # Create a user for the Huggingface space
 RUN groupmod -g 1010 ubuntu && \
