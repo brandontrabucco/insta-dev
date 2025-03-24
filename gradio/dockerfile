@@ -51,7 +51,8 @@ ARG PATH="/miniconda3/bin:${PATH}"
 RUN pushd /code/insta/javascript/server && \
     rm -rf node_modules package-lock.json && \
     npm cache clean --force && \
-    npm install && npx tsc && popd
+    npm install && npx tsc && \
+    npx playwright install chromium && popd
 
 # Expose the Playwright server ports
 ENV SERVER_BASE_PORT=3000
