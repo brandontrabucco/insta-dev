@@ -3,6 +3,7 @@
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
+VLLM_LOG=${VLLM_LOG:-"vllm.log"}
 MODEL_NAME=${MODEL_NAME:-"meta-llama/Llama-3.3-70B-Instruct"}
 API_KEY=${API_KEY:-"token-abc123"}
 MAX_ERRORS=${MAX_ERRORS:-1000}
@@ -34,7 +35,7 @@ unset LD_LIBRARY_PATH
 
 for IDX in {1..${MAX_ERRORS}}; do
 
-vllm serve $MODEL_NAME ${VLLM_ARGS[@]} >> vllm.log 2>&1
+vllm serve $MODEL_NAME ${VLLM_ARGS[@]} >> ${VLLM_LOG} 2>&1
 
 done
 
