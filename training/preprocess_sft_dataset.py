@@ -1,4 +1,3 @@
-from trl import SFTConfig, SFTTrainer
 from datasets import load_dataset
 
 from insta.configs.agent_config import (
@@ -73,11 +72,6 @@ def prepare_messages(
         "actions"
     )
 
-    judgments_dir = os.path.join(
-        base_data_dir,
-        "judgments"
-    )
-
     domains = examples["domain"]
     instructions = examples["task"]
 
@@ -95,15 +89,24 @@ def prepare_messages(
             "{}.json".format(domain)
         )
 
-        with open(observations_path, "r") as file:
-            observations = json.load(file)
+        try:  # file may be corrupted
 
-        with open(actions_path, "r") as file:
-            actions = json.load(file)
+            with open(observations_path, "r") as file:
+                observations = json.load(file)
+
+            with open(actions_path, "r") as file:
+                actions = json.load(file)
+
+        except json.decoder.JSONDecodeError:
+
+            continue
 
         for last_timestep in range(1, len(observations)):
 
-            first_timestep = max(0, last_timestep - agent.config.max_history - 1)
+            first_timestep = max(
+                0, last_timestep - 
+                agent.config.max_history - 1
+            )
 
             obs = observations[first_timestep:last_timestep]
             act = actions[first_timestep:last_timestep]
@@ -156,12 +159,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--model_name",
-        type = str,
-        default="Qwen/Qwen2.5-1.5B-Instruct"
-    )
-
-    parser.add_argument(
         "--dataset_name",
         type = str,
         default="data-for-agents/insta-150k-v2"
@@ -180,18 +177,6 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--output_dir",
-        type = str,
-        default="./qwen-1.5b"
-    )
-
-    parser.add_argument(
-        "--max_seq_length",
-        type = int,
-        default = 8196
-    )
-
-    parser.add_argument(
         "--max_history",
         type = int,
         default = 2
@@ -204,8 +189,9 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--use_bf16",
-        action = "store_true"
+        "--dataset_output_dir",
+        type = str,
+        default="./insta-150k-v2"
     )
 
     args = parser.parse_args()
@@ -243,32 +229,14 @@ if __name__ == "__main__":
         agent = agent
     )
 
-    insta_dataset = dataset.map(
+    dataset = dataset.map(
         prepare_messages,
         batched = True,
         remove_columns = dataset.column_names,
         batch_size = 32,
-        num_proc = 8,
+        num_proc = 32,
     )
-
-    training_args = SFTConfig(
-        optim = "adamw_torch_fused",
-        gradient_checkpointing = True,
-        gradient_checkpointing_kwargs = {'use_reentrant': False},
-        gradient_accumulation_steps = 4,
-        learning_rate = 1e-5,
-        num_train_epochs = 1,
-        max_length = args.max_seq_length,
-        output_dir = args.output_dir,
-        per_device_train_batch_size = 1,
-        per_device_eval_batch_size = 1,
-        bf16 = args.use_bf16,
+    
+    dataset.save_to_disk(
+        args.dataset_output_dir
     )
-
-    trainer = SFTTrainer(
-        model = args.model_name,
-        train_dataset = insta_dataset,
-        args = training_args,
-    )
-
-    trainer.train()
