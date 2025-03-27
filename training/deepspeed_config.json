@@ -1,0 +1,21 @@
+{
+    "zero_optimization": {
+      "stage": 3,
+      "offload_param": {
+        "device": "cpu"
+      },
+      "offload_optimizer": {
+        "device": "cpu"
+      },
+      "overlap_comm": true,
+      "contiguous_gradients": true,
+      "reduce_bucket_size": 5e6,
+      "allgather_bucket_size": 5e6
+    },
+    "gradient_accumulation_steps": 4,
+    "train_micro_batch_size_per_gpu": 1,
+    "gradient_clipping": 1.0,
+    "bf16": {
+      "enabled": true
+    }
+  }
