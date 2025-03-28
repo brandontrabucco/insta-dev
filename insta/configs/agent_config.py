@@ -6,6 +6,8 @@ from insta.configs.browser_config import FunctionCall
 @dataclass
 class AgentConfig:
 
+    action_parser: str = "json"
+
     tokenizer: str = "meta-llama/Llama-3.3-70B-Instruct"
     client_kwargs: Dict = None
     generation_kwargs: Dict = None
@@ -24,6 +26,9 @@ class BrowserAction:
     function_calls: List[FunctionCall] = None
     response: str = None
     matched_response: str = None
+
+
+DEFAULT_ACTION_PARSER = "json"
 
 
 DEFAULT_TOKENIZER = "meta-llama/Llama-3.3-70B-Instruct"
@@ -53,6 +58,7 @@ DEFAULT_LOG_ERRORS = False
 
 
 DEFAULT_AGENT_CONFIG = AgentConfig(
+    action_parser = DEFAULT_ACTION_PARSER,
     tokenizer = DEFAULT_TOKENIZER,
     client_kwargs = DEFAULT_CLIENT_KWARGS,
     generation_kwargs = DEFAULT_GENERATION_KWARGS,

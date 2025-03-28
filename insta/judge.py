@@ -54,8 +54,7 @@ class BrowserJudge(Callable):
     
     """
 
-    def __init__(self, config: JudgeConfig = DEFAULT_JUDGE_CONFIG,
-                 judgment_parser: str = "json"):
+    def __init__(self, config: JudgeConfig = DEFAULT_JUDGE_CONFIG):
         """Defines an LLM Judge for evaluating agents operating a web browser,
         served via the OpenAI API---local LLMs can be served using vLLM, 
         and proprietary LLMs can be accessed directly through the OpenAI API.
@@ -67,12 +66,6 @@ class BrowserJudge(Callable):
             to use, the client to use, and the generation kwargs to use,
             refer to insta/configs/judge_config.py for more information.
 
-
-        judgment_parser: str
-            The judgment parser for parsing responses from the LLM into a
-            dictionary of scores that estimate the agent's performance,
-            refer to insta/judgment_parsers/* for more information.
-        
         """
 
         super(BrowserJudge, self).__init__()
@@ -80,7 +73,7 @@ class BrowserJudge(Callable):
         self.config = config
 
         self.judgment_parser = JUDGMENT_PARSERS[
-            judgment_parser
+            self.config.judgment_parser
         ]()
 
         self.tokenizer = AutoTokenizer.from_pretrained(

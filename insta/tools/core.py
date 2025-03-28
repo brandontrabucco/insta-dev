@@ -98,7 +98,7 @@ def create_new_session(
     playwright_port: int = 3000,
     playwright_workers: int = 8,
     observation_processor: str = "markdown",
-    action_parser: str = "javascript",
+    action_parser: str = "json",
     browser_kwargs: dict = None,
     context_kwargs: dict = None,
 ) -> Dict[str, any]:
@@ -204,7 +204,7 @@ def interact_with_browser(
     playwright_port: int = 3000,
     playwright_workers: int = 8,
     observation_processor: str = "markdown",
-    action_parser: str = "javascript",
+    action_parser: str = "json",
     browser_kwargs: dict = None,
     context_kwargs: dict = None,
 ) -> Tuple[str, str, Image.Image]:

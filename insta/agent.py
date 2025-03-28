@@ -54,8 +54,7 @@ class BrowserAgent(Callable):
     
     """
 
-    def __init__(self, config: AgentConfig = DEFAULT_AGENT_CONFIG,
-                 action_parser: str = "json"):
+    def __init__(self, config: AgentConfig = DEFAULT_AGENT_CONFIG):
         """Defines an LLM Agent for interacting with a web browsing session,
         served via the OpenAI API---local LLMs can be served using vLLM, 
         and proprietary LLMs can be accessed directly through the OpenAI API.
@@ -66,11 +65,6 @@ class BrowserAgent(Callable):
             The configuration for the agent, which includes the tokenizer
             to use, the client to use, and the generation kwargs to use,
             refer to insta/configs/agent_config.py for more information.
-
-        action_parser: str
-            The action parser to use for parsing the output of the LLM
-            into a sequence of function calls to the Playwright API,
-            refer to insta/action_parsers.py for more information.
         
         """
 
@@ -79,7 +73,7 @@ class BrowserAgent(Callable):
         self.config = config
 
         self.action_parser = ACTION_PARSERS[
-            action_parser
+            self.config.action_parser
         ]()
 
         self.tokenizer = AutoTokenizer.from_pretrained(

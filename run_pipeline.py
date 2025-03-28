@@ -144,6 +144,12 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--action_parser",
+        type = str,
+        default = "json"
+    )
+
+    parser.add_argument(
         "--skip_finished",
         action = "store_true",
         help = "Skip finished domains",
@@ -194,7 +200,8 @@ if __name__ == "__main__":
 
     agent_config = get_agent_config(
         client_kwargs = agent_client_kwargs,
-        generation_kwargs = agent_generation_kwargs
+        generation_kwargs = agent_generation_kwargs,
+        action_parser = args.action_parser
     )
 
     judge_client_kwargs = {

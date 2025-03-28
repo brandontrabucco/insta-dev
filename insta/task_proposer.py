@@ -63,8 +63,7 @@ class BrowserTaskProposer(Callable):
     instructions: List[str]
     task_proposals: List[str]
 
-    def __init__(self, config: TaskProposerConfig = DEFAULT_TASK_PROPOSER_CONFIG,
-                 task_parser: str = "json"):
+    def __init__(self, config: TaskProposerConfig = DEFAULT_TASK_PROPOSER_CONFIG):
         """Defines an LLM Task Proposer for LLM agents operating a web browser,
         served via the OpenAI API---local LLMs can be served using vLLM, 
         and proprietary LLMs can be accessed directly through the OpenAI API.
@@ -75,11 +74,6 @@ class BrowserTaskProposer(Callable):
             The configuration for the proposer, which includes the tokenizer
             to use, the client to use, and the generation kwargs to use,
             refer to insta/configs/task_proposer_config.py for more information.
-
-        task_parser: TaskParser
-            The task proposal parser for parsing responses from the LLM into a
-            dictionary containing a proposer task, and estimates of
-            feasibility, difficulty, and steps to completion.
         
         """
 
@@ -88,7 +82,7 @@ class BrowserTaskProposer(Callable):
         self.config = config
 
         self.task_parser = TASK_PARSERS[
-            task_parser
+            self.config.task_parser
         ]()
 
         self.tokenizer = AutoTokenizer.from_pretrained(

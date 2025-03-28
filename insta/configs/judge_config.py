@@ -5,6 +5,8 @@ from typing import Dict
 @dataclass
 class JudgeConfig:
 
+    judgment_parser: str = "json"
+
     tokenizer: str = "meta-llama/Llama-3.3-70B-Instruct"
     client_kwargs: Dict = None
     generation_kwargs: Dict = None
@@ -24,6 +26,9 @@ class BrowserJudgment:
     values: Dict[str, float] = None
     response: str = None
     matched_response: str = None
+
+
+DEFAULT_JUDGMENT_PARSER = "json"
 
 
 DEFAULT_TOKENIZER = "meta-llama/Llama-3.3-70B-Instruct"
@@ -54,6 +59,7 @@ DEFAULT_LOG_ERRORS = False
 
 
 DEFAULT_JUDGE_CONFIG = JudgeConfig(
+    judgment_parser = DEFAULT_JUDGMENT_PARSER,
     tokenizer = DEFAULT_TOKENIZER,
     client_kwargs = DEFAULT_CLIENT_KWARGS,
     generation_kwargs = DEFAULT_GENERATION_KWARGS,
