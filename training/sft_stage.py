@@ -64,11 +64,32 @@ def preprocess_messages(
 
         input_ids.extend(chat_turn_tokens)
         mask.extend(chat_turn_mask)
-        
-    # Add end of sentence token
-    eos_token = tokenizer.encode("", add_special_tokens = False)
-    input_ids.extend(eos_token)
-    mask.extend([1] * len(eos_token))
+
+    need_bos_token = (
+        tokenizer.bos_token_id is not None
+        and tokenizer.bos_token_id not in input_ids[:2]
+    )
+
+    if need_bos_token:
+
+        input_ids = [
+            tokenizer.bos_token_id
+        ] + input_ids
+
+        mask = [0] + mask
+
+    need_eos_token = (
+        tokenizer.eos_token_id is not None
+        and tokenizer.eos_token_id not in input_ids[-2:]
+    )
+
+    if need_eos_token:
+
+        input_ids = input_ids + [
+            tokenizer.eos_token_id
+        ]
+
+        mask = mask + [1]
 
     return input_ids, mask
 
@@ -77,7 +98,7 @@ class ChatDataCollator:
 
     def __init__(
         self, tokenizer: PreTrainedTokenizer = None,
-        max_seq_length: int = 8196
+        max_seq_length: int = 8192
     ):
 
         self.tokenizer = tokenizer
@@ -138,14 +159,21 @@ class ChatDataCollator:
                 len(batch_tokens[batch_idx])
             )
 
-            if padding_length > 0:
+            if padding_length == 0:
 
-                batch_attention_masks[batch_idx].extend([0] * padding_length)
-                batch_labels[batch_idx].extend([-100] * padding_length)
+                continue
 
-                batch_tokens[batch_idx].extend([
-                    self.tokenizer.pad_token_id
-                ] * padding_length)
+            batch_attention_masks[batch_idx].extend(
+                [0] * padding_length
+            )
+
+            batch_labels[batch_idx].extend(
+                [-100] * padding_length
+            )
+
+            batch_tokens[batch_idx].extend([
+                self.tokenizer.pad_token_id
+            ] * padding_length)
         
         attention_mask_tensor = torch.tensor(batch_attention_masks)
         batch_tokens = torch.tensor(batch_tokens)
@@ -227,7 +255,7 @@ if __name__ == "__main__":
         adam_epsilon = 1e-8,
         num_train_epochs = 1,
         warmup_ratio = 0.01,
-        logging_steps = 20,
+        logging_steps = 100,
         output_dir = args.output_dir,
         per_device_train_batch_size = 1,
         per_device_eval_batch_size = 1,
@@ -263,5 +291,9 @@ if __name__ == "__main__":
     trainer.train()
 
     trainer.save_model(
+        args.final_model_dir
+    )
+
+    tokenizer.save_pretrained(
         args.final_model_dir
     )

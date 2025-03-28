@@ -33,6 +33,42 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--agent_model_name",
+        type = str,
+        default = None
+    )
+
+    parser.add_argument(
+        "--agent_api_key",
+        type = str,
+        default = None
+    )
+
+    parser.add_argument(
+        "--agent_llm_endpoint",
+        type = str,
+        default = None
+    )
+
+    parser.add_argument(
+        "--judge_model_name",
+        type = str,
+        default = None
+    )
+
+    parser.add_argument(
+        "--judge_api_key",
+        type = str,
+        default = None
+    )
+
+    parser.add_argument(
+        "--judge_llm_endpoint",
+        type = str,
+        default = None
+    )
+
+    parser.add_argument(
         "--dataset",
         type = str,
         default = "data-for-agents/insta-150k",
@@ -144,26 +180,38 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    client_kwargs = {
-        "api_key": args.api_key,
-        "base_url": args.llm_endpoint
+    agent_client_kwargs = {
+        "api_key": args.agent_api_key or args.api_key,
+        "base_url": args.agent_llm_endpoint or args.llm_endpoint
     }
 
-    generation_kwargs = {
-        "model": args.model_name,
+    agent_generation_kwargs = {
+        "model": args.agent_model_name or args.model_name,
         "max_tokens": 2048,
         "top_p": 1.0,
         "temperature": 0.5
     }
 
     agent_config = get_agent_config(
-        client_kwargs = client_kwargs,
-        generation_kwargs = generation_kwargs
+        client_kwargs = agent_client_kwargs,
+        generation_kwargs = agent_generation_kwargs
     )
 
+    judge_client_kwargs = {
+        "api_key": args.judge_api_key or args.api_key,
+        "base_url": args.judge_llm_endpoint or args.llm_endpoint
+    }
+
+    judge_generation_kwargs = {
+        "model": args.judge_model_name or args.model_name,
+        "max_tokens": 2048,
+        "top_p": 1.0,
+        "temperature": 0.5
+    }
+
     judge_config = get_judge_config(
-        client_kwargs = client_kwargs,
-        generation_kwargs = generation_kwargs
+        client_kwargs = judge_client_kwargs,
+        generation_kwargs = judge_generation_kwargs
     )
 
     browser_config = get_browser_config(

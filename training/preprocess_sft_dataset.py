@@ -131,7 +131,7 @@ def unpack_examples(
 
     examples = []
 
-    for last_timestep in range(1, len(observations)):
+    for last_timestep in range(1, len(observations) + 1):
 
         first_timestep = max(
             0, last_timestep - 
