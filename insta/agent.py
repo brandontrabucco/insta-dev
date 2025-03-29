@@ -13,7 +13,7 @@ from insta.configs.agent_config import (
     BrowserAction
 )
 
-from typing import List, Callable
+from typing import List, Callable, Tuple, Dict
 from transformers import AutoTokenizer
 
 import openai
@@ -54,6 +54,11 @@ class BrowserAgent(Callable):
     
     """
 
+    observations: List[str]
+    instructions: List[str]
+    urls: List[str]
+    actions: List[str]
+
     def __init__(self, config: AgentConfig = DEFAULT_AGENT_CONFIG):
         """Defines an LLM Agent for interacting with a web browsing session,
         served via the OpenAI API---local LLMs can be served using vLLM, 
@@ -86,23 +91,48 @@ class BrowserAgent(Callable):
 
         self.reset()
 
+    def reset(self) -> None:
+        """Reset the context for the LLM agent, and remove previous 
+        observations and actions, which should be performed right after
+        calling the environment reset method.
+        
+        """
+
+        self.observations = []
+        self.instructions = []
+        self.urls = []
+        self.actions = []
+
     def get_action(
-        self, context: List[dict],
-        max_history: int = 0
+        self, observations: List[str], 
+        instructions: List[str],
+        urls: List[str],
+        actions: List[str],
+        last_actions: int = 0
     ) -> BrowserAction | BrowserStatus:
         """Queries the LLM for the next action to take, given previous 
         actions and observations, up to a maximum history length.
 
         Arguments:
 
-        context: List[dict]
-            The context to use for generating the next action, which
-            includes the system prompt, previous observations,
-            and the current observation.
+        observations: List[str]
+            The current webpage processed into an agent-readible format,
+            such as the markdown format used with InSTA.
 
-        max_history: int
-            The maximum number of previous observations to include
-            in the context, defaults to 0.
+        instructions: List[str]
+            Instructions provided to the agent, such as questions
+            or commands to execute on the web.
+
+        urls: List[str]
+            The current URL of the webpage, which is used for tracking
+            the current state of the browsing session.
+
+        actions: List[str]
+            The previous actions the agent has taken in the browser,
+            typically the raw LLM action output.
+
+        last_actions: int
+            The number of previous actions to include in the context.
 
         Returns:
 
@@ -113,8 +143,11 @@ class BrowserAgent(Callable):
         """
         
         messages = self.get_prompts(
-            context = context,
-            max_history = max_history
+            observations = observations,
+            instructions = instructions,
+            urls = urls,
+            actions = actions,
+            last_actions = last_actions
         )
 
         completion = self.llm_client.chat.completions.create(
@@ -126,9 +159,11 @@ class BrowserAgent(Callable):
             completion.choices[0]
             .message.content
         )
-
+    
     def __call__(
-        self, observation: str, instruction: str,
+        self, observation: str,
+        instruction: str,
+        current_url: str
     ) -> BrowserAction | None:
         """Queries the LLM for the next action to take, given previous 
         actions and observations, up to a maximum history length.
@@ -143,6 +178,10 @@ class BrowserAgent(Callable):
             The instruction to provide to the agent, such as a question
             or a command to execute on the web.
 
+        current_url: str
+            The current URL of the webpage, which is used for tracking
+            the current state of the browsing session.
+
         Returns:
 
         PlaywrightAction | None
@@ -153,13 +192,17 @@ class BrowserAgent(Callable):
 
         self.push_observation(
             observation = observation,
-            instruction = instruction
+            instruction = instruction,
+            current_url = current_url
         )
 
         action = safe_call(
             self.get_action,
-            context = self.context,
-            max_history = self.config.max_history,
+            observations = self.observations,
+            instructions = self.instructions,
+            urls = self.urls,
+            actions = self.actions,
+            last_actions = self.config.last_actions,
             catch_errors = self.config.catch_errors,
             max_errors = self.config.max_errors,
             log_errors = self.config.log_errors
@@ -170,6 +213,151 @@ class BrowserAgent(Callable):
             return NULL_ACTION
 
         return action
+
+    def push_observation(
+        self, observation: str,
+        instruction: str,
+        current_url: str
+    ):
+        """Pushes the latest observation and instruction to the context
+        for the LLM agent, which is used for generating the next action.
+
+        Arguments:
+
+        observation: str
+            The current webpage processed into an agent-readible format,
+            such as the markdown format used with InSTA.
+
+        instruction: str
+            The instruction to provide to the agent, such as a question
+            or a command to execute on the web.
+
+        current_url: str
+            The current URL of the webpage, which is used for tracking
+            the current state of the browsing session.
+
+        """
+        
+        self.observations.append(observation)
+        self.instructions.append(instruction)
+        self.urls.append(current_url)
+
+    def push_action(self, response: str):
+        """Add the specified agent response to the context, manual
+        to handle cases where the agent response is not generated
+        by the LLM, or is post-processed by the developer.
+
+        Arguments:
+
+        response: str
+            The last response generated by the agent, which includes
+            a chain of thought, and an action.
+        
+        """
+
+        self.actions.append(response)
+
+    def pop_observation(self) -> Tuple[str, str, str] | None:
+        """If the final item in the context is an observation, then
+        pop the observation from the context and return it.
+
+        Returns:
+
+        Tuple[str, str, str] | None
+            The last observation, removed from the context, or None if
+            there is no observation at the end of the context.
+        
+        """
+
+        has_last_observation = (
+            len(self.observations) > 0 and 
+            len(self.instructions) == len(self.observations) and
+            len(self.actions) == len(self.observations) and
+            len(self.urls) == len(self.observations)
+        )
+
+        if has_last_observation:
+
+            observation = self.observations.pop()
+            instruction = self.instructions.pop()
+            last_url = self.urls.pop()
+            
+            return (
+                observation,
+                instruction,
+                last_url
+            )
+
+    def pop_action(self) -> str | None:
+        """If the final item in the context is an action, then
+        pop the action from the context and return it.
+
+        Returns:
+
+        action: str | None
+            The last action, removed from the context, or None if
+            there is no action at the end of the context.
+
+        """
+
+        has_last_action = (
+            len(self.actions) > 0 and
+            len(self.actions) == (len(self.observations) - 1)
+        )
+
+        if has_last_action:
+
+            return self.actions.pop()
+    
+    def get_context(self) -> Tuple[List[str], List[str], List[str], List[str]]:
+        """Returns the current context for the proposer, which includes
+        previous observations, and actions the agent has performed
+        in the current browsing session.
+        
+        Returns:
+        
+        Tuple[List[str], List[str], List[str], List[str]]
+            The entire context, which contains previous observations, and 
+            actions the agent has performed in the browser.
+            
+        """
+            
+        return (
+            self.observations,
+            self.instructions,
+            self.urls,
+            self.actions
+        )
+    
+    def set_context(self, context: Tuple[List[str], List[str], List[str], List[str]]):
+        """Replace the proposer context with the specified context, which
+        includes target observations, and actions the agent has performed
+        in a different browsing session.
+        
+        Arguments:
+        
+        Tuple[List[str], List[str], List[str], List[str]]
+            An entire context, which contains previous observations, and 
+            actions an agent has performed in the browser.
+        
+        """
+
+        has_valid_context = (
+            len(context) == 4 and
+            all([isinstance(x, list) for x in context]) 
+        )
+
+        if not has_valid_context:
+
+            raise ValueError(
+                "Context must have the following type: "
+                "Tuple[List[str], List[str], List[str], List[str]]"
+            )
+        
+        self.observations = context[0]
+        self.instructions = context[1]
+        self.urls = context[2]
+        self.actions = context[3]
     
     @property
     def system_prompt(self) -> str:
@@ -181,7 +369,11 @@ class BrowserAgent(Callable):
 
         return self.action_parser.user_prompt_template
 
-    def get_user_prompt(self, observation: str, instruction: str) -> str:
+    def get_single_user_prompt(
+        self, observation: str,
+        instruction: str,
+        current_url: str
+    ) -> str:
         """Returns the user prompt for the latest observation from
         the environment, and the current user instruction.
 
@@ -195,10 +387,14 @@ class BrowserAgent(Callable):
             The instruction to provide to the agent, such as a question
             or a command to execute on the web.
 
+        current_url: str
+            The current URL of the webpage, which is used for tracking
+            the current state of the browsing session.
+
         Returns:
 
-        str
-            The user prompt for the latest observation and instruction.
+        user_prompt_str: str
+            Prompt for the most recent step.
         
         """
 
@@ -215,205 +411,158 @@ class BrowserAgent(Callable):
 
         return self.user_prompt_template.format(
             observation = observation,
-            instruction = instruction
+            instruction = instruction,
+            current_url = current_url
         )
 
-    def reset(self) -> None:
-        """Reset the context for the LLM agent, and remove previous 
-        observations and actions, which should be performed right after
-        calling the environment reset method.
-        
-        """
-
-        self.context = [{
-            "role": "system",
-            "content": self.system_prompt
-        }]
-
-    def push_observation(self, observation: str, instruction: str):
-        """Pushes the latest observation and instruction to the context
-        for the LLM agent, which is used for generating the next action.
+    def get_user_prompts(
+        self, observations: List[str], 
+        instructions: List[str],
+        urls: List[str],
+        last_actions: int = 5
+    ) -> List[dict]:
+        """Builds the user prompt for querying the LLM to propose a task,
+        and selects the N most recent trajectories, and includes the 
+        last M actions, observations, and judgments.
 
         Arguments:
 
-        observation: str
+        observations: List[str]
             The current webpage processed into an agent-readible format,
             such as the markdown format used with InSTA.
 
-        instruction: str
-            The instruction to provide to the agent, such as a question
-            or a command to execute on the web.
+        instructions: List[str]
+            Instructions provided to the agent, such as questions
+            or commands to execute on the web.
 
-        """
+        urls: List[str]
+            The current URL of the webpage, which is used for tracking
+            the current state of the browsing session.
 
-        user_prompt = self.get_user_prompt(
-            observation = observation,
-            instruction = instruction
-        )
-
-        self.context.append({
-            "role": "user",
-            "content": user_prompt
-        })
-
-    def push_action(self, response: str):
-        """Add the specified agent response to the context, manual
-        to handle cases where the agent response is not generated
-        by the LLM, or is post-processed by the developer.
-
-        Arguments:
-
-        response: str
-            The last response generated by the agent, which includes
-            a chain of thought section, and code for an action.
-        
-        """
-
-        self.context.append({
-            "role": "assistant",
-            "content": response
-        })
-
-    def pop_observation(self) -> dict | None:
-        """If the final item in the context is an observation, then
-        pop the observation from the context and return it.
+        last_actions: int
+            The number of previous actions to include in the context.
 
         Returns:
 
-        dict | None
-            The last observation, removed from the context, or None if
-            there is no observation at the end of the context.
+        user_prompts: List[dict]
+            User prompts for each step of the trajectory.
         
         """
 
-        has_last_observation = (
-            len(self.context) > 0 and 
-            self.context[-1]["role"] == "user"
-        )
+        user_prompts = []
 
-        if has_last_observation:
-            
-            return self.context.pop()
+        for trajectory_step, (
+            observation,
+            instruction,
+            current_url
+        ) in enumerate(zip(
+            observations,
+            instructions,
+            urls
+        )):
 
-    def pop_action(self) -> dict | None:
-        """If the final item in the context is an action, then
-        pop the action from the context and return it.
+            time_left = (
+                len(observations) - 
+                trajectory_step - 1
+            )
 
-        Returns:
+            include_step = (
+                time_left < last_actions
+            )
 
-        dict | None
-            The last action, removed from the context, or None if
-            there is no action at the end of the context.
+            if include_step:
 
-        """
+                user_prompt_str = self.get_single_user_prompt(
+                    observation = observation,
+                    instruction = instruction,
+                    current_url = current_url
+                )
 
-        has_last_action = (
-            len(self.context) > 0 and
-            self.context[-1]["role"] == "assistant"
-        )
+                user_prompts.append({
+                    "role": "user",
+                    "content": user_prompt_str
+                })
 
-        if has_last_action:
-
-            return self.context.pop()
-
-    def pop_context(self) -> List[dict]:
-        """Pop and reset the agent context, returning the previous context,
-        which contains previous observations, and actions the agent has
-        performed in the current browsing session.
-
-        Returns:
-
-        List[dict]
-            The entire context, which contains previous observations, and 
-            actions the agent has performed in the browser.
-
-        """
-
-        previous_context = self.context
-        self.reset()
-        return previous_context
-    
-    def get_context(self) -> List[dict]:
-        """Returns the current context for the agent, which includes
-        previous observations, and actions the agent has performed
-        in the current browsing session.
-        
-        Returns:
-        
-        List[dict]
-            The entire context, which contains previous observations, and 
-            actions the agent has performed in the browser.
-            
-        """
-            
-        return self.context
-    
-    def set_context(self, context: List[dict]):
-        """Replace the agent context with the specified context, which
-        includes target observations, and actions the agent has performed
-        in a different browsing session.
-        
-        Arguments:
-        
-        context: List[dict]
-            An entire context, which contains previous observations, and 
-            actions an agent has performed in the browser.
-        
-        """
-
-        self.context = context
+        return user_prompts
 
     def get_prompts(
-        self, context: List[dict],
-        max_history: int = 0
+        self, observations: List[str], 
+        instructions: List[str],
+        urls: List[str],
+        actions: List[str],
+        last_actions: int = 5
     ) -> List[dict]:
-        """Select the `max_history` most recent observations and actions
-        from the context, and return the context with the system prompt,
-        and the most recent observations and actions.
+        """Builds the user prompt for querying the LLM to propose a task,
+        and selects the N most recent trajectories, and includes the 
+        last M actions, observations, and judgments.
 
         Arguments:
 
-        context: List[dict]
-            The entire context, which contains previous observations, and 
-            actions the agent has performed in the browser.
+        observations: List[str]
+            The current webpage processed into an agent-readible format,
+            such as the markdown format used with InSTA.
 
-        max_history: int
-            The maximum number of previous observations to include
-            in the context, defaults to 0.
+        instructions: List[str]
+            Instructions provided to the agent, such as questions
+            or commands to execute on the web.
+
+        urls: List[str]
+            The current URL of the webpage, which is used for tracking
+            the current state of the browsing session.
+
+        actions: List[str]
+            The previous actions the agent has taken in the browser,
+            typically the raw LLM action output.
+
+        last_actions: int
+            The number of previous actions to include in the context.
+
+        Returns:
+
+        user_prompts: List[dict]
+            User prompts for each step of the trajectory.
         
         """
 
-        system_prompt, *history, current_observation = context
-
-        if max_history == 0:
-
-            return [
-                system_prompt,
-                current_observation
-            ]
-
-        observations = [
-            x for x in history 
-            if x["role"] == "user"
-        ]
-
-        actions = [
-            x for x in history 
-            if x["role"] == "assistant"
-        ]
-
-        observations = observations[-max_history:]
-        actions = actions[-max_history:]
-
-        partial_action_obs = [
-            x for pair in zip(observations, actions)
-            for x in pair
-        ]
-
-        context = (
-            [system_prompt] + 
-            partial_action_obs + 
-            [current_observation]
+        valid_arguments = (
+            len(observations) == (len(actions) + 1) and 
+            len(observations) == len(urls) and 
+            len(observations) == len(instructions)
         )
 
-        return context
+        if not valid_arguments:
+
+            raise ValueError(
+                "Invalid agent context."
+            )
+
+        system_prompt = {
+            "role": "system",
+            "content": self.system_prompt
+        }
+
+        *user_prompts, last_user_prompt = self.get_user_prompts(
+            observations = observations,
+            instructions = instructions,
+            urls = urls,
+            last_actions = last_actions
+        )
+
+        assistant_prompts = [{
+            "role": "assistant",
+            "content": action
+        } for action in actions]
+
+        assistant_prompts = assistant_prompts[
+            len(assistant_prompts) - 
+            len(user_prompts):
+        ]
+
+        return [
+            system_prompt,
+            *[a for b in zip(
+                user_prompts,
+                assistant_prompts,
+            ) for a in b],
+            last_user_prompt
+        ]

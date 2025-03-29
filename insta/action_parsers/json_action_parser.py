@@ -1,4 +1,4 @@
-from insta.action_parsers.base_action_parser import (
+from insta.action_parsers.action_parser import (
     BaseActionParser
 )
 
@@ -381,7 +381,7 @@ Suppose you want to open google search:
 Thanks for helping me perform tasks on the web, please follow the instructions carefully. Start your response with a summary of what you have accomplished so far, followed by a step-by-step explanation of your plan and intended action, and finally, provide your action in the JSON format. Limit your response to 200 words."""
 
 
-USER_PROMPT_TEMPLATE = """Here is the current viewport rendered in markdown:
+USER_PROMPT_TEMPLATE = """You are currently viewing {current_url}. Here is the viewport rendered in markdown:
 
 {observation}
 

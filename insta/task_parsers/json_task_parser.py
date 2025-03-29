@@ -6,7 +6,7 @@ from insta.configs.task_proposer_config import (
     BrowserTaskProposal
 )
 
-from insta.task_parsers.base_task_parser import (
+from insta.task_parsers.task_parser import (
     BaseTaskParser
 )
 

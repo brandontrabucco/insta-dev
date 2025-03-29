@@ -6,7 +6,9 @@ from insta.action_parsers.json_action_parser import (
 SYSTEM_PROMPT = """You are a helpful assistant operating a web browser."""
 
 
-USER_PROMPT_TEMPLATE = """{observation}
+USER_PROMPT_TEMPLATE = """You are currently viewing {current_url}. Here is the viewport rendered in markdown:
+
+{observation}
 
 {instruction}"""
 

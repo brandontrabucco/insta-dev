@@ -1,4 +1,4 @@
-from insta.task_parsers.base_task_parser import (
+from insta.task_parsers.task_parser import (
     BaseTaskParser
 )
 from insta.task_parsers.json_task_parser import (

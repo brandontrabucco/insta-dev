@@ -181,7 +181,8 @@ def generate_trajectory(
         
         action = agent(
             observation = obs.processed_text,
-            instruction = instruction
+            instruction = instruction,
+            current_url = obs.current_url
         )
 
         function_calls = [

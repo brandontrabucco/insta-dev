@@ -366,23 +366,6 @@ class BrowserTaskProposer(Callable):
         if has_last_task_proposal:
 
             return self.task_proposals.pop()
-        
-    def pop_context(self) -> Tuple[List[List[str]], List[List[str]], List[str], List[str], List[str]]:
-        """Pop and reset the proposer context, returning the previous context,
-        which contains previous observations, and actions the agent has
-        performed in the current browsing session.
-
-        Returns:
-
-        Tuple[List[List[str]], List[List[str]], List[str], List[str], List[str]]
-            The entire context, which contains previous observations, and 
-            actions the agent has performed in the browser.
-
-        """
-
-        previous_context = self.get_context()
-        self.reset()
-        return previous_context
     
     def get_context(self) -> Tuple[List[List[str]], List[List[str]], List[str], List[str], List[str]]:
         """Returns the current context for the proposer, which includes
@@ -430,13 +413,11 @@ class BrowserTaskProposer(Callable):
                 "Tuple[List[List[str]], List[List[str]], List[str], List[str], List[str]]"
             )
         
-        (  # set context
-            self.observations,
-            self.actions,
-            self.judgments,
-            self.instructions,
-            self.task_proposals
-         ) = context
+        self.observations = context[0]
+        self.actions = context[1]
+        self.judgments = context[2]
+        self.instructions = context[3]
+        self.task_proposals = context[4]
 
     @property
     def system_prompt(self) -> str:
@@ -770,8 +751,7 @@ class BrowserTaskProposer(Callable):
         if not valid_arguments:
 
             raise ValueError(
-                "Arguments must be the same length, and previous responses "
-                "must be provided for all but the last trajectory."
+                "Invalid task proposer context."
             )
 
         system_prompt = {
@@ -798,7 +778,8 @@ class BrowserTaskProposer(Callable):
         } for task_proposal in task_proposals]
 
         assistant_prompts = assistant_prompts[
-            len(assistant_prompts) - len(user_prompts):
+            len(assistant_prompts) -
+            len(user_prompts):
         ]
 
         return [

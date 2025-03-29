@@ -2,7 +2,7 @@ from insta.utils import (
     BrowserStatus
 )
 
-from insta.judgment_parsers.base_judgement_parser import (
+from insta.judgment_parsers.judgement_parser import (
     BaseJudgmentParser
 )
 
