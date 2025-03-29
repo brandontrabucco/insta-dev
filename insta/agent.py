@@ -272,20 +272,20 @@ class BrowserAgent(Callable):
         has_last_observation = (
             len(self.observations) > 0 and 
             len(self.instructions) == len(self.observations) and
-            len(self.actions) == len(self.observations) and
-            len(self.urls) == len(self.observations)
+            len(self.urls) == len(self.observations) and
+            len(self.actions) == (len(self.observations) - 1)
         )
 
         if has_last_observation:
 
             observation = self.observations.pop()
             instruction = self.instructions.pop()
-            last_url = self.urls.pop()
+            current_url = self.urls.pop()
             
             return (
                 observation,
                 instruction,
-                last_url
+                current_url
             )
 
     def pop_action(self) -> str | None:
@@ -302,7 +302,7 @@ class BrowserAgent(Callable):
 
         has_last_action = (
             len(self.actions) > 0 and
-            len(self.actions) == (len(self.observations) - 1)
+            len(self.actions) == len(self.observations)
         )
 
         if has_last_action:
