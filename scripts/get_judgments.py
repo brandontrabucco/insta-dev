@@ -185,7 +185,7 @@ if __name__ == "__main__":
         "--agent_response_key",
         type = str,
         help = "key for response from the agent",
-        default = "matched_response",
+        default = "response",
     )
 
     args = parser.parse_args()
