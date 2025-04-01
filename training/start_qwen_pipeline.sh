@@ -3,7 +3,7 @@
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"./qwen-1.5b"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"Qwen/Qwen2.5-7B-Instruct"}
 JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"meta-llama/Llama-3.3-70B-Instruct"}
 
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:8000/v1"}
@@ -19,10 +19,10 @@ SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
 
 DATA_ARGS=(
-    --observations_dir qwen-data/observations
-    --screenshot_dir qwen-data/screenshots
-    --actions_dir qwen-data/actions
-    --judgments_dir qwen-data/judgments
+    --observations_dir qwen-7b-zero-shot/observations
+    --screenshot_dir qwen-7b-zero-shot/screenshots
+    --actions_dir qwen-7b-zero-shot/actions
+    --judgments_dir qwen-7b-zero-shot/judgments
 )
 
 VLLM_ARGS=(
@@ -34,10 +34,12 @@ VLLM_ARGS=(
 
 PIPELINE_ARGS=(
     --dataset data-for-agents/insta-150k-v2
+    --dataset_split test
     --num_agents ${NUM_AGENTS}
     --playwright_workers ${PLAYWRIGHT_WORKERS}
     --rank ${RANK}
     --world_size ${WORLD_SIZE}
+    --action_parser json
     ${SKIP_FINISHED}
     ${PRUNE_OBSERVATIONS}
 )

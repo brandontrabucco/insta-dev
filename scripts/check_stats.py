@@ -28,6 +28,18 @@ if __name__ == "__main__":
         help = 'Directory containing judgment files'
     )
 
+    parser.add_argument(
+        '--dump_sites',
+        type = str,
+        default = None,
+    )
+
+    parser.add_argument(
+        '--load_sites',
+        type = str,
+        default = None,
+    )
+
     args = parser.parse_args()
 
     judgment_file_pattern = os.path.join(
@@ -37,7 +49,26 @@ if __name__ == "__main__":
     all_judgments = []
     all_actions = []
 
+    sites = set()
+
+    if args.load_sites:
+
+        with open(args.load_sites, 'r') as f:
+
+            sites = set(json.load(f))
+
     for judgment_file in glob.glob(judgment_file_pattern):
+
+        if args.load_sites:
+
+            site = (
+                os.path.basename(judgment_file)
+                .removesuffix('.json')
+            )
+
+            if site not in sites:
+
+                continue
 
         with open(judgment_file, 'r') as f:
             judgment = json.load(f)
@@ -53,6 +84,23 @@ if __name__ == "__main__":
             actions = json.load(f)
 
         all_actions.append(actions)
+
+        sites.add(
+            os.path.basename(judgment_file)
+            .removesuffix('.json')
+        )
+
+    if args.dump_sites:
+
+        sites = list(sites)
+
+        with open(args.dump_sites, 'w') as f:
+
+            json.dump(
+                sites,
+                f,
+                indent = 4
+            )
 
     total_num_actions = sum(
         len(actions) 

@@ -16,12 +16,14 @@ CHUNKED_PREFILL=${CHUNKED_PREFILL:-"--enable-chunked-prefill"}
 PREFIX_CACHING=${PREFIX_CACHING:-"--enable-prefix-caching"}
 MAX_NUM_BATCHED_TOKENS=${MAX_NUM_BATCHED_TOKENS:-32768}
 
+CHAT_TEMPLATE=${CHAT_TEMPLATE:-""}
+
 VLLM_ARGS=(
     --dtype bfloat16
     --tensor-parallel-size $TENSOR_PARALLEL_SIZE
     --max-model-len $MAX_MODEL_LEN
     --gpu-memory-utilization $GPU_MEMORY_UTILIZATION
-    ${CHUNKED_PREFILL} ${PREFIX_CACHING}
+    ${CHUNKED_PREFILL} ${PREFIX_CACHING} ${CHAT_TEMPLATE}
     --max-num-batched-tokens $MAX_NUM_BATCHED_TOKENS
     --api-key $API_KEY
 )

@@ -202,7 +202,7 @@ def generate_trajectory(
             for x in observations
         ],
         actions = [
-            x["response"]
+            x["matched_response"]
             for x in actions
         ],
         instruction = instruction

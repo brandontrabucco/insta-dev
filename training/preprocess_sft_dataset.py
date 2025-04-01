@@ -12,6 +12,7 @@ from functools import partial
 from typing import List, Dict, Any
 
 import argparse
+import random
 import json
 import os
 
@@ -233,9 +234,15 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--max_num_examples",
+        type = int,
+        default = 5_000
+    )
+
+    parser.add_argument(
         "--dataset_output_dir",
         type = str,
-        default="./insta-150k-v2"
+        default="./insta-150k-v2-5k"
     )
 
     args = parser.parse_args()
@@ -248,11 +255,11 @@ if __name__ == "__main__":
     agent_config = get_agent_config(
         max_history = args.max_history,
         max_obs_tokens = args.max_obs_length,
+        action_parser = "simplified_json"
     )
 
     agent: BrowserAgent = BrowserAgent(
-        agent_config,
-        action_parser = "simplified_json"
+        config = agent_config
     )
 
     # client cannot be pickled
@@ -266,6 +273,15 @@ if __name__ == "__main__":
     dataset = dataset.filter(
         select_valid_samples
     )
+
+    if args.max_num_examples is not None:
+
+        dataset = dataset.select(
+            random.Random(0).sample(
+                list(range(len(dataset))),
+                args.max_num_examples
+            )
+        )
 
     prepare_messages = partial(
         prepare_messages,

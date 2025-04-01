@@ -16,6 +16,7 @@ from typing import (
 )
 
 import torch
+import random
 
 import argparse
 import os
@@ -208,25 +209,31 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_path",
         type = str,
-        default="./insta-150k-v2"
+        default="./insta-150k-v2-20k"
     )
 
     parser.add_argument(
         "--output_dir",
         type = str,
-        default="./qwen-1.5b"
+        default="./qwen-1.5b-20k"
     )
 
     parser.add_argument(
         "--final_model_dir",
         type = str,
-        default="./qwen-1.5b"
+        default="./qwen-1.5b-20k"
     )
 
     parser.add_argument(
         "--max_seq_length",
         type = int,
         default = 8192
+    )
+
+    parser.add_argument(
+        "--max_num_examples",
+        type = int,
+        default = None
     )
 
     parser.add_argument(
@@ -239,6 +246,15 @@ if __name__ == "__main__":
     insta_dataset = load_from_disk(
         args.dataset_path
     )
+
+    if args.max_num_examples is not None:
+
+        insta_dataset = insta_dataset.select(
+            random.Random(0).sample(
+                list(range(len(insta_dataset))),
+                args.max_num_examples
+            )
+        )
 
     training_args = TrainingArguments(
         ddp_timeout = DEFAULT_DDP_TIMEOUT,
@@ -261,6 +277,8 @@ if __name__ == "__main__":
         per_device_eval_batch_size = 1,
         bf16 = args.use_bf16,
         remove_unused_columns = False,
+        save_total_limit = 3,
+        save_steps = 1000,
         save_only_model = True,
     )
 
