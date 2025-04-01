@@ -342,37 +342,37 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset",
         type = str,
-        default = "data-for-agents/insta-150k",
+        default = "data-for-agents/insta-150k-v2",
     )
     
     parser.add_argument(
         "--observations_dir",
         type = str,
-        default = "data/observations"
+        default = "data-v4/observations"
     )
     
     parser.add_argument(
         "--actions_dir",
         type = str,
-        default = "data/actions"
+        default = "data-v4/actions"
     )
     
     parser.add_argument(
         "--judgments_dir",
         type = str,
-        default = "data/judgments"
+        default = "data-v4/judgments"
     )
 
     parser.add_argument(
         "--screenshot_dir",
         type = str,
-        default = "data/screenshots"
+        default = "data-v4/screenshots"
     )
 
     parser.add_argument(
         "--video_dir",
         type = str,
-        default = "data/videos"
+        default = "data-v4/videos"
     )
     
     parser.add_argument(
@@ -430,5 +430,5 @@ if __name__ == "__main__":
         output_width = args.output_width,
         task_is_feasible_threshold = args.task_is_feasible_threshold,
         success_threshold = args.success_threshold,
-        on_right_track_threshold = args.on_right_track_threshold
+        reasoning_is_correct_threshold = args.reasoning_is_correct_threshold
     )

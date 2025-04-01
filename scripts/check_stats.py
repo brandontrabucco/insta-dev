@@ -15,16 +15,16 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        '--judgments_dir',
+        '--actions_dir',
         type = str,
-        default = 'data/judgments',
+        default = 'data/actions',
         help = 'Directory containing judgment files'
     )
 
     parser.add_argument(
-        '--actions_dir',
+        '--judgments_dir',
         type = str,
-        default = 'data/actions',
+        default = 'data/judgments',
         help = 'Directory containing judgment files'
     )
 
@@ -80,9 +80,9 @@ if __name__ == "__main__":
         for key in VALUE_KEYS
     }
 
-    fraction_ge_0_9 = {
+    fraction_ge_0_5 = {
         key: sum(
-            (judgment[key] or 0) >= 0.9
+            (judgment[key] or 0) > 0.5
             for judgment in all_judgments
         ) / len(all_judgments)
         for key in VALUE_KEYS
@@ -108,6 +108,6 @@ if __name__ == "__main__":
         json.dumps(fraction_eq_1, indent = 4)
     ))
 
-    print('Fraction conf >= 0.9: {}\n'.format(
-        json.dumps(fraction_ge_0_9, indent = 4)
+    print('Fraction conf > 0.5: {}\n'.format(
+        json.dumps(fraction_ge_0_5, indent = 4)
     ))

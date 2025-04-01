@@ -1,5 +1,6 @@
 from insta import (
     get_judge_config,
+    JudgeConfig,
     BrowserJudge
 )
 
@@ -9,7 +10,11 @@ from insta.utils import (
 
 from multiprocessing import Pool
 from functools import partial
-from datasets import load_dataset
+
+from datasets import (
+    load_dataset,
+    Dataset
+)
 
 import argparse
 import random
@@ -19,12 +24,13 @@ import os
 
 
 def relabel_judgments(
-    example_id,
-    dataset = None,
-    input_actions_dir = None,
-    input_observations_dir = None,
-    input_judgments_dir = None,
-    judge_config = None
+    example_id: int,
+    dataset: Dataset = None,
+    input_actions_dir: str = None,
+    input_observations_dir: str = None,
+    input_judgments_dir: str = None,
+    judge_config: JudgeConfig = None,
+    agent_response_key: str = None
 ):
     
     judge = BrowserJudge(
@@ -74,7 +80,7 @@ def relabel_judgments(
             for x in observations
         ],
         actions = [
-            x["response"]
+            x[agent_response_key]
             for x in actions
         ],
         instruction = instruction
@@ -132,13 +138,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_data_dir",
         type = str,
-        default = "data"
+        default = "data-v4"
     )
 
     parser.add_argument(
         "--dataset",
         type = str,
-        default = "data-for-agents/insta-150k",
+        default = "data-for-agents/insta-150k-v2",
     )
 
     parser.add_argument(
@@ -173,6 +179,13 @@ if __name__ == "__main__":
         type = int,
         help = "Number of agents per machine",
         default = 32
+    )
+
+    parser.add_argument(
+        "--agent_response_key",
+        type = str,
+        help = "key for response from the agent",
+        default = "response",
     )
 
     args = parser.parse_args()
@@ -246,7 +259,8 @@ if __name__ == "__main__":
         input_actions_dir = input_actions_dir,
         input_observations_dir = input_observations_dir,
         input_judgments_dir = input_judgments_dir,
-        judge_config = judge_config
+        judge_config = judge_config,
+        agent_response_key = args.agent_response_key
     )
     
     with Pool(processes = args.num_agents) as pool:
