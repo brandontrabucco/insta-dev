@@ -137,6 +137,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--agent_response_key",
+        type = str,
+        help = "key for response from the agent",
+        default = "matched_response",
+    )
+
+    parser.add_argument(
         "--max_actions",
         type = int,
         help = "Maximum number of actions to take",
@@ -235,6 +242,7 @@ if __name__ == "__main__":
         actions_dir = args.actions_dir,
         judgments_dir = args.judgments_dir,
         max_actions = args.max_actions,
+        agent_response_key = args.agent_response_key,
         skip_finished = args.skip_finished,
         prune_observations = args.prune_observations,
         seed = args.seed,

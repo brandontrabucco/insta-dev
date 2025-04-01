@@ -47,6 +47,9 @@ DEFAULT_ACTIONS_DIR = "data/actions"
 DEFAULT_JUDGMENTS_DIR = "data/judgments"
 
 
+DEFAULT_AGENT_RESPONSE_KEY = "matched_response"
+
+
 DEFAULT_MAX_ACTIONS = 30
 DEFAULT_SKIP_FINISHED = False
 DEFAULT_PRUNE_OBSERVATIONS = False
@@ -74,6 +77,7 @@ def generate_trajectory(
     env: InstaEnv | BrowserConfig,
     url: str, instruction: str,
     max_actions: int = DEFAULT_MAX_ACTIONS,
+    agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
 ) -> Tuple[List[Dict], List[Dict], Dict]:
     """Attempt a web navigation task using the LLM agent, and return the
     observations and actions along the trajectory for later processing.
@@ -202,7 +206,7 @@ def generate_trajectory(
             for x in observations
         ],
         actions = [
-            x["matched_response"]
+            x[agent_response_key]
             for x in actions
         ],
         instruction = instruction
@@ -232,6 +236,7 @@ def iter_trajectories(
     actions_dir: str = DEFAULT_ACTIONS_DIR,
     judgments_dir: str = DEFAULT_JUDGMENTS_DIR,
     max_actions: int = DEFAULT_MAX_ACTIONS,
+    agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
     seed: int = DEFAULT_SEED,
@@ -417,7 +422,8 @@ def iter_trajectories(
         observations, actions, judgment = generate_trajectory(
             env = env, agent = agent, judge = judge,
             url = url, instruction = instruction,
-            max_actions = max_actions
+            max_actions = max_actions,
+            agent_response_key = agent_response_key
         )
 
         for step_idx, observation in enumerate(observations):
@@ -498,6 +504,7 @@ def list_trajectories(
     actions_dir: str = DEFAULT_ACTIONS_DIR,
     judgments_dir: str = DEFAULT_JUDGMENTS_DIR,
     max_actions: int = DEFAULT_MAX_ACTIONS,
+    agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
     seed: int = DEFAULT_SEED,
@@ -568,6 +575,7 @@ def list_trajectories(
         actions_dir = actions_dir,
         judgments_dir = judgments_dir,
         max_actions = max_actions,
+        agent_response_key = agent_response_key,
         skip_finished = skip_finished,
         prune_observations = prune_observations,
         seed = seed,
@@ -586,6 +594,7 @@ def save_trajectories(
     actions_dir: str = DEFAULT_ACTIONS_DIR,
     judgments_dir: str = DEFAULT_JUDGMENTS_DIR,
     max_actions: int = DEFAULT_MAX_ACTIONS,
+    agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
     seed: int = DEFAULT_SEED,
@@ -650,6 +659,7 @@ def save_trajectories(
         actions_dir = actions_dir,
         judgments_dir = judgments_dir,
         max_actions = max_actions,
+        agent_response_key = agent_response_key,
         skip_finished = skip_finished,
         prune_observations = prune_observations,
         seed = seed,
@@ -670,6 +680,7 @@ def launch_data_collection(
     actions_dir: str = DEFAULT_ACTIONS_DIR,
     judgments_dir: str = DEFAULT_JUDGMENTS_DIR,
     max_actions: int = DEFAULT_MAX_ACTIONS,
+    agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
     seed: int = DEFAULT_SEED,
@@ -753,6 +764,7 @@ def launch_data_collection(
         actions_dir = actions_dir,
         judgments_dir = judgments_dir,
         max_actions = max_actions,
+        agent_response_key = agent_response_key,
         skip_finished = skip_finished,
         prune_observations = prune_observations
     )
@@ -838,6 +850,7 @@ class InstaPipeline(Callable):
                  actions_dir: str = DEFAULT_ACTIONS_DIR,
                  judgments_dir: str = DEFAULT_JUDGMENTS_DIR,
                  max_actions: int = DEFAULT_MAX_ACTIONS,
+                 agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
                  skip_finished: bool = DEFAULT_SKIP_FINISHED,
                  prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
                  seed: int = DEFAULT_SEED,
@@ -900,6 +913,7 @@ class InstaPipeline(Callable):
         self.judgments_dir = judgments_dir
 
         self.max_actions = max_actions
+        self.agent_response_key = agent_response_key
         self.skip_finished = skip_finished
         self.prune_observations = prune_observations
 
@@ -944,7 +958,8 @@ class InstaPipeline(Callable):
         observations, actions, judgment = generate_trajectory(
             env = self.env, agent = self.agent, judge = self.judge,
             url = url, instruction = instruction,
-            max_actions = self.max_actions
+            max_actions = self.max_actions,
+            agent_response_key = self.agent_response_key
         )
 
         return observations, actions, judgment
@@ -1001,6 +1016,7 @@ class InstaPipeline(Callable):
             actions_dir = self.actions_dir,
             judgments_dir = self.judgments_dir,
             max_actions = self.max_actions,
+            agent_response_key = self.agent_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
             seed = self.seed,
@@ -1036,6 +1052,7 @@ class InstaPipeline(Callable):
             actions_dir = self.actions_dir,
             judgments_dir = self.judgments_dir,
             max_actions = self.max_actions,
+            agent_response_key = self.agent_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
             seed = self.seed,
@@ -1063,6 +1080,7 @@ class InstaPipeline(Callable):
             actions_dir = self.actions_dir,
             judgments_dir = self.judgments_dir,
             max_actions = self.max_actions,
+            agent_response_key = self.agent_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
             seed = self.seed,
@@ -1110,6 +1128,7 @@ class InstaPipeline(Callable):
             actions_dir = self.actions_dir,
             judgments_dir = self.judgments_dir,
             max_actions = self.max_actions,
+            agent_response_key = self.agent_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
             seed = self.seed,
