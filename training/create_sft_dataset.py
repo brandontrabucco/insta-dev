@@ -18,94 +18,111 @@ import os
 
 
 def select_valid_samples(
-    example: dict,
-    base_data_dir: str = "data-v3",
+    example_dict: dict = None,
+    data_dir: str = "data",
+    success_threshold: float = 0.9
 ) -> bool:
 
     observations_dir = os.path.join(
-        base_data_dir,
+        data_dir,
         "observations"
     )
 
     actions_dir = os.path.join(
-        base_data_dir,
+        data_dir,
         "actions"
     )
 
     judgments_dir = os.path.join(
-        base_data_dir,
+        data_dir,
         "judgments"
     )
+
+    domain = example_dict["domain"]
             
     valid_domain = (
         os.path.exists(
             os.path.join(
                 observations_dir,
-                "{}.json".format(example["domain"])
+                "{}.json".format(domain)
             )
         ) and os.path.exists(
             os.path.join(
                 actions_dir,
-                "{}.json".format(example["domain"])
+                "{}.json".format(domain)
             )
         ) and os.path.exists(
             os.path.join(
                 judgments_dir,
-                "{}.json".format(example["domain"])
+                "{}.json".format(domain)
             )
         )
+    )
+
+    if not valid_domain:
+
+        return False
+    
+    judgments_path = os.path.join(
+        judgments_dir,
+        "{}.json".format(domain)
+    )     
+
+    with open(judgments_path, "r") as file:
+        judgments = json.load(file)
+
+    success = judgments["success"]
+
+    valid_domain = (
+        success is not None and 
+        success > success_threshold
     )
 
     return valid_domain
 
 
-def prepare_trajectory(
-    observations: List[Dict[str, Any]],
-    actions: List[Dict[str, Any]],
-    instruction: str,
-    agent: BrowserAgent
+def get_prompts(
+    observations: List[Dict[str, Any]] = None,
+    actions: List[Dict[str, Any]] = None,
+    instruction: str = None,
+    agent: BrowserAgent = None,
 ) -> List[Dict[str, str]]:
 
-    trajectory = [{
-        "role": "system",
-        "content": agent.system_prompt
-    }]
+    last_action = actions.pop()
 
-    for obs_t, act_t in zip(observations, actions):
+    prompts = agent.get_prompts(
+        observations = [
+            x['processed_text'] 
+            for x in observations
+        ],
+        instructions = [
+            instruction
+        ] * len(observations),
+        urls = [
+            x['current_url'] 
+            for x in observations
+        ],
+        actions = [
+            x['response'] 
+            for x in actions
+        ],
+        last_obs = agent.config.last_obs
+    )
 
-        invalid_step = (
-            obs_t['processed_text'] is None or
-            act_t['response'] is None
-        )
+    prompts.append({
+        "role": "assistant",
+        "content": last_action["response"]
+    })
 
-        if invalid_step:
-
-            continue
-
-        user_prompt = agent.get_user_prompt(
-            observation = obs_t['processed_text'],
-            instruction = instruction
-        )
-
-        trajectory.append({
-            "role": "user",
-            "content": user_prompt
-        })
-
-        trajectory.append({
-            "role": "assistant",
-            "content": act_t['response']
-        })
-
-    return trajectory
+    return prompts
 
 
 def unpack_examples(
-    domain: str,
-    instruction: str,
-    observations_dir: str,
-    actions_dir: str,
-    agent: BrowserAgent
+    domain: str = None,
+    instruction: str = None,
+    observations_dir: str = None,
+    actions_dir: str = None,
+    agent: BrowserAgent = None,
 ) -> List[List[Dict[str, str]]]:
     
     observations_path = os.path.join(
@@ -118,58 +135,50 @@ def unpack_examples(
         "{}.json".format(domain)
     )
 
-    try:  # file may be corrupted
+    with open(observations_path, "r") as file:
+        observations = json.load(file)
 
-        with open(observations_path, "r") as file:
-            observations = json.load(file)
-
-        with open(actions_path, "r") as file:
-            actions = json.load(file)
-
-    except json.decoder.JSONDecodeError:
-
-        return []
+    with open(actions_path, "r") as file:
+        actions = json.load(file)
 
     examples = []
 
     for last_timestep in range(1, len(observations) + 1):
 
-        first_timestep = max(
-            0, last_timestep - 
-            agent.config.max_history - 1
+        prompts = get_prompts(
+            observations = observations[:last_timestep],
+            actions = actions[:last_timestep],
+            instruction = instruction,
+            agent = agent,
         )
 
-        obs = observations[
-            first_timestep:last_timestep
-        ]
+        valid_prompts = all([
+            x["content"] is not None
+            for x in prompts
+        ])
 
-        act = actions[
-            first_timestep:last_timestep
-        ]
+        if not valid_prompts:
 
-        examples.append(prepare_trajectory(
-            observations = obs,
-            actions = act,
-            instruction = instruction,
-            agent = agent
-        ))
+            continue
+
+        examples.append(prompts)
 
     return examples
 
 
-def prepare_messages(
+def process_dataset(
     examples: dict,
-    base_data_dir: str = "data-v3",
+    data_dir: str = None,
     agent: BrowserAgent = None,
 ) -> dict:
 
     observations_dir = os.path.join(
-        base_data_dir,
+        data_dir,
         "observations"
     )
 
     actions_dir = os.path.join(
-        base_data_dir,
+        data_dir,
         "actions"
     )
 
@@ -188,12 +197,14 @@ def prepare_messages(
             instruction = instruction,
             observations_dir = observations_dir,
             actions_dir = actions_dir,
-            agent = agent
+            agent = agent,
         ))
 
-    return {
+    output_dict = {
         "messages": examples
     }
+
+    return output_dict
 
 
 if __name__ == "__main__":
@@ -216,13 +227,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--base_data_dir",
+        "--data_dir",
         type = str,
         default="data-v3"
     )
 
     parser.add_argument(
-        "--max_history",
+        "--last_obs",
         type = int,
         default = 3
     )
@@ -236,13 +247,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max_num_examples",
         type = int,
-        default = 5_000
+        default = None
     )
 
     parser.add_argument(
         "--dataset_output_dir",
         type = str,
-        default="./insta-150k-v2-5k"
+        default="./insta-150k-v2-filtered"
+    )
+
+    parser.add_argument(
+        "--success_threshold",
+        type = float,
+        default = 0.5
     )
 
     args = parser.parse_args()
@@ -253,7 +270,7 @@ if __name__ == "__main__":
     )
 
     agent_config = get_agent_config(
-        max_history = args.max_history,
+        last_obs = args.last_obs,
         max_obs_tokens = args.max_obs_length,
         action_parser = "simplified_json"
     )
@@ -267,7 +284,8 @@ if __name__ == "__main__":
 
     select_valid_samples = partial(
         select_valid_samples,
-        base_data_dir = args.base_data_dir
+        data_dir = args.data_dir,
+        success_threshold = args.success_threshold
     )
     
     dataset = dataset.filter(
@@ -283,14 +301,14 @@ if __name__ == "__main__":
             )
         )
 
-    prepare_messages = partial(
-        prepare_messages,
-        base_data_dir = args.base_data_dir,
+    process_dataset = partial(
+        process_dataset,
+        data_dir = args.data_dir,
         agent = agent
     )
 
     dataset = dataset.map(
-        prepare_messages,
+        process_dataset,
         batched = True,
         remove_columns = dataset.column_names,
         batch_size = 32,

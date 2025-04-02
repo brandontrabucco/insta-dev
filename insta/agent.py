@@ -108,7 +108,7 @@ class BrowserAgent(Callable):
         instructions: List[str],
         urls: List[str],
         actions: List[str],
-        last_actions: int = 0
+        last_obs: int = 0
     ) -> BrowserAction | BrowserStatus:
         """Queries the LLM for the next action to take, given previous 
         actions and observations, up to a maximum history length.
@@ -131,8 +131,8 @@ class BrowserAgent(Callable):
             The previous actions the agent has taken in the browser,
             typically the raw LLM action output.
 
-        last_actions: int
-            The number of previous actions to include in the context.
+        last_obs: int
+            The number of previous steps in the context.
 
         Returns:
 
@@ -147,7 +147,7 @@ class BrowserAgent(Callable):
             instructions = instructions,
             urls = urls,
             actions = actions,
-            last_actions = last_actions
+            last_obs = last_obs
         )
 
         completion = self.llm_client.chat.completions.create(
@@ -202,7 +202,7 @@ class BrowserAgent(Callable):
             instructions = self.instructions,
             urls = self.urls,
             actions = self.actions,
-            last_actions = self.config.last_actions,
+            last_obs = self.config.last_obs,
             catch_errors = self.config.catch_errors,
             max_errors = self.config.max_errors,
             log_errors = self.config.log_errors
@@ -419,7 +419,7 @@ class BrowserAgent(Callable):
         self, observations: List[str], 
         instructions: List[str],
         urls: List[str],
-        last_actions: int = 5
+        last_obs: int = 5
     ) -> List[dict]:
         """Builds the user prompt for querying the LLM to propose a task,
         and selects the N most recent trajectories, and includes the 
@@ -439,8 +439,8 @@ class BrowserAgent(Callable):
             The current URL of the webpage, which is used for tracking
             the current state of the browsing session.
 
-        last_actions: int
-            The number of previous actions to include in the context.
+        last_obs: int
+            The number of previous steps in the context.
 
         Returns:
 
@@ -467,7 +467,7 @@ class BrowserAgent(Callable):
             )
 
             include_step = (
-                time_left < last_actions
+                time_left < last_obs
             )
 
             if include_step:
@@ -490,7 +490,7 @@ class BrowserAgent(Callable):
         instructions: List[str],
         urls: List[str],
         actions: List[str],
-        last_actions: int = 5
+        last_obs: int = 5
     ) -> List[dict]:
         """Builds the user prompt for querying the LLM to propose a task,
         and selects the N most recent trajectories, and includes the 
@@ -514,8 +514,8 @@ class BrowserAgent(Callable):
             The previous actions the agent has taken in the browser,
             typically the raw LLM action output.
 
-        last_actions: int
-            The number of previous actions to include in the context.
+        last_obs: int
+            The number of previous steps in the context.
 
         Returns:
 
@@ -545,7 +545,7 @@ class BrowserAgent(Callable):
             observations = observations,
             instructions = instructions,
             urls = urls,
-            last_actions = last_actions
+            last_obs = last_obs
         )
 
         assistant_prompts = [{

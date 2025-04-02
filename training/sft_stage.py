@@ -195,12 +195,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--chat_template",
-        type = str,
-        default="training/qwen2.5-instruct.jinja"
-    )
-
-    parser.add_argument(
         "--model_name",
         type = str,
         default="Qwen/Qwen2.5-1.5B-Instruct"
@@ -209,19 +203,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_path",
         type = str,
-        default="./insta-150k-v2-20k"
+        default="./insta-150k-v2-filtered"
     )
 
     parser.add_argument(
         "--output_dir",
         type = str,
-        default="./qwen-1.5b-20k"
+        default="./qwen-1.5b-filtered"
     )
 
     parser.add_argument(
         "--final_model_dir",
         type = str,
-        default="./qwen-1.5b-20k"
+        default="./qwen-1.5b-filtered"
     )
 
     parser.add_argument(
@@ -288,11 +282,7 @@ if __name__ == "__main__":
         attn_implementation = "flash_attention_2",
     )
 
-    with open(args.chat_template, "r") as file:
-        chat_template = file.read()
-
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-    tokenizer.chat_template = chat_template
 
     data_collator = ChatDataCollator(
         tokenizer = tokenizer,

@@ -12,7 +12,7 @@ class AgentConfig:
     client_kwargs: Dict = None
     generation_kwargs: Dict = None
 
-    last_actions: int = 5
+    last_obs: int = 5
     max_obs_tokens: int = 4096
 
     catch_errors: bool = True
@@ -48,7 +48,7 @@ DEFAULT_GENERATION_KWARGS = {
 }
 
 
-DEFAULT_LAST_ACTIONS = 5
+DEFAULT_LAST_OBS = 5
 DEFAULT_MAX_OBS_TOKENS = 4096
 
 
@@ -62,7 +62,7 @@ DEFAULT_AGENT_CONFIG = AgentConfig(
     tokenizer = DEFAULT_TOKENIZER,
     client_kwargs = DEFAULT_CLIENT_KWARGS,
     generation_kwargs = DEFAULT_GENERATION_KWARGS,
-    last_actions = DEFAULT_LAST_ACTIONS,
+    last_obs = DEFAULT_LAST_OBS,
     max_obs_tokens = DEFAULT_MAX_OBS_TOKENS,
     catch_errors = DEFAULT_CATCH_ERRORS,
     max_errors = DEFAULT_MAX_ERRORS,
