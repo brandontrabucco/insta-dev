@@ -18,13 +18,6 @@ WORLD_SIZE=${WORLD_SIZE:-1}
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
 
-DATA_ARGS=(
-    --observations_dir data/observations
-    --screenshot_dir data/screenshots
-    --actions_dir data/actions
-    --judgments_dir data/judgments
-)
-
 VLLM_ARGS=(
     --agent_model_name ${AGENT_MODEL_NAME}
     --agent_llm_endpoint ${AGENT_LLM_ENDPOINT}
@@ -34,7 +27,7 @@ VLLM_ARGS=(
 
 PIPELINE_ARGS=(
     --dataset data-for-agents/insta-150k-v2
-    --dataset_split test
+    --dataset_split train
     --num_agents ${NUM_AGENTS}
     --playwright_workers ${PLAYWRIGHT_WORKERS}
     --rank ${RANK}
@@ -46,8 +39,15 @@ PIPELINE_ARGS=(
 
 unset LD_LIBRARY_PATH
 
+DATA_ARGS=(
+    --observations_dir data/observations
+    --screenshot_dir data/screenshots
+    --actions_dir data/actions
+    --judgments_dir data/judgments
+)
+
 python -u run_pipeline.py \
     ${PIPELINE_ARGS[@]} \
     ${DATA_ARGS[@]} \
     ${VLLM_ARGS[@]} \
-    > agents.log 2>&1
+    > agents-${ITERATION}.log 2>&1

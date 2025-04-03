@@ -3,29 +3,33 @@
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
-VLLM_LOG=${VLLM_LOG:-"vllm.log"}
 MODEL_NAME=${MODEL_NAME:-"meta-llama/Llama-3.3-70B-Instruct"}
 API_KEY=${API_KEY:-"token-abc123"}
-MAX_ERRORS=${MAX_ERRORS:-1000}
+DTYPE=${DTYPE:-"bfloat16"}
+
+VLLM_LOG=${VLLM_LOG:-"vllm.log"}
 
 TENSOR_PARALLEL_SIZE=${TENSOR_PARALLEL_SIZE:-8}
+DATA_PARALLEL_SIZE=${DATA_PARALLEL_SIZE:-1}
+
 MAX_MODEL_LEN=${MAX_MODEL_LEN:-32000}
 GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION:-0.8}
 
 CHUNKED_PREFILL=${CHUNKED_PREFILL:-"--enable-chunked-prefill"}
 PREFIX_CACHING=${PREFIX_CACHING:-"--enable-prefix-caching"}
-MAX_NUM_BATCHED_TOKENS=${MAX_NUM_BATCHED_TOKENS:-32768}
 
-CHAT_TEMPLATE=${CHAT_TEMPLATE:-""}
+NUM_BATCHED_TOKENS=${NUM_BATCHED_TOKENS:-32768}
+MAX_ERRORS=${MAX_ERRORS:-1000}
 
 VLLM_ARGS=(
-    --dtype bfloat16
     --tensor-parallel-size $TENSOR_PARALLEL_SIZE
+    --data-parallel-size $DATA_PARALLEL_SIZE
     --max-model-len $MAX_MODEL_LEN
     --gpu-memory-utilization $GPU_MEMORY_UTILIZATION
-    ${CHUNKED_PREFILL} ${PREFIX_CACHING} ${CHAT_TEMPLATE}
-    --max-num-batched-tokens $MAX_NUM_BATCHED_TOKENS
+    ${CHUNKED_PREFILL} ${PREFIX_CACHING}
+    --max-num-batched-tokens $NUM_BATCHED_TOKENS
     --api-key $API_KEY
+    --dtype $DTYPE
 )
 
 read -r -d '' VLLM_COMMAND << END_OF_SCRIPT

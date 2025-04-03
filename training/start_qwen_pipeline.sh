@@ -3,7 +3,7 @@
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"Qwen/Qwen2.5-7B-Instruct"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"./qwen-1.5b-filtered"}
 JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"meta-llama/Llama-3.3-70B-Instruct"}
 
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:8000/v1"}
@@ -13,17 +13,10 @@ NUM_AGENTS=${NUM_AGENTS:-32}
 PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-8}
 
 RANK=${RANK:-0}
-WORLD_SIZE=${WORLD_SIZE:-1}
+WORLD_SIZE=${WORLD_SIZE:-150}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
-
-DATA_ARGS=(
-    --observations_dir qwen-7b-zero-shot/observations
-    --screenshot_dir qwen-7b-zero-shot/screenshots
-    --actions_dir qwen-7b-zero-shot/actions
-    --judgments_dir qwen-7b-zero-shot/judgments
-)
 
 VLLM_ARGS=(
     --agent_model_name ${AGENT_MODEL_NAME}
@@ -34,19 +27,31 @@ VLLM_ARGS=(
 
 PIPELINE_ARGS=(
     --dataset data-for-agents/insta-150k-v2
-    --dataset_split test
+    --dataset_split train
     --num_agents ${NUM_AGENTS}
     --playwright_workers ${PLAYWRIGHT_WORKERS}
     --rank ${RANK}
     --world_size ${WORLD_SIZE}
-    --action_parser json
+    --action_parser simplified_json
     ${SKIP_FINISHED}
     ${PRUNE_OBSERVATIONS}
 )
 
 unset LD_LIBRARY_PATH
 
+for ITERATION in {0..100}; do 
+
+DATA_ARGS=(
+    --observations_dir grpo-n=${ITERATION}/observations
+    --screenshot_dir grpo-n=${ITERATION}/screenshots
+    --actions_dir grpo-n=${ITERATION}/actions
+    --judgments_dir grpo-n=${ITERATION}/judgments
+)
+
 python -u run_pipeline.py \
     ${PIPELINE_ARGS[@]} \
     ${DATA_ARGS[@]} \
-    ${VLLM_ARGS[@]} > agents.log 2>&1
+    ${VLLM_ARGS[@]} \
+    > agents-${ITERATION}.log 2>&1
+
+done
