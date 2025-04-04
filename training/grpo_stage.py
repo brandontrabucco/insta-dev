@@ -104,11 +104,25 @@ def action_reward_function(
 
             continue
 
-        reward = 0.1
-
         action = json.loads(
             action.matched_response
         )
+
+        has_required_keys = (
+            "action_key" in action and
+            "target_element_id" in action and
+            "action_kwargs" in action
+        )
+
+        if not has_required_keys:
+
+            rewards.append(
+                -1.0 * original_success
+            )
+
+            continue
+
+        reward = 0.1
 
         action_key_match = (
             ground_truth["action_key"] == 
