@@ -19,13 +19,7 @@ from trl import (
 )
 
 from functools import partial
-
-from typing import (
-    Any,
-    Dict,
-    List,
-    Tuple
-)
+from typing import List
 
 import json
 import torch
@@ -250,22 +244,31 @@ if __name__ == "__main__":
     training_args = GRPOConfig(
         ddp_timeout = DEFAULT_DDP_TIMEOUT,
         optim = "adamw_torch_fused",
-        gradient_accumulation_steps = 4,
+        per_device_train_batch_size = 1,
+        per_device_eval_batch_size = 1,
+        gradient_accumulation_steps = 8,
         gradient_checkpointing = True,
         gradient_checkpointing_kwargs = {
             'use_reentrant': False
         },
-        learning_rate = 5e-5,
-        weight_decay = 0,
+        max_prompt_length = 7680,
+        max_completion_length = 512,
+        num_generations = 8,
+        temperature = 0.5,
+        top_p = 1.0,
+        top_k = None,
+        learning_rate = 1e-5,
+        beta = 0.04,
+        num_iterations = 1,
+        epsilon = 0.2,
+        weight_decay = 0.0,
         adam_beta1 = 0.9,
         adam_beta2 = 0.999,
         adam_epsilon = 1e-8,
         num_train_epochs = 1,
         warmup_ratio = 0.01,
-        logging_steps = 100,
+        logging_steps = 10,
         output_dir = args.output_dir,
-        per_device_train_batch_size = 1,
-        per_device_eval_batch_size = 1,
         bf16 = args.use_bf16,
         remove_unused_columns = False,
         save_total_limit = 3,
