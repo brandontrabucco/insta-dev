@@ -144,22 +144,17 @@ def action_reward_function(
             action["action_kwargs"]
         )
 
-        fuzzy_kwargs_match = (
-            editdistance.eval(
-                ground_truth_kwargs_str,
-                action_kwargs_str
-            ) / max(
-                len(ground_truth_kwargs_str),
-                len(action_kwargs_str)
-            )
+        action_kwargs_match = (
+            ground_truth_kwargs_str ==
+            action_kwargs_str
         )
 
-        reward += 0.3 * (
-            1 - fuzzy_kwargs_match
-        )
+        if action_kwargs_match:
+
+            reward += 0.3
 
         rewards.append(
-            reward * original_success
+            reward
         )
 
     return rewards
@@ -244,30 +239,30 @@ if __name__ == "__main__":
     training_args = GRPOConfig(
         ddp_timeout = DEFAULT_DDP_TIMEOUT,
         optim = "adamw_torch_fused",
-        per_device_train_batch_size = 1,
-        per_device_eval_batch_size = 1,
+        per_device_train_batch_size = 8,
+        per_device_eval_batch_size = 8,
         gradient_accumulation_steps = 8,
         gradient_checkpointing = True,
         gradient_checkpointing_kwargs = {
             'use_reentrant': False
         },
-        max_prompt_length = 7680,
-        max_completion_length = 512,
-        num_generations = 8,
-        temperature = 0.5,
-        top_p = 1.0,
-        top_k = None,
-        learning_rate = 1e-5,
-        beta = 0.04,
-        num_iterations = 1,
-        epsilon = 0.2,
+        learning_rate = 5e-5,
         weight_decay = 0.0,
         adam_beta1 = 0.9,
-        adam_beta2 = 0.999,
+        adam_beta2 = 0.99,
         adam_epsilon = 1e-8,
-        num_train_epochs = 1,
-        warmup_ratio = 0.01,
-        logging_steps = 10,
+        max_prompt_length = 7680,
+        max_completion_length = 512,
+        temperature = 0.7,
+        top_k = None,
+        top_p = 1,
+        num_generations = 8,
+        num_iterations = 1,
+        beta = 0.04,
+        epsilon = 0.2,
+        num_train_epochs = 10,
+        warmup_steps = 0,
+        logging_steps = 1,
         output_dir = args.output_dir,
         bf16 = args.use_bf16,
         remove_unused_columns = False,
