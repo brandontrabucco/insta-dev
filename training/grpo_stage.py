@@ -170,19 +170,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_name",
         type = str,
-        default = "./qwen-1.5b-grpo-n0"
+        default = "./qwen-1.5b-sft"
     )
 
     parser.add_argument(
         "--dataset_path",
         type = str,
-        default = "./insta-150k-v2-grpo-n1"
+        default = "./insta-150k-v2-grpo-n0"
     )
 
     parser.add_argument(
         "--output_dir",
         type = str,
-        default = "./qwen-1.5b-grpo-n1"
+        default = "./qwen-1.5b-grpo-n0"
     )
 
     parser.add_argument(
@@ -246,7 +246,7 @@ if __name__ == "__main__":
         gradient_checkpointing_kwargs = {
             'use_reentrant': False
         },
-        learning_rate = 5e-5,
+        learning_rate = 1e-5,
         weight_decay = 0.0,
         adam_beta1 = 0.9,
         adam_beta2 = 0.99,
@@ -260,14 +260,14 @@ if __name__ == "__main__":
         num_iterations = 1,
         beta = 0.04,
         epsilon = 0.2,
-        num_train_epochs = 10,
-        warmup_steps = 0,
+        num_train_epochs = 3,
+        warmup_steps = 10,
         logging_steps = 1,
         output_dir = args.output_dir,
         bf16 = args.use_bf16,
         remove_unused_columns = False,
         save_total_limit = 3,
-        save_steps = 1000,
+        save_steps = 100,
         save_only_model = True,
         use_vllm = True,
     )

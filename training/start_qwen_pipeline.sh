@@ -12,8 +12,8 @@ JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"http://localhost:8001/v1"}
 NUM_AGENTS=${NUM_AGENTS:-32}
 PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-8}
 
-RANK=${RANK:-1}
-WORLD_SIZE=${WORLD_SIZE:-150}
+RANK=${RANK:-0}
+WORLD_SIZE=${WORLD_SIZE:-1}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
@@ -27,7 +27,7 @@ VLLM_ARGS=(
 
 PIPELINE_ARGS=(
     --dataset data-for-agents/insta-150k-v2
-    --dataset_split train
+    --dataset_split test
     --num_agents ${NUM_AGENTS}
     --playwright_workers ${PLAYWRIGHT_WORKERS}
     --rank ${RANK}
@@ -39,19 +39,15 @@ PIPELINE_ARGS=(
 
 unset LD_LIBRARY_PATH
 
-for ITERATION in 0 1 2 3 4 5 6 7; do 
-
 DATA_ARGS=(
-    --observations_dir qwen-1.5b-grpo-n0-rollouts/x${ITERATION}/observations
-    --screenshot_dir qwen-1.5b-grpo-n0-rollouts/x${ITERATION}/screenshots
-    --actions_dir qwen-1.5b-grpo-n0-rollouts/x${ITERATION}/actions
-    --judgments_dir qwen-1.5b-grpo-n0-rollouts/x${ITERATION}/judgments
+    --observations_dir qwen-1.5b-grpo-n0-rollouts/test/observations
+    --screenshot_dir qwen-1.5b-grpo-n0-rollouts/test/screenshots
+    --actions_dir qwen-1.5b-grpo-n0-rollouts/test/actions
+    --judgments_dir qwen-1.5b-grpo-n0-rollouts/test/judgments
 )
 
 python -u run_pipeline.py \
     ${PIPELINE_ARGS[@]} \
     ${DATA_ARGS[@]} \
     ${VLLM_ARGS[@]} \
-    > agents-${ITERATION}.log 2>&1
-
-done
+    > agents-test.log 2>&1

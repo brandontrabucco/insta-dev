@@ -275,9 +275,21 @@ def process_dataset(
         ] * len(new_prompts))
 
     output_dict = {
+        "data_source": [
+            args.dataset_name
+        ] * len(prompts),
         "prompt": prompts,
-        "output": outputs,
-        "success": successes,
+        "ability": [
+            args.dataset_name
+        ] * len(prompts),
+        "reward_model": [{
+            "style": "insta",
+            "ground_truth": ground_truth
+        } for ground_truth in outputs],
+        "extra_info": [{
+            "success": success,
+            "split": "train"
+        } for success in successes]
     }
 
     return output_dict
@@ -328,9 +340,9 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--dataset_output_dir",
+        "--dataset_output_file",
         type = str,
-        default="./insta-150k-v2-grpo-n1"
+        default="./verl/insta-150k-v2-grpo-n0.parquet"
     )
 
     parser.add_argument(
@@ -391,7 +403,7 @@ if __name__ == "__main__":
         batch_size = 32,
         num_proc = 32,
     )
-    
-    dataset.save_to_disk(
-        args.dataset_output_dir
+
+    dataset.to_parquet(
+        args.dataset_output_file
     )
