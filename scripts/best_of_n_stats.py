@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--judgments_pattern',
         type = str,
-        default = 'grpo-n=*/judgments/*.json',
+        default = 'qwen-1.5b-grpo-n0-rollouts/*/judgments/*.json',
         help = 'Directory containing judgment files'
     )
 

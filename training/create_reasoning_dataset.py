@@ -332,7 +332,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_output_dir",
         type = str,
-        default="./insta-150k-v2-grpo-round=0"
+        default="./insta-150k-v2-grpo-n1"
     )
 
     parser.add_argument(

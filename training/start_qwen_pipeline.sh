@@ -3,7 +3,7 @@
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"./qwen-1.5b-filtered"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"./qwen-1.5b-grpo-n0"}
 JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"meta-llama/Llama-3.3-70B-Instruct"}
 
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:8000/v1"}
@@ -12,7 +12,7 @@ JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"http://localhost:8001/v1"}
 NUM_AGENTS=${NUM_AGENTS:-32}
 PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-8}
 
-RANK=${RANK:-0}
+RANK=${RANK:-1}
 WORLD_SIZE=${WORLD_SIZE:-150}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
@@ -39,13 +39,13 @@ PIPELINE_ARGS=(
 
 unset LD_LIBRARY_PATH
 
-for ITERATION in {0..100}; do 
+for ITERATION in 0 1 2 3 4 5 6 7; do 
 
 DATA_ARGS=(
-    --observations_dir grpo-n=${ITERATION}/observations
-    --screenshot_dir grpo-n=${ITERATION}/screenshots
-    --actions_dir grpo-n=${ITERATION}/actions
-    --judgments_dir grpo-n=${ITERATION}/judgments
+    --observations_dir qwen-1.5b-grpo-n0-rollouts/x${ITERATION}/observations
+    --screenshot_dir qwen-1.5b-grpo-n0-rollouts/x${ITERATION}/screenshots
+    --actions_dir qwen-1.5b-grpo-n0-rollouts/x${ITERATION}/actions
+    --judgments_dir qwen-1.5b-grpo-n0-rollouts/x${ITERATION}/judgments
 )
 
 python -u run_pipeline.py \

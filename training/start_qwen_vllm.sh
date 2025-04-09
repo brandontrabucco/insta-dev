@@ -3,7 +3,7 @@
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
-MODEL_NAME=${MODEL_NAME:-"./qwen-1.5b-filtered"}
+MODEL_NAME=${MODEL_NAME:-"./qwen-1.5b-grpo-n0"}
 API_KEY=${API_KEY:-"token-abc123"}
 DTYPE=${DTYPE:-"bfloat16"}
 
@@ -27,7 +27,7 @@ VLLM_ARGS=(
     --max-model-len $MAX_MODEL_LEN
     --gpu-memory-utilization $GPU_MEMORY_UTILIZATION
     ${CHUNKED_PREFILL} ${PREFIX_CACHING}
-    --max-num-batched-tokens $MAX_NUM_BATCHED_TOKENS
+    --max-num-batched-tokens $NUM_BATCHED_TOKENS
     --api-key $API_KEY
     --dtype $DTYPE
 )
