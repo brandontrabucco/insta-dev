@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DOCKER_IMAGE=${DOCKER_IMAGE:-"hiyouga/verl:ngc-th2.6.0-cu120-vllm0.8.2-verl0.3.0.post1"}
-VERL_COMMAND=${VERL_COMMAND:-"bash verl/run_qwen2.5-1.5b.sh"}
+VERL_COMMAND=${VERL_COMMAND:-"bash verl/train_grpo_qwen2.5-1.5b.sh"}
 
 MODEL_PATH=${MODEL_PATH:-"./qwen-1.5b-sft"}
 DEFAULT_LOCAL_DIR=${DEFAULT_LOCAL_DIR:-"./qwen-1.5b-grpo-n0"}
