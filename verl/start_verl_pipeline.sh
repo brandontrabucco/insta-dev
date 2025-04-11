@@ -53,20 +53,15 @@ mkdir -p ${DEFAULT_LOCAL_DIR}
 docker run ${DOCKER_ARGS[@]} ${DOCKER_IMAGE} \
     bash -c "cd /insta-dev && pip install -e . && ${VERL_COMMAND}"
 
-CKPT_DIR=$(
-    ls -d ${DEFAULT_LOCAL_DIR}/global_step*/ 
-    | sort -V | tail -n 1
-)
+LAST_CKPT_DIR=$(ls -d ${DEFAULT_LOCAL_DIR}/global_step* | sort -V | tail -n 1)
+
+cp ${LAST_CKPT_DIR}/actor/huggingface/* ${LAST_CKPT_DIR}/
 
 MERGE_ARGS=(
-    --local_dir ${CKPT_DIR}/actor/
-    --target_dir ${CKPT_DIR}
-    --hf_model_path ${CKPT_DIR}
+    --local_dir ${LAST_CKPT_DIR}/actor/
+    --target_dir ${LAST_CKPT_DIR}
+    --hf_model_path ${LAST_CKPT_DIR}
 )
-
-cp ${CKPT_DIR}/actor/huggingface/* ${CKPT_DIR}/
 
 python verl/model_merger.py \
     --backend fsdp ${MERGE_ARGS[@]}
-
-rm -rf ${DEFAULT_LOCAL_DIR}/global_step*

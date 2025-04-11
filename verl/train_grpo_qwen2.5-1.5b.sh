@@ -24,7 +24,7 @@ TRAINER_ARGS=(
     trainer.experiment_name=${EXPERIMENT_NAME}
     trainer.n_gpus_per_node=8 
     trainer.nnodes=1 
-    trainer.save_freq=20
+    trainer.save_freq=-1
     trainer.test_freq=40 
     trainer.total_epochs=5
 )
