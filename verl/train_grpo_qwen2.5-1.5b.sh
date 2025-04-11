@@ -70,3 +70,9 @@ python3 -m verl.trainer.main_ppo \
     ${DATASET_ARGS[@]} \
     ${TRAINER_ARGS[@]} \
     > ${VERL_LOG} 2>&1
+
+chmod -R 777 ${DEFAULT_LOCAL_DIR}
+chmod -R 777 ${VERL_LOG}
+
+chmod -R 777 wandb
+chmod -R 777 outputs

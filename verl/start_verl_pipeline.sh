@@ -67,18 +67,19 @@ docker run ${DOCKER_ARGS[@]} \
     bash -c "${DOCKER_COMMAND}"
 
 CKPT_DIR=$(
-    ls -d ${DEFAULT_LOCAL_DIR}/global*/ 
+    ls -d ${DEFAULT_LOCAL_DIR}/global_step*/ 
     | sort -V | tail -n 1
 )
 
 MERGE_ARGS=(
     --local_dir ${CKPT_DIR}/actor/
-    --hf_model_path ${CKPT_DIR}
     --target_dir ${CKPT_DIR}
+    --hf_model_path ${CKPT_DIR}
 )
 
-sudo chmod 777 -R ${DEFAULT_LOCAL_DIR}
 cp ${CKPT_DIR}/actor/huggingface/* ${CKPT_DIR}/
 
 python verl/model_merger.py \
     --backend fsdp ${MERGE_ARGS[@]}
+
+rm -rf ${DEFAULT_LOCAL_DIR}/global_step*
