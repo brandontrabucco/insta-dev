@@ -2,8 +2,12 @@ from typing import Callable, Tuple, List, Dict, Generator
 from collections import namedtuple
 
 from dataclasses import asdict
-from functools import partial
-from multiprocessing import Pool
+from itertools import cycle
+
+from torch.multiprocessing import (
+    Process,
+    Queue,
+)
 
 from insta.configs import (
     DEFAULT_AGENT_CONFIG,
@@ -13,6 +17,8 @@ from insta.configs import (
     JudgeConfig,
     BrowserConfig,
     get_browser_config,
+    get_agent_config,
+    get_judge_config
 )
 
 from insta.gym_env import (
@@ -35,7 +41,11 @@ from insta.utils import (
     VALUE_KEYS
 )
 
+
+import torch
 import random
+
+import time
 import tqdm
 import json
 import os
@@ -231,6 +241,9 @@ def iter_trajectories(
     agent: BrowserAgent | AgentConfig,
     judge: BrowserJudge | JudgeConfig,
     env: InstaEnv | BrowserConfig,
+    rank: int = DEFAULT_RANK,
+    world_size: int = DEFAULT_WORLD_SIZE,
+    seed: int = DEFAULT_SEED,
     observations_dir: str = DEFAULT_OBSERVATIONS_DIR,
     screenshot_dir: str = DEFAULT_SCREENSHOT_DIR,
     actions_dir: str = DEFAULT_ACTIONS_DIR,
@@ -239,9 +252,6 @@ def iter_trajectories(
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
-    seed: int = DEFAULT_SEED,
-    rank: int = DEFAULT_RANK,
-    world_size: int = DEFAULT_WORLD_SIZE
 ) -> Generator[InstaPipelineOutput, None, None]:
     """Run the InSTA pipeline for internet-scale data collection, and yield
     the observations, actions, and judgments for each task.
@@ -260,6 +270,15 @@ def iter_trajectories(
 
     env: InstaEnv | BrowserConfig
         The web navigation environment running Playwright.
+
+    rank: int
+        Rank of the process.
+
+    world_size: int
+        Number of data collection processes.
+
+    seed: int
+        Seed for the dataset.
 
     observations_dir: str
         Directory to save observations.
@@ -281,15 +300,6 @@ def iter_trajectories(
 
     prune_observations: bool
         Whether to prune observations before saving.
-
-    seed: int
-        Seed for the dataset.
-
-    rank: int
-        Rank of the process.
-
-    world_size: int
-        Number of data collection processes.
 
     Returns:
 
@@ -499,6 +509,9 @@ def list_trajectories(
     agent: BrowserAgent | AgentConfig, 
     judge: BrowserJudge | JudgeConfig,
     env: InstaEnv | BrowserConfig,
+    rank: int = DEFAULT_RANK,
+    world_size: int = DEFAULT_WORLD_SIZE,
+    seed: int = DEFAULT_SEED,
     observations_dir: str = DEFAULT_OBSERVATIONS_DIR,
     screenshot_dir: str = DEFAULT_SCREENSHOT_DIR,
     actions_dir: str = DEFAULT_ACTIONS_DIR,
@@ -507,9 +520,6 @@ def list_trajectories(
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
-    seed: int = DEFAULT_SEED,
-    rank: int = DEFAULT_RANK,
-    world_size: int = DEFAULT_WORLD_SIZE
 ) -> List[InstaPipelineOutput]:
     """Run the InSTA pipeline for internet-scale data collection, and list
     the observations, actions, and judgments for each task.
@@ -529,6 +539,15 @@ def list_trajectories(
     env: InstaEnv | BrowserConfig
         The web navigation environment running Playwright.
 
+    rank: int
+        Rank of the process.
+
+    world_size: int
+        Number of data collection processes.
+
+    seed: int
+        Seed for the dataset.
+
     observations_dir: str
         Directory to save observations.
 
@@ -550,15 +569,6 @@ def list_trajectories(
     prune_observations: bool
         Whether to prune observations before saving.
 
-    seed: int
-        Seed for the dataset.
-
-    rank: int
-        Rank of the process.
-
-    world_size: int
-        Number of data collection processes.
-
     Returns:
 
     List[InstaPipelineOutput]
@@ -568,8 +578,9 @@ def list_trajectories(
     """
 
     return list(iter_trajectories(
-        dataset = dataset, env = env,
-        agent = agent, judge = judge,
+        dataset = dataset,
+        env = env, agent = agent, judge = judge,
+        seed = seed, rank = rank, world_size = world_size,
         observations_dir = observations_dir,
         screenshot_dir = screenshot_dir,
         actions_dir = actions_dir,
@@ -578,9 +589,6 @@ def list_trajectories(
         agent_response_key = agent_response_key,
         skip_finished = skip_finished,
         prune_observations = prune_observations,
-        seed = seed,
-        rank = rank,
-        world_size = world_size
     ))
 
 
@@ -589,6 +597,9 @@ def save_trajectories(
     agent: BrowserAgent | AgentConfig,
     judge: BrowserJudge | JudgeConfig,
     env: InstaEnv | BrowserConfig,
+    rank: int = DEFAULT_RANK,
+    world_size: int = DEFAULT_WORLD_SIZE,
+    seed: int = DEFAULT_SEED,
     observations_dir: str = DEFAULT_OBSERVATIONS_DIR,
     screenshot_dir: str = DEFAULT_SCREENSHOT_DIR,
     actions_dir: str = DEFAULT_ACTIONS_DIR,
@@ -597,9 +608,6 @@ def save_trajectories(
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
-    seed: int = DEFAULT_SEED,
-    rank: int = DEFAULT_RANK,
-    world_size: int = DEFAULT_WORLD_SIZE
 ) -> None:
     """Run the InSTA pipeline for internet-scale data collection, and save
     the observations, actions, and judgments for each task.
@@ -619,6 +627,15 @@ def save_trajectories(
     env: InstaEnv | BrowserConfig
         The web navigation environment running Playwright.
 
+    rank: int
+        Rank of the process.
+
+    world_size: int
+        Number of data collection processes.
+
+    seed: int
+        Seed for the dataset.
+
     observations_dir: str
         Directory to save observations.
 
@@ -639,21 +656,13 @@ def save_trajectories(
 
     prune_observations: bool
         Whether to prune observations before saving.
-
-    seed: int
-        Seed for the dataset.
-
-    rank: int
-        Rank of the process.
-
-    world_size: int
-        Number of data collection processes.
     
     """
 
     for x in iter_trajectories(
-        dataset = dataset, env = env,
-        agent = agent, judge = judge,
+        dataset = dataset,
+        env = env, agent = agent, judge = judge,
+        seed = seed, rank = rank, world_size = world_size,
         observations_dir = observations_dir,
         screenshot_dir = screenshot_dir,
         actions_dir = actions_dir,
@@ -662,12 +671,70 @@ def save_trajectories(
         agent_response_key = agent_response_key,
         skip_finished = skip_finished,
         prune_observations = prune_observations,
-        seed = seed,
-        rank = rank,
-        world_size = world_size
     ):
         
         pass
+
+
+WORKER_DONE: str = "WORKER_DONE"
+
+
+def multiprocessing_wrapper(
+    data_collection_fn: Callable,
+    dataset: List[Dict[str, str]],
+    agent_config: AgentConfig = DEFAULT_AGENT_CONFIG,
+    judge_config: JudgeConfig = DEFAULT_JUDGE_CONFIG,
+    seed: int = DEFAULT_SEED,
+    observations_dir: str = DEFAULT_OBSERVATIONS_DIR,
+    screenshot_dir: str = DEFAULT_SCREENSHOT_DIR,
+    actions_dir: str = DEFAULT_ACTIONS_DIR,
+    judgments_dir: str = DEFAULT_JUDGMENTS_DIR,
+    max_actions: int = DEFAULT_MAX_ACTIONS,
+    agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
+    skip_finished: bool = DEFAULT_SKIP_FINISHED,
+    prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
+):
+
+    def worker_fn(
+        output_queue: Queue,
+        browser_config: BrowserConfig,
+        agent_rank: int,
+        total_agent_size: int,
+    ):
+        
+        os.environ['VLLM_WORKER_MULTIPROC_METHOD'] = 'spawn'
+        os.environ["CUDA_VISIBLE_DEVICES"] = \
+            str(agent_rank % torch.cuda.device_count())
+
+        outputs = data_collection_fn(
+            dataset = dataset,
+            agent = agent_config,
+            judge = judge_config,
+            env = browser_config,
+            rank = agent_rank,
+            world_size = total_agent_size,
+            seed = seed,
+            observations_dir = observations_dir,
+            screenshot_dir = screenshot_dir,
+            actions_dir = actions_dir,
+            judgments_dir = judgments_dir,
+            max_actions = max_actions,
+            agent_response_key = agent_response_key,
+            skip_finished = skip_finished,
+            prune_observations = prune_observations
+        )
+        
+        if outputs is not None and (
+                isinstance(outputs, list) or 
+                isinstance(outputs, Generator)):
+
+            for output in outputs:
+
+                output_queue.put(output)
+
+        output_queue.put(WORKER_DONE)
+
+    return worker_fn
 
 
 def launch_data_collection(
@@ -675,6 +742,8 @@ def launch_data_collection(
     agent_config: AgentConfig = DEFAULT_AGENT_CONFIG,
     judge_config: JudgeConfig = DEFAULT_JUDGE_CONFIG,
     browser_config: BrowserConfig = DEFAULT_BROWSER_CONFIG,
+    rank: int = DEFAULT_RANK,
+    world_size: int = DEFAULT_WORLD_SIZE,
     observations_dir: str = DEFAULT_OBSERVATIONS_DIR,
     screenshot_dir: str = DEFAULT_SCREENSHOT_DIR,
     actions_dir: str = DEFAULT_ACTIONS_DIR,
@@ -687,8 +756,6 @@ def launch_data_collection(
     return_trajectories: bool = DEFAULT_RETURN_TRAJECTORIES,
     num_agents: int = DEFAULT_NUM_AGENTS,
     playwright_workers: int = DEFAULT_PLAYWRIGHT_WORKERS,
-    rank: int = DEFAULT_RANK,
-    world_size: int = DEFAULT_WORLD_SIZE,
 ) -> List[InstaPipelineOutput] | None:
     """Run parallel agents to complete web navigation tasks,
     such as for performing Deep Research across the whole internet.
@@ -755,10 +822,17 @@ def launch_data_collection(
     
     """
 
-    worker_fn = partial(
+    worker_fn = (
         list_trajectories
         if return_trajectories else
-        save_trajectories,
+        save_trajectories
+    )
+
+    worker_fn = multiprocessing_wrapper(
+        worker_fn, seed = seed,
+        dataset = dataset,
+        agent_config = agent_config,
+        judge_config = judge_config,
         observations_dir = observations_dir,
         screenshot_dir = screenshot_dir,
         actions_dir = actions_dir,
@@ -766,17 +840,17 @@ def launch_data_collection(
         max_actions = max_actions,
         agent_response_key = agent_response_key,
         skip_finished = skip_finished,
-        prune_observations = prune_observations
+        prune_observations = prune_observations,
     )
 
-    worker_args = []
-
-    dataset_ids = list(range(len(dataset)))
-
-    random.seed(seed)
-    random.shuffle(dataset_ids)
-
     browser_config_dict = asdict(browser_config)
+
+    total_agent_size = (
+        world_size * num_agents
+    )
+
+    worker_processes = []
+    worker_queues = []
 
     for agent_rank in range(
             rank * num_agents,
@@ -790,34 +864,75 @@ def launch_data_collection(
             )
         )
 
-        rank_dataset_ids = dataset_ids[
-            agent_rank::world_size * num_agents
-        ]
+        output_queue = Queue()
 
-        rank_dataset = [
-            dataset[example_id]
-            for example_id in rank_dataset_ids
-        ]
-
-        worker_args.append((
-            rank_dataset,
-            agent_config,
-            judge_config,
-            browser_config
-        ))
-        
-    with Pool(processes = num_agents) as pool:
-
-        results = pool.starmap(
-            worker_fn, worker_args
+        worker_args = (
+            output_queue,
+            browser_config,
+            agent_rank,
+            total_agent_size
         )
+
+        worker_process = Process(
+            target = worker_fn,
+            args = worker_args
+        )
+
+        worker_process.start()
+
+        worker_processes.append(
+            worker_process
+        )
+
+        worker_queues.append(
+            output_queue
+        )
+
+    pipeline_outputs = []
         
+    for idx, queue in cycle(enumerate(worker_queues)):
+
+        all_queues_finished = all(
+            queue_i is None
+            for queue_i in worker_queues
+        )
+
+        if all_queues_finished:
+    
+            break
+
+        queue_is_empty = (
+            queue is None
+            or queue.empty()
+        )
+
+        if queue_is_empty:
+
+            continue
+
+        output = queue.get()
+
+        if output is WORKER_DONE:
+
+            worker_queues[idx] = None
+
+        elif isinstance(
+            output, InstaPipelineOutput
+        ):
+
+            pipeline_outputs.append(
+                output
+            )
+
+        time.sleep(0.01)
+
+    for worker_process in worker_processes:
+
+        worker_process.join()
+
     if return_trajectories:
-        
-        return [
-            x for result in results
-            for x in result
-        ]
+
+        return pipeline_outputs
 
 
 class InstaPipeline(Callable):
@@ -845,6 +960,9 @@ class InstaPipeline(Callable):
     def __init__(self, agent_config: AgentConfig = DEFAULT_AGENT_CONFIG,
                  judge_config: JudgeConfig = DEFAULT_JUDGE_CONFIG,
                  browser_config: BrowserConfig = DEFAULT_BROWSER_CONFIG,
+                 rank: int = DEFAULT_RANK,
+                 world_size: int = DEFAULT_WORLD_SIZE,
+                 seed: int = DEFAULT_SEED,
                  observations_dir: str = DEFAULT_OBSERVATIONS_DIR,
                  screenshot_dir: str = DEFAULT_SCREENSHOT_DIR,
                  actions_dir: str = DEFAULT_ACTIONS_DIR,
@@ -852,10 +970,7 @@ class InstaPipeline(Callable):
                  max_actions: int = DEFAULT_MAX_ACTIONS,
                  agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
                  skip_finished: bool = DEFAULT_SKIP_FINISHED,
-                 prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
-                 seed: int = DEFAULT_SEED,
-                 rank: int = DEFAULT_RANK,
-                 world_size: int = DEFAULT_WORLD_SIZE):
+                 prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS):
         """Initialize the InSTA pipeline for internet-scale data collection,
         creates a browser, LLM agent, and LLM judge, then runs the agent
         to attempt web navigation tasks from the InSTA-150k dataset.
@@ -870,6 +985,15 @@ class InstaPipeline(Callable):
 
         browser_config: BrowserConfig
             Configuration for the Playwright environment.
+
+        rank: int
+            Rank of the process.
+
+        world_size: int
+            Number of data collection processes.
+
+        seed: int
+            Seed for the dataset.
 
         observations_dir: str
             Directory to save observations.
@@ -891,21 +1015,16 @@ class InstaPipeline(Callable):
 
         prune_observations: bool
             Whether to prune observations before saving.
-
-        seed: int
-            Seed for the dataset.
-
-        rank: int
-            Rank of the process.
-
-        world_size: int
-            Number of data collection processes.
         
         """
 
         self.agent_config = agent_config
         self.judge_config = judge_config
         self.browser_config = browser_config
+
+        self.rank = rank
+        self.world_size = world_size
+        self.seed = seed
 
         self.observations_dir = observations_dir
         self.screenshot_dir = screenshot_dir
@@ -916,22 +1035,6 @@ class InstaPipeline(Callable):
         self.agent_response_key = agent_response_key
         self.skip_finished = skip_finished
         self.prune_observations = prune_observations
-
-        self.seed = seed
-        self.rank = rank
-        self.world_size = world_size
-
-        self.agent = BrowserAgent(
-            config = self.agent_config
-        )
-
-        self.judge = BrowserJudge(
-            config = self.judge_config
-        )
-
-        self.env = InstaEnv(
-            config = self.browser_config
-        )
 
     def generate_trajectory(
         self, url: str, instruction: str
@@ -954,6 +1057,24 @@ class InstaPipeline(Callable):
             generated by running the agent with an instruction.
         
         """
+
+        if self.agent is None:
+
+            self.agent = BrowserAgent(
+                config = self.agent_config
+            )
+
+        if self.judge is None:
+
+            self.judge = BrowserJudge(
+                config = self.judge_config
+            )
+
+        if self.env is None:
+
+            self.env = InstaEnv(
+                config = self.browser_config
+            )
     
         observations, actions, judgment = generate_trajectory(
             env = self.env, agent = self.agent, judge = self.judge,
@@ -1008,9 +1129,27 @@ class InstaPipeline(Callable):
         
         """
 
+        if self.agent is None:
+
+            self.agent = BrowserAgent(
+                config = self.agent_config
+            )
+
+        if self.judge is None:
+
+            self.judge = BrowserJudge(
+                config = self.judge_config
+            )
+
+        if self.env is None:
+
+            self.env = InstaEnv(
+                config = self.browser_config
+            )
+
         yield from iter_trajectories(
-            dataset = dataset, env = self.env,
-            agent = self.agent, judge = self.judge, 
+            dataset, self.agent, self.judge, self.env,
+            rank = self.rank, world_size = self.world_size, seed = self.seed,
             observations_dir = self.observations_dir,
             screenshot_dir = self.screenshot_dir,
             actions_dir = self.actions_dir,
@@ -1019,9 +1158,6 @@ class InstaPipeline(Callable):
             agent_response_key = self.agent_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
-            seed = self.seed,
-            rank = self.rank,
-            world_size = self.world_size
         )
 
     def list_trajectories(
@@ -1044,9 +1180,27 @@ class InstaPipeline(Callable):
         
         """
 
+        if self.agent is None:
+
+            self.agent = BrowserAgent(
+                config = self.agent_config
+            )
+
+        if self.judge is None:
+
+            self.judge = BrowserJudge(
+                config = self.judge_config
+            )
+
+        if self.env is None:
+
+            self.env = InstaEnv(
+                config = self.browser_config
+            )
+
         return list_trajectories(
-            dataset = dataset, env = self.env,
-            agent = self.agent, judge = self.judge, 
+            dataset, self.agent, self.judge, self.env,
+            rank = self.rank, world_size = self.world_size, seed = self.seed,
             observations_dir = self.observations_dir,
             screenshot_dir = self.screenshot_dir,
             actions_dir = self.actions_dir,
@@ -1055,9 +1209,6 @@ class InstaPipeline(Callable):
             agent_response_key = self.agent_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
-            seed = self.seed,
-            rank = self.rank,
-            world_size = self.world_size
         )
 
     def save_trajectories(self, dataset: List[Dict[str, str]]) -> None:
@@ -1072,9 +1223,27 @@ class InstaPipeline(Callable):
         
         """
 
+        if self.agent is None:
+
+            self.agent = BrowserAgent(
+                config = self.agent_config
+            )
+
+        if self.judge is None:
+
+            self.judge = BrowserJudge(
+                config = self.judge_config
+            )
+
+        if self.env is None:
+
+            self.env = InstaEnv(
+                config = self.browser_config
+            )
+
         save_trajectories(
-            dataset = dataset, env = self.env,
-            agent = self.agent, judge = self.judge, 
+            dataset, self.agent, self.judge, self.env,
+            rank = self.rank, world_size = self.world_size, seed = self.seed,
             observations_dir = self.observations_dir,
             screenshot_dir = self.screenshot_dir,
             actions_dir = self.actions_dir,
@@ -1083,9 +1252,6 @@ class InstaPipeline(Callable):
             agent_response_key = self.agent_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
-            seed = self.seed,
-            rank = self.rank,
-            world_size = self.world_size
         )
 
     def launch(
@@ -1121,8 +1287,12 @@ class InstaPipeline(Callable):
         """
 
         return launch_data_collection(
-            dataset = dataset, agent_config = self.agent_config,
-            judge_config = self.judge_config, browser_config = self.browser_config,
+            dataset, agent_config = self.agent_config,
+            judge_config = self.judge_config,
+            browser_config = self.browser_config,
+            rank = self.rank,
+            world_size = self.world_size,
+            seed = self.seed,
             observations_dir = self.observations_dir,
             screenshot_dir = self.screenshot_dir,
             actions_dir = self.actions_dir,
@@ -1131,10 +1301,7 @@ class InstaPipeline(Callable):
             agent_response_key = self.agent_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
-            seed = self.seed,
             return_trajectories = return_trajectories,
             num_agents = num_agents,
             playwright_workers = playwright_workers,
-            rank = self.rank,
-            world_size = self.world_size,
         )

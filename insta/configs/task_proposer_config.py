@@ -8,6 +8,8 @@ class TaskProposerConfig:
     task_parser: str = "json"
 
     tokenizer: str = "meta-llama/Llama-3.3-70B-Instruct"
+
+    client_type: str = None
     client_kwargs: Dict = None
     generation_kwargs: Dict = None
 
@@ -42,6 +44,9 @@ DEFAULT_TASK_PARSER = "json"
 DEFAULT_TOKENIZER = "meta-llama/Llama-3.3-70B-Instruct"
 
 
+DEFAULT_CLIENT_TYPE = "openai"
+
+
 DEFAULT_CLIENT_KWARGS = {
     "api_key": "token-abc123",
     "base_url": "http://localhost:8000/v1",
@@ -74,6 +79,7 @@ DEFAULT_LOG_ERRORS = False
 DEFAULT_TASK_PROPOSER_CONFIG = TaskProposerConfig(
     task_parser = DEFAULT_TASK_PARSER,
     tokenizer = DEFAULT_TOKENIZER,
+    client_type = DEFAULT_CLIENT_TYPE,
     client_kwargs = DEFAULT_CLIENT_KWARGS,
     generation_kwargs = DEFAULT_GENERATION_KWARGS,
     last_judgments = DEFAULT_LAST_JUDGMENTS,

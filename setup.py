@@ -15,8 +15,6 @@ REQUIREMENTS = [
     'gradio',
     'gradio_client',
     'langchain',
-    'scrubadub',
-    'scrubadub_spacy',
 ]
 
 URL = (
@@ -58,4 +56,10 @@ setuptools.setup(
     long_description = DESCRIPTION,
     long_description_content_type = 'text/markdown',
     classifiers = CLASSIFIERS,
+    extras_require = {
+        'pii': [
+            'scrubadub',
+            'scrubadub_spacy',
+        ],
+    },
 )

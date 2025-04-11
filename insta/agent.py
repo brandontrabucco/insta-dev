@@ -16,6 +16,10 @@ from insta.configs.agent_config import (
 from typing import List, Callable, Tuple, Dict
 from transformers import AutoTokenizer
 
+from vllm import (
+    LLM, SamplingParams
+)
+
 import openai
 
 
@@ -85,9 +89,17 @@ class BrowserAgent(Callable):
             self.config.tokenizer
         )
 
-        self.llm_client = openai.OpenAI(
-            **self.config.client_kwargs
-        )
+        if self.config.client_type == "vllm":
+
+            self.llm_client = LLM(
+                **self.config.client_kwargs
+            )
+
+        elif self.config.client_type == "openai":
+
+            self.llm_client = openai.OpenAI(
+                **self.config.client_kwargs
+            )
 
         self.reset()
 
@@ -150,14 +162,26 @@ class BrowserAgent(Callable):
             last_obs = last_obs
         )
 
-        completion = self.llm_client.chat.completions.create(
-            messages = messages,
-            **self.config.generation_kwargs
-        )
+        if self.config.client_type == "vllm":
+
+            params = SamplingParams(
+                **self.config.generation_kwargs
+            )
+
+            response = self.llm_client.chat(
+                messages = messages,
+                sampling_params = params
+            ).outputs[0].text
+
+        elif self.config.client_type == "openai":
+
+            response = self.llm_client.chat.completions.create(
+                messages = messages,
+                **self.config.generation_kwargs
+            ).choices[0].message.content
 
         return self.action_parser.parse_action(
-            completion.choices[0]
-            .message.content
+            response = response
         )
     
     def __call__(
