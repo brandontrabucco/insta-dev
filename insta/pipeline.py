@@ -724,9 +724,7 @@ def multiprocessing_wrapper(
             prune_observations = prune_observations
         )
         
-        if outputs is not None and (
-                isinstance(outputs, list) or 
-                isinstance(outputs, Generator)):
+        if outputs is not None:
 
             for output in outputs:
 
@@ -735,6 +733,9 @@ def multiprocessing_wrapper(
         output_queue.put(WORKER_DONE)
 
     return worker_fn
+
+
+NULL_QUEUE = None
 
 
 def launch_data_collection(
@@ -893,7 +894,7 @@ def launch_data_collection(
     for idx, queue in cycle(enumerate(worker_queues)):
 
         all_queues_finished = all(
-            queue_i is None
+            queue_i is NULL_QUEUE
             for queue_i in worker_queues
         )
 
@@ -902,7 +903,7 @@ def launch_data_collection(
             break
 
         queue_is_empty = (
-            queue is None
+            queue is NULL_QUEUE
             or queue.empty()
         )
 
@@ -912,9 +913,15 @@ def launch_data_collection(
 
         output = queue.get()
 
-        if output is WORKER_DONE:
+        worker_finished = (
+            output == WORKER_DONE
+        )
 
-            worker_queues[idx] = None
+        if worker_finished:
+
+            worker_queues[idx] = (
+                NULL_QUEUE
+            )
 
         elif isinstance(
             output, InstaPipelineOutput

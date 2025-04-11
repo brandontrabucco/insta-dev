@@ -1,8 +1,4 @@
-import scrubadub
-import scrubadub_spacy
-
-
-SCRUBBER: scrubadub.Scrubber = None
+SCRUBBER: 'scrubadub.Scrubber' = None
 
 
 def scrubadub_clean(processed_text: str) -> str:
@@ -19,6 +15,9 @@ def scrubadub_clean(processed_text: str) -> str:
         The text with PII removed.
     
     """
+
+    import scrubadub
+    import scrubadub_spacy
 
     global SCRUBBER
 

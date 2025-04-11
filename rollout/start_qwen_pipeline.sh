@@ -22,7 +22,7 @@ WORLD_SIZE=${WORLD_SIZE:-150}
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
 
-BEST_OF_N=${BEST_OF_N:-5}
+BEST_OF_N=${BEST_OF_N:-4}
 
 VLLM_ARGS=(
     --agent_model_name ${AGENT_MODEL_NAME}
