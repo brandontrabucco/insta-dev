@@ -3,7 +3,7 @@
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"./qwen-1.5b-sft"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"./qwen-1.5b-grpo-n0"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:8000/v1"}
 AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
 
@@ -47,6 +47,7 @@ PIPELINE_ARGS=(
 
 unset LD_LIBRARY_PATH
 
+export MODEL_NAME=${AGENT_MODEL_NAME}
 bash rollout/start_qwen_vllm.sh
 
 for ((IDX = 0; IDX < BEST_OF_N; IDX++)); do
