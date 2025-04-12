@@ -41,7 +41,7 @@ unset LD_LIBRARY_PATH
 
 for IDX in {1..${MAX_ERRORS}}; do
 
-vllm serve $MODEL_NAME ${VLLM_ARGS[@]} >> ${VLLM_LOG} 2>&1
+vllm serve $MODEL_NAME ${VLLM_ARGS[@]} > ${VLLM_LOG} 2>&1
 
 done
 

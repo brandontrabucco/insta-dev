@@ -342,7 +342,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_output_file",
         type = str,
-        default="./verl/insta-150k-v2-grpo-n0.parquet"
+        default="./rl/insta-150k-v2-grpo-n0.parquet"
     )
 
     parser.add_argument(

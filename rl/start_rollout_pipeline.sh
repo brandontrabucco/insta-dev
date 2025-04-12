@@ -9,7 +9,7 @@ AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
 
 ROLLOUT_DIR=${ROLLOUT_DIR:-"${AGENT_MODEL_NAME}-rollouts"}
 
-JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gpt-4o-mini"}
+JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gpt-4o"}
 JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://api.openai.com/v1"}
 JUDGE_API_KEY=${JUDGE_API_KEY:-${OPENAI_API_KEY}}
 
@@ -22,7 +22,7 @@ WORLD_SIZE=${WORLD_SIZE:-150}
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
 
-BEST_OF_N=${BEST_OF_N:-4}
+BEST_OF_N=${BEST_OF_N:-8}
 
 VLLM_ARGS=(
     --agent_model_name ${AGENT_MODEL_NAME}
@@ -48,7 +48,7 @@ PIPELINE_ARGS=(
 unset LD_LIBRARY_PATH
 
 export MODEL_NAME=${AGENT_MODEL_NAME}
-bash rollout/start_qwen_vllm.sh
+bash rl/start_rollout_vllm.sh
 
 for ((IDX = 0; IDX < BEST_OF_N; IDX++)); do
 
@@ -59,7 +59,7 @@ DATA_ARGS=(
     --judgments_dir ${ROLLOUT_DIR}/${IDX}/judgments
 )
 
-python -u rollout/qwen_pipeline.py \
+python -u rl/rollout_pipeline.py \
     ${PIPELINE_ARGS[@]} \
     ${DATA_ARGS[@]} \
     ${VLLM_ARGS[@]} \

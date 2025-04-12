@@ -6,16 +6,16 @@ DEFAULT_LOCAL_DIR=${DEFAULT_LOCAL_DIR:-"./qwen-1.5b-grpo-n0"}
 PROJECT_NAME=${PROJECT_NAME:-"verl_qwen_grpo"}
 EXPERIMENT_NAME=${EXPERIMENT_NAME:-"qwen2.5_1.5b_grpo_n0_lr1e-5-large-batch"}
 
-TRAIN_FILES=${TRAIN_FILES:-"./verl/insta-150k-v2-grpo-n0.parquet"}
-VAL_FILES=${VAL_FILES:-"./verl/insta-150k-v2-grpo-n0.parquet"}
+TRAIN_FILES=${TRAIN_FILES:-"./rl/insta-150k-v2-grpo-n0.parquet"}
+VAL_FILES=${VAL_FILES:-"./rl/insta-150k-v2-grpo-n0.parquet"}
 
-VERL_LOG=${VERL_LOG:-"./verl/trainer.log"}
+VERL_LOG=${VERL_LOG:-"./rl/verl.log"}
 
 set -x  # Enable debugging output
 
 TRAINER_ARGS=(
     algorithm.adv_estimator=grpo 
-    custom_reward_function.path=./verl/reward_func.py 
+    custom_reward_function.path=./rl/reward_func.py 
     custom_reward_function.name='compute_score' 
     trainer.default_local_dir=${DEFAULT_LOCAL_DIR}
     trainer.critic_warmup=0 

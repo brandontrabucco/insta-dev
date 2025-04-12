@@ -4,7 +4,7 @@ source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
 DOCKER_IMAGE=${DOCKER_IMAGE:-"hiyouga/verl:ngc-th2.6.0-cu120-vllm0.8.2-verl0.3.0.post1"}
-VERL_COMMAND=${VERL_COMMAND:-"bash verl/train_grpo_qwen2.5-1.5b.sh"}
+VERL_COMMAND=${VERL_COMMAND:-"bash rl/train_grpo_qwen2.5-1.5b.sh"}
 
 MODEL_PATH=${MODEL_PATH:-"./qwen-1.5b-grpo-n0"}
 DEFAULT_LOCAL_DIR=${DEFAULT_LOCAL_DIR:-"./qwen-1.5b-grpo-n1"}
@@ -13,12 +13,12 @@ PROJECT_NAME=${PROJECT_NAME:-"verl_qwen_grpo"}
 EXPERIMENT_NAME=${EXPERIMENT_NAME:-"qwen2.5_1.5b_grpo_n1_lr1e-5"}
 
 ROLLOUT_DIRS=${ROLLOUT_DIRS:-"./qwen-1.5b-grpo-n0-rollouts/*"}
-DATASET_OUTPUT_FILE=${DATASET_OUTPUT_FILE:-"./verl/insta-150k-v2-grpo-n1.parquet"}
+DATASET_OUTPUT_FILE=${DATASET_OUTPUT_FILE:-"./rl/insta-150k-v2-grpo-n1.parquet"}
 
 TRAIN_FILES=${TRAIN_FILES:-$DATASET_OUTPUT_FILE}
 VAL_FILES=${VAL_FILES:-$DATASET_OUTPUT_FILE}
 
-VERL_LOG=${VERL_LOG:-"verl/trainer.log"}
+VERL_LOG=${VERL_LOG:-"rl/verl.log"}
 
 docker pull ${DOCKER_IMAGE}
 
@@ -46,7 +46,7 @@ DATASET_ARGS=(
     --dataset_output_file ${DATASET_OUTPUT_FILE}
 )
 
-python verl/create_verl_dataset.py ${DATASET_ARGS[@]}
+python rl/create_verl_dataset.py ${DATASET_ARGS[@]}
 
 docker run ${DOCKER_ARGS[@]} ${DOCKER_IMAGE} \
     bash -c "cd /insta-dev && pip install -e . && ${VERL_COMMAND}"
@@ -55,11 +55,11 @@ LAST_CKPT_DIR=$(ls -d ${DEFAULT_LOCAL_DIR}/global_step* | sort -V | tail -n 1)
 
 mv ${LAST_CKPT_DIR}/actor/huggingface/* ${LAST_CKPT_DIR}/
 
-MERGE_ARGS=(
+CHECKPOINT_ARGS=(
     --local_dir ${LAST_CKPT_DIR}/actor/
     --target_dir ${LAST_CKPT_DIR}
     --hf_model_path ${LAST_CKPT_DIR}
 )
 
-python verl/model_merger.py \
-    --backend fsdp ${MERGE_ARGS[@]}
+python rl/verl_to_huggingface.py \
+    --backend fsdp ${CHECKPOINT_ARGS[@]}
