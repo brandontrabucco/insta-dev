@@ -48,14 +48,12 @@ DATASET_ARGS=(
 
 python verl/create_verl_dataset.py ${DATASET_ARGS[@]}
 
-mkdir -p ${DEFAULT_LOCAL_DIR}
-
 docker run ${DOCKER_ARGS[@]} ${DOCKER_IMAGE} \
     bash -c "cd /insta-dev && pip install -e . && ${VERL_COMMAND}"
 
 LAST_CKPT_DIR=$(ls -d ${DEFAULT_LOCAL_DIR}/global_step* | sort -V | tail -n 1)
 
-cp ${LAST_CKPT_DIR}/actor/huggingface/* ${LAST_CKPT_DIR}/
+mv ${LAST_CKPT_DIR}/actor/huggingface/* ${LAST_CKPT_DIR}/
 
 MERGE_ARGS=(
     --local_dir ${LAST_CKPT_DIR}/actor/

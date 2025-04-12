@@ -3,7 +3,7 @@
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"./qwen-1.5b-grpo-n0"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"./qwen-1.5b-grpo-n1"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:8000/v1"}
 AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
 
@@ -16,7 +16,7 @@ JUDGE_API_KEY=${JUDGE_API_KEY:-${OPENAI_API_KEY}}
 NUM_AGENTS=${NUM_AGENTS:-128}
 PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-32}
 
-RANK=${RANK:-1}
+RANK=${RANK:-2}
 WORLD_SIZE=${WORLD_SIZE:-150}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
