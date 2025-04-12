@@ -3,26 +3,26 @@
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"./qwen-1.5b-grpo-n1"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"./qwen-1.5b-grpo-n0"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:8000/v1"}
 AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
 
 ROLLOUT_DIR=${ROLLOUT_DIR:-"${AGENT_MODEL_NAME}-rollouts"}
 
-JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gpt-4o"}
-JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://api.openai.com/v1"}
-JUDGE_API_KEY=${JUDGE_API_KEY:-${OPENAI_API_KEY}}
+JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"meta-llama/Llama-3.3-70B-Instruct"}
+JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"http://localhost:8001/v1"}
+JUDGE_API_KEY=${JUDGE_API_KEY:-"token-abc123"}
 
 NUM_AGENTS=${NUM_AGENTS:-128}
 PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-32}
 
-RANK=${RANK:-2}
+RANK=${RANK:-0}
 WORLD_SIZE=${WORLD_SIZE:-150}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
 
-BEST_OF_N=${BEST_OF_N:-8}
+BEST_OF_N=${BEST_OF_N:-5}
 
 VLLM_ARGS=(
     --agent_model_name ${AGENT_MODEL_NAME}
@@ -63,7 +63,7 @@ python -u rl/rollout_pipeline.py \
     ${PIPELINE_ARGS[@]} \
     ${DATA_ARGS[@]} \
     ${VLLM_ARGS[@]} \
-    > agents-train-${IDX}.log 2>&1
+    > rl/agents-train-${IDX}.log 2>&1
 
 done
 

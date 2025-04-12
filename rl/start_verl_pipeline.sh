@@ -53,6 +53,8 @@ docker run ${DOCKER_ARGS[@]} ${DOCKER_IMAGE} \
 
 LAST_CKPT_DIR=$(ls -d ${DEFAULT_LOCAL_DIR}/global_step* | sort -V | tail -n 1)
 
+echo "Using Last Checkpoint: ${LAST_CKPT_DIR}"
+
 mv ${LAST_CKPT_DIR}/actor/huggingface/* ${LAST_CKPT_DIR}/
 
 CHECKPOINT_ARGS=(

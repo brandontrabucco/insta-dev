@@ -19,7 +19,7 @@ PREFIX_CACHING=${PREFIX_CACHING:-"--enable-prefix-caching"}
 NUM_BATCHED_TOKENS=${NUM_BATCHED_TOKENS:-32768}
 MAX_ERRORS=${MAX_ERRORS:-1000}
 
-VLLM_LOG=${VLLM_LOG:-"vllm.log"}
+VLLM_LOG=${VLLM_LOG:-"rl/vllm.log"}
 
 VLLM_ARGS=(
     --tensor-parallel-size $TENSOR_PARALLEL_SIZE
