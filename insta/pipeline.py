@@ -2,7 +2,7 @@ from typing import Callable, Tuple, List, Dict, Generator
 from collections import namedtuple
 
 from dataclasses import asdict
-from itertools import cycle
+from itertools import count
 
 from torch.multiprocessing import (
     Process,
@@ -891,7 +891,10 @@ def launch_data_collection(
 
     pipeline_outputs = []
         
-    for idx, queue in cycle(enumerate(worker_queues)):
+    for idx, queue in (
+        x for loop in count() 
+        for x in enumerate(worker_queues)
+    ):
 
         all_queues_finished = all(
             queue_i is NULL_QUEUE

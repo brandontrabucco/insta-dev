@@ -55,12 +55,12 @@ LAST_CKPT_DIR=$(ls -d ${DEFAULT_LOCAL_DIR}/global_step* | sort -V | tail -n 1)
 
 echo "Using Last Checkpoint: ${LAST_CKPT_DIR}"
 
-mv ${LAST_CKPT_DIR}/actor/huggingface/* ${LAST_CKPT_DIR}/
+mv ${LAST_CKPT_DIR}/actor/huggingface/* ${DEFAULT_LOCAL_DIR}/
 
 CHECKPOINT_ARGS=(
     --local_dir ${LAST_CKPT_DIR}/actor/
-    --target_dir ${LAST_CKPT_DIR}
-    --hf_model_path ${LAST_CKPT_DIR}
+    --target_dir ${DEFAULT_LOCAL_DIR}
+    --hf_model_path ${DEFAULT_LOCAL_DIR}
 )
 
 python rl/verl_to_huggingface.py \

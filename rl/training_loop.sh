@@ -6,7 +6,7 @@ conda activate insta
 export NUM_ITERATIONS=${NUM_ITERATIONS:-100}
 export BEST_OF_N=${BEST_OF_N:-5}
 
-for ((ITERATION = 0; ITERATION < NUM_ITERATIONS; ITERATION++)); do
+for ((ITERATION = 1; ITERATION < NUM_ITERATIONS; ITERATION++)); do
 
 export AGENT_MODEL_NAME="./qwen-1.5b-grpo-n${ITERATION}"
 
