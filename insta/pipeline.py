@@ -38,7 +38,8 @@ from insta.judge import (
 from insta.utils import (
     prune_observation,
     METADATA_KEYS,
-    VALUE_KEYS
+    VALUE_KEYS,
+    safe_call
 )
 
 
@@ -209,6 +210,18 @@ def generate_trajectory(
             "response": action.response,
             "matched_response": action.matched_response
         })
+
+    is_truncated = outputs is None or (
+        isinstance(outputs, InstaEnvStepOutput)
+        and outputs.truncated
+    )
+
+    if is_truncated:
+
+        raise RuntimeError(
+            "Failed to generate trajectory:\n{}\n\n"
+            .format(outputs)
+        )
 
     judgment = judge(
         observations = [
@@ -429,11 +442,15 @@ def iter_trajectories(
             domain = domain
         )
         
-        observations, actions, judgment = generate_trajectory(
+        observations, actions, judgment = safe_call(
+            generate_trajectory,
             env = env, agent = agent, judge = judge,
             url = url, instruction = instruction,
             max_actions = max_actions,
-            agent_response_key = agent_response_key
+            agent_response_key = agent_response_key,
+            catch_errors = True,
+            log_errors = True,
+            max_errors = 5,
         )
 
         for step_idx, observation in enumerate(observations):
@@ -1085,14 +1102,18 @@ class InstaPipeline(Callable):
             self.env = InstaEnv(
                 config = self.browser_config
             )
-    
-        observations, actions, judgment = generate_trajectory(
+        
+        observations, actions, judgment = safe_call(
+            generate_trajectory,
             env = self.env, agent = self.agent, judge = self.judge,
             url = url, instruction = instruction,
             max_actions = self.max_actions,
-            agent_response_key = self.agent_response_key
+            agent_response_key = self.agent_response_key,
+            catch_errors = True,
+            log_errors = True,
+            max_errors = 5,
         )
-
+    
         return observations, actions, judgment
     
     def __call__(self, url: str, instruction: str) -> Tuple[List[Dict], List[Dict]]:
