@@ -39,6 +39,7 @@ from insta.utils import (
     prune_observation,
     METADATA_KEYS,
     VALUE_KEYS,
+    BrowserStatus,
     safe_call
 )
 
@@ -442,7 +443,7 @@ def iter_trajectories(
             domain = domain
         )
         
-        observations, actions, judgment = safe_call(
+        trajectory = safe_call(
             generate_trajectory,
             env = env, agent = agent, judge = judge,
             url = url, instruction = instruction,
@@ -452,6 +453,12 @@ def iter_trajectories(
             log_errors = True,
             max_errors = 5,
         )
+
+        observations, actions, judgment = None, None, None
+
+        if trajectory is not BrowserStatus.ERROR:
+
+            observations, actions, judgment = trajectory
 
         for step_idx, observation in enumerate(observations):
 
@@ -1103,7 +1110,7 @@ class InstaPipeline(Callable):
                 config = self.browser_config
             )
         
-        observations, actions, judgment = safe_call(
+        trajectory = safe_call(
             generate_trajectory,
             env = self.env, agent = self.agent, judge = self.judge,
             url = url, instruction = instruction,
@@ -1113,9 +1120,15 @@ class InstaPipeline(Callable):
             log_errors = True,
             max_errors = 5,
         )
-    
+
+        observations, actions, judgment = None, None, None
+
+        if trajectory is not BrowserStatus.ERROR:
+
+            observations, actions, judgment = trajectory
+        
         return observations, actions, judgment
-    
+        
     def __call__(self, url: str, instruction: str) -> Tuple[List[Dict], List[Dict]]:
         """Attempt a web navigation task using the LLM agent, and return the
         observations and actions along the trajectory for later processing.
