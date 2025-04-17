@@ -909,9 +909,11 @@ def launch_data_collection(
     pipeline_outputs = []
         
     for idx, queue in (
-        x for loop in count() 
+        x for repeat in count() 
         for x in enumerate(worker_queues)
     ):
+
+        time.sleep(0.01)
 
         all_queues_finished = all(
             queue_i is NULL_QUEUE
@@ -950,8 +952,6 @@ def launch_data_collection(
             pipeline_outputs.append(
                 output
             )
-
-        time.sleep(0.01)
 
     for worker_process in worker_processes:
 
