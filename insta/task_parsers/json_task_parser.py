@@ -29,18 +29,18 @@ Format your task in the following JSON schema:
 ```json
 {
     "proposed_task": str,
-    "intermediate_steps": List[str],
-    "success_criteria": str
+    "steps": List[str],
+    "criteria": str
 }
 ```
 
 Here is what each key means:
 
-- `proposed_task`: A specific, challenging task that an expert user might want to accomplish on the website.
+- `proposed_task`: A specific, challenging task that an expert user might leverage this website to complete.
     - Must not require making an account, logging in, submitting personal information, making a purchase, or placing an order.
 
-- `intermediate_steps`: The steps an expert user would follow to complete the proposed task.
-- `success_criteria`: Criteria for the evaluator, including the required answer.
+- `steps`: Steps an expert user would follow to complete the proposed task.
+- `criteria`: The required answer, and criteria to determine if the task was completed.
 
 ## Example Tasks For Inspiration
 
@@ -49,13 +49,13 @@ Suppose you want to design a task around the 'C-to-C Hose-Shut-Off Valve' on 'aw
 ```json
 {
     "proposed_task": "What is the C-to-C Hose-Shut-Off Valve length in mm?",
-    "intermediate_steps": [
+    "steps": [
         "Navigate to 'awg-fittings.com'",
         "Open the product catelog for fittings",
         "Locate the product listing for the C-to-C Hose-Shut-Off Valve",
         "Find the product length in mm, and respond with that length in the answer"
     ],
-    "success_criteria": "The answer should include the specific length of '237 mm' for this product"
+    "criteria": "The answer should include the specific length of '237 mm' for this product"
 }
 ```
 
@@ -64,13 +64,13 @@ Suppose you want to design a task around the document 'The Angora cat; how to br
 ```json
 {
     "proposed_task": "Open a scanned copy of 'The Angora cat; how to breed train and keep it'.",
-    "intermediate_steps": [
+    "steps": [
         "Navigate to 'biodiversitylibrary.org'",
         "Search for 'The Angora cat; how to breed train and keep it' in the search bar",
         "Click on the title of the document in the search results",
         "Confirm the correct document is displayed in an embedded PDF reader"
     ],
-    "success_criteria": "The final webpage should display the correct document in an embedded PDF reader"
+    "criteria": "The final webpage should display the correct document in an embedded PDF reader"
 }
 ```
 
@@ -79,13 +79,13 @@ Suppose you want to design a task around the 'Generative Adversarial Networks' p
 ```json
 {
     "proposed_task": "How many citations does the paper 'Generative Adversarial Networks' have?",
-    "intermediate_steps": [
+    "steps": [
         "Navigate to 'scholar.google.com'",
         "Search for 'Generative Adversarial Networks' in the search bar",
         "Locate the correct paper in the search results",
         "Find an up-to-date citation count, and respond with that count in the answer"
     ],
-    "success_criteria": "The answer should include an up-to-date citation count, which is '80613' as of April 2025"
+    "criteria": "The answer should include an up-to-date citation count, which is '80613' as of April 2025"
 }
 ```
 
@@ -94,13 +94,13 @@ Suppose you want to design a task around the word 'serendipity' on 'wiktionary.o
 ```json
 {
     "proposed_task": "What is the definition and etymology of the word 'serendipity'?",
-    "intermediate_steps": [
+    "steps": [
         "Navigate to 'wiktionary.org'",
         "Search for 'serendipity' in the search bar",
         "Find the definition and etymology sections of the 'serendipity' page",
         "Summarize the contents of these sections in the answer"
     ],
-    "success_criteria": "The answer should mention Serendip (or Serendib), coined by English writer and politician Horace Walpole in 1754"
+    "criteria": "The answer should mention Serendip (or Serendib), coined by English writer and politician Horace Walpole in 1754"
 }
 ```
 
@@ -120,10 +120,18 @@ Enter a task in the following JSON schema:
 ```json
 {{
     "proposed_task": str,
-    "intermediate_steps": List[str],
-    "success_criteria": str
+    "steps": List[str],
+    "criteria": str
 }}
 ```
+
+Here is what each key means:
+
+- `proposed_task`: A specific, challenging task that an expert user might leverage {target_url} to complete.
+    - Must not require making an account, logging in, submitting personal information, making a purchase, or placing an order.
+
+- `steps`: Steps an expert user would follow to complete the proposed task.
+- `criteria`: The required answer, and criteria to determine if the task was completed.
 
 Start your response with an analysis for how an expert user would leverage {target_url}, followed by a step-by-step breakdown of your proposed task, and finally, enter your task in the JSON format. Respond in 500 words."""
 
@@ -188,8 +196,8 @@ class JsonTaskParser(BaseTaskParser):
         
         has_required_keys = (
             "proposed_task" in response_dict and
-            "intermediate_steps" in response_dict and
-            "success_criteria" in response_dict
+            "steps" in response_dict and
+            "criteria" in response_dict
         )
 
         if not has_required_keys:
@@ -197,14 +205,14 @@ class JsonTaskParser(BaseTaskParser):
             return BrowserStatus.ERROR
         
         proposed_task = response_dict["proposed_task"]
-        intermediate_steps = response_dict["intermediate_steps"]
-        success_criteria = response_dict["success_criteria"]
+        steps = response_dict["steps"]
+        criteria = response_dict["criteria"]
         
         keys_right_type = (
             (isinstance(proposed_task, str) and (len(proposed_task) > 0)) and
-            (isinstance(intermediate_steps, list) and (len(intermediate_steps) > 0) and all([
-                isinstance(x, str) for x in intermediate_steps])) and
-            (isinstance(success_criteria, str) and (len(success_criteria) > 0))
+            (isinstance(steps, list) and (len(steps) > 0) and all([
+                isinstance(x, str) for x in steps])) and
+            (isinstance(criteria, str) and (len(criteria) > 0))
         )
 
         if not keys_right_type:
@@ -213,8 +221,8 @@ class JsonTaskParser(BaseTaskParser):
         
         task_dict = {
             "proposed_task": str(proposed_task),
-            "intermediate_steps": list(intermediate_steps),
-            "success_criteria": str(success_criteria),
+            "steps": list(steps),
+            "criteria": str(criteria),
         }
         
         browser_task = BrowserTaskProposal(

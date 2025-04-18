@@ -102,8 +102,8 @@ def get_task_proposals(
 
     task_proposal = {
         "proposed_task": task_proposal.proposed_task,
-        "intermediate_steps": task_proposal.intermediate_steps,
-        "success_criteria": task_proposal.success_criteria,
+        "steps": task_proposal.steps,
+        "criteria": task_proposal.criteria,
         "response": task_proposal.response,
         "matched_response": task_proposal.matched_response,
     }

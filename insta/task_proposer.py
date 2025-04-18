@@ -25,8 +25,8 @@ import openai
 
 NULL_TASK_PROPOSAL = BrowserTaskProposal(
     proposed_task = None,
-    intermediate_steps = None,
-    success_criteria = None,
+    steps = None,
+    criteria = None,
     response = None,
     matched_response = None
 )

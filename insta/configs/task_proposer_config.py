@@ -30,8 +30,8 @@ class TaskProposerConfig:
 class BrowserTaskProposal:
 
     proposed_task: str = None
-    intermediate_steps: List[str] = None
-    success_criteria: str = None
+    steps: List[str] = None
+    criteria: str = None
 
     response: str = None
     matched_response: str = None
