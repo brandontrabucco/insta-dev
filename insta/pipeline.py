@@ -454,7 +454,7 @@ def iter_trajectories(
             max_errors = 5,
         )
 
-        observations, actions, judgment = None, None, None
+        observations, actions, judgment = [], [], {}
 
         if trajectory is not BrowserStatus.ERROR:
 
@@ -1121,7 +1121,7 @@ class InstaPipeline(Callable):
             max_errors = 5,
         )
 
-        observations, actions, judgment = None, None, None
+        observations, actions, judgment = [], [], {}
 
         if trajectory is not BrowserStatus.ERROR:
 
