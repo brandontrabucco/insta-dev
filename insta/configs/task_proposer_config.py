@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Dict
+from typing import Dict, List
 
 
 @dataclass
@@ -19,7 +19,7 @@ class TaskProposerConfig:
 
     last_actions: int = 5
     last_obs: int = 5
-    max_obs_tokens: int = 4096
+    max_obs_tokens: int = 2048
 
     catch_errors: bool = True
     max_errors: int = 5
@@ -30,9 +30,8 @@ class TaskProposerConfig:
 class BrowserTaskProposal:
 
     proposed_task: str = None
-    task_is_feasible: float = None
-    estimated_difficulty: float = None
-    estimated_steps: float = None
+    intermediate_steps: List[str] = None
+    success_criteria: str = None
 
     response: str = None
     matched_response: str = None
@@ -68,7 +67,7 @@ DEFAULT_LAST_TRAJECTORIES = 1
 
 DEFAULT_LAST_ACTIONS = 5
 DEFAULT_LAST_OBS = 5
-DEFAULT_MAX_OBS_TOKENS = 4096
+DEFAULT_MAX_OBS_TOKENS = 2048
 
 
 DEFAULT_CATCH_ERRORS = True

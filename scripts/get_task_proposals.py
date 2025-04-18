@@ -31,8 +31,7 @@ def get_task_proposals(
 ):
     
     task_proposer = BrowserTaskProposer(
-        config = task_proposer_config,
-        task_parser = "json"
+        config = task_proposer_config
     )
 
     example_dict = dataset[example_id]
@@ -103,9 +102,8 @@ def get_task_proposals(
 
     task_proposal = {
         "proposed_task": task_proposal.proposed_task,
-        "task_is_feasible": task_proposal.task_is_feasible,
-        "estimated_difficulty": task_proposal.estimated_difficulty,
-        "estimated_steps": task_proposal.estimated_steps,
+        "intermediate_steps": task_proposal.intermediate_steps,
+        "success_criteria": task_proposal.success_criteria,
         "response": task_proposal.response,
         "matched_response": task_proposal.matched_response,
     }
@@ -138,19 +136,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_data_dir",
         type = str,
-        default = "data"
+        default = "insta-150k-v2-qwen-2.5b-grpo-n1/insta-150k-v2-qwen-2.5b-grpo-n1"
     )
 
     parser.add_argument(
         "--output_tasks_file",
         type = str,
-        default = "tasks-test.json"
+        default = "insta-150k-v3.json"
     )
 
     parser.add_argument(
         "--dataset",
         type = str,
-        default = "data-for-agents/insta-150k",
+        default = "data-for-agents/insta-150k-v2",
     )
 
     parser.add_argument(
