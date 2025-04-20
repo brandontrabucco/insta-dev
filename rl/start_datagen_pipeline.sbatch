@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=insta
+#SBATCH --exclude=babel-6-13,babel-4-9,babel-4-29,babel-13-13,babel-4-17,babel-4-1,babel-13-1,babel-8-13
 #SBATCH --output=logs/datagen-%A-%a-%N.out
 #SBATCH --time=48:00:00
 #SBATCH --cpus-per-task=32
@@ -7,7 +8,7 @@
 #SBATCH --nodes=1
 #SBATCH --partition=array
 #SBATCH --gres=gpu:L40S:4
-#SBATCH --array=0-9
+#SBATCH --array=0-79
 
 SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-0}
 SLURM_ARRAY_TASK_COUNT=${SLURM_ARRAY_TASK_COUNT:-1}
@@ -39,7 +40,7 @@ AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"btrabucco/Insta-Qwen2.5-1.5B-GRPO-n1"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:8000/v1"}
 AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
 
-ROLLOUT_DIR=${ROLLOUT_DIR:-"${NFS_DIR}/btrabucc/insta-150k-v2-qwen-2.5b-grpo-n1"}
+ROLLOUT_DIR=${ROLLOUT_DIR:-"${NFS_DIR}/btrabucc/insta-150k-v2-qwen-1.5b-grpo-n1-x1"}
 
 JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gpt-4.1-nano"}
 JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://api.openai.com/v1"}

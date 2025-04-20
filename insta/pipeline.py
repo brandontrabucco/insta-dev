@@ -491,7 +491,17 @@ def iter_trajectories(
                     )
                 )
 
-        if observations_dir is not None:
+        trajectory_valid = (
+            observations is not None and 
+            len(observations) > 0 and 
+            actions is not None and 
+            len(actions) > 0 and 
+            judgment is not None and 
+            len(judgment) > 0
+        )
+
+        if trajectory_valid and \
+                observations_dir is not None:
                 
             with open(observations_path, "w") as file:
                 
@@ -501,7 +511,8 @@ def iter_trajectories(
                     indent = 4
                 )
 
-        if actions_dir is not None:
+        if trajectory_valid and \
+                actions_dir is not None:
 
             with open(actions_path, "w") as file:
                 
@@ -511,7 +522,8 @@ def iter_trajectories(
                     indent = 4
                 )
 
-        if judgments_dir is not None:
+        if trajectory_valid and \
+                judgments_dir is not None:
 
             with open(judgments_path, "w") as file:
                 
