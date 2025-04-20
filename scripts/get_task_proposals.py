@@ -84,15 +84,15 @@ def get_task_proposals(
 
     task_proposal = task_proposer(
         observations = [
-            x["processed_text"]
+            x.get("processed_text")
             for x in observations
         ],
         actions = [
-            x["response"]
+            x.get("response")
             for x in actions
         ],
         judgment = (
-            judgment["response"]
+            judgment.get("response")
         ),
         instruction = (
             task
@@ -235,6 +235,25 @@ if __name__ == "__main__":
     random.seed(args.seed)
     random.shuffle(dataset_ids)
 
+    all_tasks = []
+
+    if os.path.exists(args.output_tasks_file):
+
+        with open(args.output_tasks_file, "r") as file:
+
+            all_tasks = json.load(file)
+
+        finished_domains = set([
+            example_dict['domain']
+            for example_dict in all_tasks
+        ])
+
+        dataset_ids = [
+            example_idx for example_idx in dataset_ids
+            if dataset[example_idx]["domain"]
+            not in finished_domains
+        ]
+
     out_dataset_ids = []
 
     for agent_rank in range(
@@ -259,8 +278,6 @@ if __name__ == "__main__":
         input_judgments_dir = input_judgments_dir,
         task_proposer_config = task_proposer_config
     )
-
-    all_tasks = []
     
     with Pool(processes = args.num_agents) as pool:
 
