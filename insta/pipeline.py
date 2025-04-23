@@ -999,9 +999,9 @@ class InstaPipeline(Callable):
 
     """
 
-    agent: BrowserAgent
-    judge: BrowserJudge
-    env: InstaEnv
+    agent: BrowserAgent = None
+    judge: BrowserJudge = None
+    env: InstaEnv = None
 
     def __init__(self, agent_config: AgentConfig = DEFAULT_AGENT_CONFIG,
                  judge_config: JudgeConfig = DEFAULT_JUDGE_CONFIG,

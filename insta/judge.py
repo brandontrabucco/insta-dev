@@ -86,6 +86,10 @@ class BrowserJudge(Callable):
 
         if self.config.client_type == "vllm":
 
+            self.sampling_params = SamplingParams(
+                **self.config.generation_kwargs
+            )
+
             self.llm_client = LLM(
                 **self.config.client_kwargs
             )
@@ -144,14 +148,10 @@ class BrowserJudge(Callable):
 
         if self.config.client_type == "vllm":
 
-            params = SamplingParams(
-                **self.config.generation_kwargs
-            )
-
             response = self.llm_client.chat(
                 messages = messages,
-                sampling_params = params
-            ).outputs[0].text
+                sampling_params = self.sampling_params
+            )[0].outputs[0].text
 
         elif self.config.client_type == "openai":
 
