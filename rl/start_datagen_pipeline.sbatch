@@ -16,11 +16,11 @@ SLURM_ARRAY_TASK_COUNT=${SLURM_ARRAY_TASK_COUNT:-1}
 NUM_AGENTS=${NUM_AGENTS:-32}
 PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-8}
 
-export PLAYWRIGHT_LOG="playwright-${SLURM_ARRAY_TASK_ID}.log"
-export PLAYWRIGHT_PORT=$(( 3000 + SLURM_ARRAY_TASK_ID * PLAYWRIGHT_WORKERS ))
+PLAYWRIGHT_LOG="playwright-${SLURM_ARRAY_TASK_ID}.log"
+PLAYWRIGHT_PORT=$(( 3000 + SLURM_ARRAY_TASK_ID * PLAYWRIGHT_WORKERS ))
 
 export VLLM_LOG="logs/vllm-${SLURM_ARRAY_TASK_ID}.log"
-export AGENT_LLM_ENDPOINT_PORT=$(( 6000 + SLURM_ARRAY_TASK_ID * 2 ))
+AGENT_LLM_ENDPOINT_PORT=$(( 6000 + SLURM_ARRAY_TASK_ID * 2 ))
 
 SINGULARITY_ARGS=(
     --pwd /code/insta -w
@@ -35,9 +35,6 @@ sleep 90s  # wait for browser
 
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
-
-export NCCL_P2P_DISABLE=1
-unset LD_LIBRARY_PATH
 
 AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"btrabucco/Insta-Qwen2.5-1.5B-GRPO-n1"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:${AGENT_LLM_ENDPOINT_PORT}/v1"}
@@ -90,6 +87,9 @@ DATA_ARGS=(
 
 export HF_HOME=/scratch/btrabucc/hfcache
 huggingface-cli login --token $HUGGINGFACE_ACCESS_TOKEN
+
+export NCCL_P2P_DISABLE=1
+unset LD_LIBRARY_PATH
 
 python -u rl/rollout_pipeline.py \
     ${PIPELINE_ARGS[@]} \

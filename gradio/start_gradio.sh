@@ -13,4 +13,4 @@ conda activate insta
 touch ${SERVER_LOG} && tail -f ${SERVER_LOG} &
 bash start_playwright_server.sh
 
-python gradio/app.py
+python gradio/env.py
