@@ -2,29 +2,29 @@
 #SBATCH --job-name=insta
 #SBATCH --exclude=babel-6-13,babel-4-9,babel-4-29,babel-13-13,babel-4-17,babel-4-1,babel-13-1,babel-8-13
 #SBATCH --output=logs/datagen-%A-%a-%N.out
-#SBATCH --time=48:00:00
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=384G
+#SBATCH --time=12:00:00
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
 #SBATCH --nodes=1
 #SBATCH --partition=array
-#SBATCH --gres=gpu:L40S:4
-#SBATCH --array=0-79
+#SBATCH --gres=gpu:L40S:1
+#SBATCH --array=0-319
 
 SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-0}
 SLURM_ARRAY_TASK_COUNT=${SLURM_ARRAY_TASK_COUNT:-1}
 
+NUM_AGENTS=${NUM_AGENTS:-32}
+PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-8}
+
 export PLAYWRIGHT_LOG="playwright-${SLURM_ARRAY_TASK_ID}.log"
-export VLLM_LOG="rl/vllm-${SLURM_ARRAY_TASK_ID}.log"
+export PLAYWRIGHT_PORT=$(( 3000 + SLURM_ARRAY_TASK_ID * PLAYWRIGHT_WORKERS ))
 
-export NCCL_P2P_DISABLE=1
-unset LD_LIBRARY_PATH
-
-NUM_AGENTS=${NUM_AGENTS:-128}
-PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-32}
+export VLLM_LOG="logs/vllm-${SLURM_ARRAY_TASK_ID}.log"
+export AGENT_LLM_ENDPOINT_PORT=$(( 6000 + SLURM_ARRAY_TASK_ID * 2 ))
 
 SINGULARITY_ARGS=(
     --pwd /code/insta -w
-    --env SERVER_LOG=${PLAYWRIGHT_LOG},SERVER_WORKERS=${PLAYWRIGHT_WORKERS}
+    --env SERVER_LOG=${PLAYWRIGHT_LOG},SERVER_WORKERS=${PLAYWRIGHT_WORKERS},SERVER_BASE_PORT=${PLAYWRIGHT_PORT}
 )
 
 export NFS_DIR=${NFS_DIR:-/data/matrix/projects/rsalakhugroup}
@@ -36,11 +36,14 @@ sleep 90s  # wait for browser
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
+export NCCL_P2P_DISABLE=1
+unset LD_LIBRARY_PATH
+
 AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"btrabucco/Insta-Qwen2.5-1.5B-GRPO-n1"}
-AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:8000/v1"}
+AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:${AGENT_LLM_ENDPOINT_PORT}/v1"}
 AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
 
-ROLLOUT_DIR=${ROLLOUT_DIR:-"${NFS_DIR}/btrabucc/insta-150k-v2-qwen-1.5b-grpo-n1-x1"}
+ROLLOUT_DIR=${ROLLOUT_DIR:-"${NFS_DIR}/btrabucc/insta-150k-v2-qwen-1.5b-grpo-n1-x2"}
 
 JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gpt-4.1-nano"}
 JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://api.openai.com/v1"}
@@ -64,8 +67,9 @@ VLLM_ARGS=(
 PIPELINE_ARGS=(
     --dataset data-for-agents/insta-150k-v2
     --dataset_split train
-    --num_agents ${NUM_AGENTS}
+    --playwright_port ${PLAYWRIGHT_PORT}
     --playwright_workers ${PLAYWRIGHT_WORKERS}
+    --num_agents ${NUM_AGENTS}
     --rank ${RANK}
     --world_size ${WORLD_SIZE}
     --action_parser simplified_json
@@ -74,6 +78,7 @@ PIPELINE_ARGS=(
 )
 
 export MODEL_NAME=${AGENT_MODEL_NAME}
+export LLM_ENDPOINT_PORT=${AGENT_LLM_ENDPOINT_PORT}
 bash rl/start_rollout_vllm.sh
 
 DATA_ARGS=(
@@ -90,6 +95,6 @@ python -u rl/rollout_pipeline.py \
     ${PIPELINE_ARGS[@]} \
     ${DATA_ARGS[@]} \
     ${VLLM_ARGS[@]} \
-    > rl/agents-${RANK}.log 2>&1
+    > logs/agents-${RANK}.log 2>&1
 
 screen -XS vllm quit

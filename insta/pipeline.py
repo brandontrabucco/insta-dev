@@ -451,7 +451,7 @@ def iter_trajectories(
             agent_response_key = agent_response_key,
             catch_errors = True,
             log_errors = True,
-            max_errors = 5,
+            max_errors = 1,
         )
 
         observations, actions, judgment = [], [], {}
@@ -1130,7 +1130,7 @@ class InstaPipeline(Callable):
             agent_response_key = self.agent_response_key,
             catch_errors = True,
             log_errors = True,
-            max_errors = 5,
+            max_errors = 1,
         )
 
         observations, actions, judgment = [], [], {}

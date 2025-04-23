@@ -32,7 +32,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--base_url",
+        "--llm_endpoint",
         type = str,
         default = "http://localhost:8000/v1",
     )
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     client_kwargs = {
         "api_key": args.api_key,
-        "base_url": args.base_url
+        "base_url": args.llm_endpoint
     }
 
     generation_kwargs = {
