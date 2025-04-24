@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source /miniconda/etc/profile.d/conda.sh
+source /miniconda3/etc/profile.d/conda.sh
 conda activate insta
 
 MODEL_NAME=${MODEL_NAME:-"btrabucco/Insta-Qwen2.5-1.5B-SFT"}
@@ -38,7 +38,7 @@ VLLM_ARGS=(
 
 read -r -d '' VLLM_COMMAND << END_OF_SCRIPT
 
-source /miniconda/etc/profile.d/conda.sh
+source /miniconda3/etc/profile.d/conda.sh
 conda activate insta
 
 for IDX in {1..${MAX_ERRORS}}; do
