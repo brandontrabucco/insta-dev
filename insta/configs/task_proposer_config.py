@@ -7,7 +7,7 @@ class TaskProposerConfig:
 
     task_parser: str = "json"
 
-    tokenizer: str = "meta-llama/Llama-3.3-70B-Instruct"
+    tokenizer: str = "Qwen/Qwen2.5-1.5B-Instruct"
 
     client_type: str = None
     client_kwargs: Dict = None
@@ -40,7 +40,7 @@ class BrowserTaskProposal:
 DEFAULT_TASK_PARSER = "json"
 
 
-DEFAULT_TOKENIZER = "meta-llama/Llama-3.3-70B-Instruct"
+DEFAULT_TOKENIZER = "Qwen/Qwen2.5-1.5B-Instruct"
 
 
 DEFAULT_CLIENT_TYPE = "openai"
