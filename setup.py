@@ -12,6 +12,7 @@ REQUIREMENTS = [
     'tqdm',
     'Pillow',
     'scikit-video',
+    'opencv-python',
     'gradio',
     'gradio_client',
     'langchain',

@@ -7,7 +7,7 @@ class JudgeConfig:
 
     judgment_parser: str = "json"
 
-    tokenizer: str = "Qwen/Qwen2.5-1.5B-Instruct"
+    tokenizer: str = "Qwen/Qwen2.5-72B-Instruct"
 
     client_type: str = None
     client_kwargs: Dict = None
@@ -33,7 +33,7 @@ class BrowserJudgment:
 DEFAULT_JUDGMENT_PARSER = "json"
 
 
-DEFAULT_TOKENIZER = "Qwen/Qwen2.5-1.5B-Instruct"
+DEFAULT_TOKENIZER = "Qwen/Qwen2.5-72B-Instruct"
 
 
 DEFAULT_CLIENT_TYPE = "openai"
@@ -46,7 +46,7 @@ DEFAULT_CLIENT_KWARGS = {
 
 
 DEFAULT_GENERATION_KWARGS = {
-    "model": "meta-llama/Llama-3.3-70B-Instruct",
+    "model": "Qwen/Qwen2.5-72B-Instruct",
     "max_tokens": 2048,
     "top_p": 1.0,
     "temperature": 0.5
