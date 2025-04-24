@@ -63,4 +63,4 @@ EXPOSE 7860 3000-3007
 ENV GRADIO_SERVER_NAME="0.0.0.0"
 
 # Start the Huggingface demo
-CMD ["bash", "gradio/start_gradio.sh"]
+CMD ["bash", "gradio/start_agent.sh"]

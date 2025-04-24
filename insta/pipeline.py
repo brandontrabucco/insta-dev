@@ -387,12 +387,21 @@ def iter_trajectories(
 
         example_dict = dataset[example_id]
 
-        domain = example_dict["domain"]
-        instruction = example_dict["task"]
+        domain = example_dict.get(
+            "url", example_dict.get("domain")
+        )
+
+        instruction = example_dict.get(
+            "instruction", example_dict.get("task")
+        )
+
+        identifier = example_dict.get(
+            "identifier", domain
+        )
 
         progress_bar.set_description(
             "Processing: {}".format(
-                domain
+                identifier
             )
         )
 
@@ -400,28 +409,28 @@ def iter_trajectories(
 
             observations_path = os.path.join(
                 observations_dir,
-                "{}.json".format(domain)
+                "{}.json".format(identifier)
             )
 
         if actions_dir is not None:
 
             actions_path = os.path.join(
                 actions_dir,
-                "{}.json".format(domain)
+                "{}.json".format(identifier)
             )
 
         if judgments_dir is not None:
 
             judgments_path = os.path.join(
                 judgments_dir,
-                "{}.json".format(domain)
+                "{}.json".format(identifier)
             )
 
         if screenshot_dir is not None:
 
             screenshot_domain_dir = os.path.join(
                 screenshot_dir,
-                "{}".format(domain)
+                "{}".format(identifier)
             )
 
             os.makedirs(
@@ -439,9 +448,18 @@ def iter_trajectories(
 
             continue
 
-        url = "http://{domain}".format(
-            domain = domain
+        has_protocol = (
+            domain.startswith("http://")
+            or domain.startswith("https://")
         )
+
+        if not has_protocol:
+
+            url = "http://{domain}".format(
+                domain = domain
+            )
+
+        else: url = domain
         
         trajectory = safe_call(
             generate_trajectory,
