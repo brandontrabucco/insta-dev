@@ -12,8 +12,7 @@ conda activate insta
 
 rm ${SERVER_LOG}
 touch ${SERVER_LOG}
-
-bash start_playwright_server.sh
 tail -f ${SERVER_LOG} &
 
+bash start_playwright_server.sh
 python -u gradio/demo_env.py

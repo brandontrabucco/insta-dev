@@ -23,7 +23,7 @@ DEFAULT_VIDEO_HEIGHT = 720
 DEFAULT_VIDEO_WIDTH = 1280
 
 DEFAULT_MAX_ACTIONS = 30
-DEFAULT_BEST_OF_N = 8
+DEFAULT_NUM_SAMPLES = 8
 
 DEFAULT_MAX_OBS_TOKENS = 2048
 DEFAULT_LAST_OBS = 3
@@ -203,13 +203,13 @@ def generate_trajectory(
         url = "https://{}".format(url)
 
     print("Collecting {n} Trajectories\nInitial URL: {url}\nInstruction: {instruction}".format(
-        n = args.best_of_n,
+        n = args.num_samples,
         url = url, instruction = instruction
     ))
 
     instruction_dataset = [
         {"domain": url, "task": instruction}
-    ] * args.best_of_n
+    ] * args.num_samples
 
     trajectories = pipeline.launch(
         dataset = instruction_dataset,
@@ -410,21 +410,21 @@ if __name__ == "__main__":
         "--num_agents",
         type = int,
         help = "Number of parallel agents to run",
-        default = DEFAULT_BEST_OF_N
+        default = DEFAULT_NUM_SAMPLES
     )
 
     parser.add_argument(
-        "--best_of_n",
+        "--num_samples",
         type = int,
-        help = "Number of tries",
-        default = DEFAULT_BEST_OF_N
+        help = "Number of samples to select from",
+        default = DEFAULT_NUM_SAMPLES
     )
 
     args = parser.parse_args()
 
     args.num_agents = min(
         args.num_agents,
-        args.best_of_n
+        args.num_samples
     )
 
     agent_client_type = args.agent_client_type
