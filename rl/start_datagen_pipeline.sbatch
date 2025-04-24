@@ -31,7 +31,7 @@ export NFS_DIR=${NFS_DIR:-/data/matrix/projects/rsalakhugroup}
 singularity run ${SINGULARITY_ARGS[@]} -w \
     ${NFS_DIR}/btrabucc/insta-browser-environment.img & 
 
-sleep 90s  # wait for browser
+sleep ${WAIT_FOR_BROWSER:-90s}
 
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
@@ -40,7 +40,7 @@ AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"btrabucco/Insta-Qwen2.5-1.5B-GRPO-n1"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:${AGENT_LLM_ENDPOINT_PORT}/v1"}
 AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
 
-ROLLOUT_DIR=${ROLLOUT_DIR:-"${NFS_DIR}/btrabucc/insta-150k-v2-qwen-1.5b-grpo-n1-x2"}
+ROLLOUT_DIR=${ROLLOUT_DIR:-"${NFS_DIR}/btrabucc/insta-150k-v2-qwen-1.5b-grpo-n1-x3"}
 
 JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gpt-4.1-nano"}
 JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://api.openai.com/v1"}
