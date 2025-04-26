@@ -29,7 +29,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output_dataset_dir",
         type = str,
-        default = "/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-qwen-1.5b-best-of-5",
+        default = "/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-qwen-1.5b-c0.5",
     )
 
     parser.add_argument(
@@ -67,13 +67,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--success_threshold",
         type = float,
-        default = 0.0
+        default = 0.5
     )
 
     parser.add_argument(
         "--consistency_threshold",
         type = float,
-        default = 1.0
+        default = 0.7
     )
 
     args = parser.parse_args()
@@ -173,40 +173,40 @@ if __name__ == "__main__":
                 success > 0.5
             )
 
-            did_not_succeed = (
-                success < 
-                args.success_threshold
-            )
-
-            if did_not_succeed:
-
-                continue
-
             dirs_judgments.append(
                 (data_dir, judgment_dict)
             )
 
         if len(dirs_judgments) == 0:
 
-            return 0.0, 0.0
+            return None, None
 
         consistency = np.mean(
             domain_success_values
         )
 
         already_too_consistent = (
-            consistency > 
+            consistency >=
             args.consistency_threshold
         )
 
         if already_too_consistent:
 
-            return 0.0, 0.0
+            return None, None
 
         best_data_dir, best_judgment = max(
             dirs_judgments,
             key = lambda x: x[1]['success']
         )
+
+        did_not_succeed = (
+            best_judgment['success'] <=
+            args.success_threshold
+        )
+
+        if did_not_succeed:
+
+            return None, None
 
         input_observations_path = os.path.join(
             best_data_dir,
@@ -297,14 +297,18 @@ if __name__ == "__main__":
 
             progress_bar.update()
 
-            successes.append(success > 0.5)
-            consistencies.append(consistency)
+            if success is not None and \
+                    consistency is not None:
+
+                successes.append(success > 0.5)
+                consistencies.append(consistency > 0.5)
 
             mean_success_rate = np.mean(successes)
             mean_consistency_rate = np.mean(consistencies)
 
             progress_bar.set_description(
-                'Success = {:0.3f}, Consistency = {:0.3f}'.format(
+                'Num: {} Success: {:0.3f} Consistency: {:0.3f}'.format(
+                    len(successes),
                     mean_success_rate,
                     mean_consistency_rate
                 )
