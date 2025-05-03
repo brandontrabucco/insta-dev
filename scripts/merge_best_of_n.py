@@ -29,7 +29,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output_dataset_dir",
         type = str,
-        default = "/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-qwen-1.5b-c0.5",
+        default = "/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-qwen-1.5b-s0.5-c0.7",
     )
 
     parser.add_argument(
@@ -139,6 +139,36 @@ if __name__ == "__main__":
 
     def worker_function(domain: str) -> float:
 
+        output_observations_path = os.path.join(
+            output_observations_dir,
+            "{}.json".format(domain)
+        )
+
+        output_actions_path = os.path.join(
+            output_actions_dir,
+            "{}.json".format(domain)
+        )
+
+        output_judgment_path = os.path.join(
+            output_judgments_dir,
+            "{}.json".format(domain)
+        )
+
+        output_screenshot_path = os.path.join(
+            output_screenshot_dir,
+            "{}".format(domain)
+        )
+
+        is_finished = (
+            os.path.exists(output_observations_path) and 
+            os.path.exists(output_actions_path) and 
+            os.path.exists(output_judgment_path) 
+        )
+
+        if is_finished:
+
+            return None, None
+
         dirs_judgments = [] 
 
         domain_success_values = []
@@ -159,9 +189,11 @@ if __name__ == "__main__":
 
             with open(judgment_file, 'r') as file:
 
-                judgment_dict = json.load(
-                    file
-                )
+                try:  # handle broken files
+                    
+                    judgment_dict = json.load(file)
+
+                except: continue
 
             success = judgment_dict.get(
                 'success', DEFAULT_SUCCESS
@@ -229,26 +261,6 @@ if __name__ == "__main__":
         input_screenshot_path = os.path.join(
             best_data_dir,
             "screenshots",
-            "{}".format(domain)
-        )
-
-        output_observations_path = os.path.join(
-            output_observations_dir,
-            "{}.json".format(domain)
-        )
-
-        output_actions_path = os.path.join(
-            output_actions_dir,
-            "{}.json".format(domain)
-        )
-
-        output_judgment_path = os.path.join(
-            output_judgments_dir,
-            "{}.json".format(domain)
-        )
-
-        output_screenshot_path = os.path.join(
-            output_screenshot_dir,
             "{}".format(domain)
         )
 

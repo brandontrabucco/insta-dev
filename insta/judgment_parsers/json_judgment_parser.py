@@ -20,7 +20,7 @@ ACTION_PATTERN = re.compile(
 )
 
 
-SYSTEM_PROMPT = """You are a helpful assistant providing feedback to a web automation script. I will show you a desired task, and a sequence of webpages and actions, formatted in markdown. I want your help evaluating the progress of the script towards completing the task.
+SYSTEM_PROMPT = """You are helping me evaluate a browser automation script. I will share a task provided to the script, and a sequence of webpages and actions produced by the script.
 
 ## Understanding The Action Format
 
@@ -36,9 +36,9 @@ You will see actions in the following JSON schema:
 
 Here is what each key means:
 
-- `action_key`: The action to perform.
-- `action_kwargs`: Dictionary of arguments for action.
-- `target_element_id`: The id of the element to perform the action on.
+- `action_key`: The action the script performs.
+- `action_kwargs`: Optional dictionary of action arguments.
+- `target_element_id`: The id of the element the script performs the action on.
 
 ## Available Actions
 
@@ -120,7 +120,7 @@ Here is an example where the script fills the input `[id: 13] "Name..." (Enter y
 
 Here is an example where the script sets the value of a range slider `[id: 71] "$250 (5)" (range slider min: 0 max: 50 step: 1)` to $1000:
 
-This slider has a range of 0 to 50 with a step of 1, and the value is currently set to 5. The script must translate the desired "$1000" to the correct underlying range value.
+This slider has a range of 0 to 50 with a step of 1, and the value is currently set to 5. The script translates the desired "$1000" to the correct underlying range value.
 
 ```json
 {
@@ -176,6 +176,8 @@ Here is an example where the script checks the checkbox `[id: 21] "I agree to th
 
 ### Example Go Back Action
 
+Here is an example where the script goes back to the previous page:
+
 ```json
 {
     "action_key": "go_back",
@@ -222,74 +224,74 @@ Here is an example where the script stops and reports `I'm done!`:
 }
 ```
 
-## Formatting The Response
+## Evaluation Instructions
 
-Format your evaluation in the following JSON schema:
+Based on the progress of the script, you are helping me determine if the desired task has been completed successfully. 
+
+You will provide scores as JSON in a fenced code block:
 
 ```json
 {
-    "task_is_feasible": float,
-    "is_blocked": float,
     "success": float,
-    "future_success": float,
-    "reasoning_is_correct": float
+    "efficiency": float,
+    "backtracking": float,
+    "self_correction": float
 }
 ```
 
-Here is what each key means:
+### Score Definitions
 
-- `task_is_feasible`: The probability the desired task is feasible on this website.
-    - range: 0.0 (not possible) to 1.0 (absolutely certain).
-- `is_blocked`: The probability the website has blocked the script.
+- `success`: Your confidence the desired task has been completed successfully.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-- `success`: The probability the desired task has been completed successfully.
-    - range: 0.0 (not possible) to 1.0 (absolutely certain).
-- `future_success`: The probability the script would complete its task if given more time.
+- `efficiency`: Your confidence the script has taken the most efficient path to solve the task.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-- `reasoning_is_correct`: The probability that all steps of reasoning produced by the script are correct.
+- `backtracking`: Your confidence the script employed backtracking successfully when attempting to complete the task.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-Thanks for helping me with evaluation, please follow the instructions carefully. Start your response with a summary of what the script has accomplished, followed by a step-by-step justification of your scores, and finally, provide your evaluation in the JSON format. Limit your response to 500 words."""
+- `self_correction`: Your confidence the script identified and corrected its own mistake successfully when attempting to complete the task.
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+
+Write a 300 word analysis that establishes specific criteria to rigorously evaluate whether the task was completed, followed by which criteria the script has satisfied. After your response, provide your scores as JSON in a fenced code block."""
 
 
-USER_PROMPT_TEMPLATE = """## Here Is A Task To Evaluate
+USER_PROMPT_TEMPLATE = """## Evaluate The Following Task
 
-The desired task is: `{instruction}`. Review and evaluate the progress of the script.
+{instruction}
 
-{trajectory}
+{summary}
 
-## Formatting The Response
+## Evaluation Instructions
 
-Enter an evaluation in the following JSON schema:
+Based on the progress of the script, you are helping me determine if the desired task has been completed successfully. 
+
+You will provide scores as JSON in a fenced code block:
 
 ```json
 {{
-    "task_is_feasible": float,
-    "is_blocked": float,
     "success": float,
-    "future_success": float,
-    "reasoning_is_correct": float
+    "efficiency": float,
+    "backtracking": float,
+    "self_correction": float
 }}
 ```
 
-Here is what each key means:
+### Score Definitions
 
-- `task_is_feasible`: The probability the desired task is feasible on this website.
-    - range: 0.0 (not possible) to 1.0 (absolutely certain).
-- `is_blocked`: The probability the website has blocked the script.
+- `success`: Your confidence the desired task has been completed successfully.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-- `success`: The probability the desired task has been completed successfully.
-    - range: 0.0 (not possible) to 1.0 (absolutely certain).
-- `future_success`: The probability the script would complete its task if given more time.
+- `efficiency`: Your confidence the script has taken the most efficient path to solve the task.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-- `reasoning_is_correct`: The probability that all steps of reasoning produced by the script are correct.
+- `backtracking`: Your confidence the script employed backtracking successfully when attempting to complete the task.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-Start your response with a summary of what the script has accomplished, followed by a step-by-step justification of your scores, and finally, provide your evaluation in the JSON format. Limit your response to 500 words."""
+- `self_correction`: Your confidence the script identified and corrected its own mistake successfully when attempting to complete the task.
+    - range: 0.0 (not possible) to 1.0 (absolutely certain).
+
+Write a 300 word analysis that establishes specific criteria to rigorously evaluate whether the task was completed, followed by which criteria the script has satisfied. After your response, provide your scores as JSON in a fenced code block."""
 
 
 class JsonJudgmentParser(BaseJudgmentParser):
@@ -332,9 +334,7 @@ class JsonJudgmentParser(BaseJudgmentParser):
         
         """
         
-        match = ACTION_PATTERN.search(
-            response
-        )
+        match = ACTION_PATTERN.search(response)
 
         has_required_field = (
             match is not None and 
@@ -343,50 +343,51 @@ class JsonJudgmentParser(BaseJudgmentParser):
 
         if not has_required_field:
     
-            return BrowserStatus.ERROR
+            raise ValueError(
+                "Failed to parse judgment"
+            )
 
         matched_response = match.group("json")
-        
-        try: response_dict = json.loads(matched_response)
-        except json.JSONDecodeError:
-            return BrowserStatus.ERROR
+        response_dict = json.loads(
+            matched_response
+        )
         
         has_required_keys = (
-            "task_is_feasible" in response_dict and
-            "is_blocked" in response_dict and
             "success" in response_dict and
-            "future_success" in response_dict and
-            "reasoning_is_correct" in response_dict
+            "efficiency" in response_dict and
+            "backtracking" in response_dict and
+            "self_correction" in response_dict
         )
 
         if not has_required_keys:
-
-            return BrowserStatus.ERROR
+    
+            raise ValueError(
+                "Failed to parse judgment"
+            )
         
-        task_is_feasible = response_dict["task_is_feasible"]
-        is_blocked = response_dict["is_blocked"]
         success = response_dict["success"]
-        future_success = response_dict["future_success"]
-        reasoning_is_correct = response_dict["reasoning_is_correct"]
+        efficiency = response_dict["efficiency"]
+        backtracking = response_dict["backtracking"]
+        self_correction = response_dict["self_correction"]
         
         keys_right_type = (
-            (isinstance(task_is_feasible, float) or isinstance(task_is_feasible, int)) and
-            (isinstance(is_blocked, float) or isinstance(is_blocked, int)) and
             (isinstance(success, float) or isinstance(success, int)) and
-            (isinstance(future_success, float) or isinstance(future_success, int)) and
-            (isinstance(reasoning_is_correct, float) or isinstance(reasoning_is_correct, int))
+            (isinstance(efficiency, float) or isinstance(efficiency, int)) and
+            (isinstance(backtracking, float) or isinstance(backtracking, int)) and
+            (isinstance(self_correction, float) or isinstance(self_correction, int))
         )
 
         if not keys_right_type:
-
-            return BrowserStatus.ERROR
+    
+            raise ValueError(
+                "Failed to parse judgment"
+            )
         
         values = {
-            "task_is_feasible": float(task_is_feasible),
-            "is_blocked": float(is_blocked),
             "success": float(success),
-            "future_success": float(future_success),
-            "reasoning_is_correct": float(reasoning_is_correct)
+            "efficiency": float(efficiency),
+            "backtracking": float(backtracking),
+            "self_correction": float(self_correction),
         }
         
         browser_judgment = BrowserJudgment(

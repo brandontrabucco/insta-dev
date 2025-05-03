@@ -75,7 +75,7 @@ def select_valid_samples(
 
     valid_domain = (
         success is not None and 
-        success > success_threshold
+        (success_threshold == 0 or success > success_threshold)
     )
 
     return valid_domain
@@ -229,13 +229,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data_dir",
         type = str,
-        default="data-v3"
+        default="/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-qwen3-235b-together"
     )
 
     parser.add_argument(
         "--last_obs",
         type = int,
-        default = 3
+        default = 5
     )
 
     parser.add_argument(
@@ -247,13 +247,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max_num_examples",
         type = int,
-        default = None
+        default = 5000
     )
 
     parser.add_argument(
         "--dataset_output_dir",
         type = str,
-        default="./insta-150k-v2-filtered"
+        default="/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-sft-qwen3-235b-{max_num_examples}x-{success_threshold}s"
     )
 
     parser.add_argument(
@@ -263,6 +263,12 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+
+    args.dataset_output_dir = (
+        args.dataset_output_dir.format(
+            **vars(args)
+        )
+    )
 
     dataset = load_dataset(
         args.dataset_name,

@@ -186,13 +186,14 @@ class JsonTaskParser(BaseTaskParser):
 
         if not has_required_field:
     
-            return BrowserStatus.ERROR
+            raise ValueError(
+                "Failed to parse task"
+            )
 
         matched_response = match.group("json")
-        
-        try: response_dict = json.loads(matched_response)
-        except json.JSONDecodeError:
-            return BrowserStatus.ERROR
+        response_dict = json.loads(
+            matched_response
+        )
         
         has_required_keys = (
             "proposed_task" in response_dict and
@@ -201,8 +202,10 @@ class JsonTaskParser(BaseTaskParser):
         )
 
         if not has_required_keys:
-
-            return BrowserStatus.ERROR
+    
+            raise ValueError(
+                "Failed to parse task"
+            )
         
         proposed_task = response_dict["proposed_task"]
         steps = response_dict["steps"]
@@ -216,8 +219,10 @@ class JsonTaskParser(BaseTaskParser):
         )
 
         if not keys_right_type:
-
-            return BrowserStatus.ERROR
+    
+            raise ValueError(
+                "Failed to parse task"
+            )
         
         task_dict = {
             "proposed_task": str(proposed_task),

@@ -28,51 +28,62 @@ def relabel_judgments(
     dataset: Dataset = None,
     input_actions_dir: str = None,
     input_observations_dir: str = None,
-    input_judgments_dir: str = None,
+    output_judgments_dir: str = None,
     judge_config: JudgeConfig = None,
-    agent_response_key: str = None
+    agent_response_key: str = None,
+    overwrite: bool = False,
 ):
-    
-    judge = BrowserJudge(
-        config = judge_config
-    )
 
     example_dict = dataset[example_id]
 
-    domain = example_dict["domain"]
+    domain = example_dict.get(
+        "url", example_dict.get("domain")
+    )
 
-    input_actions_path = os.path.join(
-        input_actions_dir,
-        "{}.json".format(domain)
+    instruction = example_dict.get(
+        "instruction", example_dict.get("task")
+    )
+
+    identifier = example_dict.get(
+        "identifier", domain
     )
 
     input_observations_path = os.path.join(
         input_observations_dir,
-        "{}.json".format(domain)
+        "{}.json".format(identifier)
+    )
+
+    input_actions_path = os.path.join(
+        input_actions_dir,
+        "{}.json".format(identifier)
+    )
+
+    output_judgment_path = os.path.join(
+        output_judgments_dir,
+        "{}.json".format(identifier)
     )
 
     valid_example = (
         os.path.exists(input_actions_path)
         and os.path.exists(input_observations_path)
+        and (overwrite or not os.path.exists(output_judgment_path))
     )
 
     if not valid_example:
 
         return None
 
-    with open(input_actions_path, "r") as file:
-        
-        actions = json.load(
-            file
-        )
-
     with open(input_observations_path, "r") as file:
         
-        observations = json.load(
-            file
-        )
+        observations = json.load(file)
 
-    instruction = example_dict["task"]
+    with open(input_actions_path, "r") as file:
+        
+        actions = json.load(file)
+    
+    judge = BrowserJudge(
+        config = judge_config
+    )
 
     judgment = judge(
         observations = [
@@ -97,11 +108,6 @@ def relabel_judgments(
         "matched_response": judgment.matched_response,
     }
 
-    output_judgment_path = os.path.join(
-        input_judgments_dir,
-        "{}.json".format(domain)
-    )
-
     with open(output_judgment_path, "w") as file:
         
         json.dump(
@@ -110,7 +116,7 @@ def relabel_judgments(
             indent = 4
         )
 
-    return domain
+    return identifier
 
 
 if __name__ == "__main__":
@@ -120,25 +126,31 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_name",
         type = str,
-        default = "meta-llama/Llama-3.3-70B-Instruct",
+        default = "Qwen/Qwen3-235B-A22B-fp8-tput",
     )
 
     parser.add_argument(
         "--api_key",
         type = str,
-        default = "token-abc123",
+        default = os.environ.get("TOGETHER_API_KEY")
     )
 
     parser.add_argument(
         "--llm_endpoint",
         type = str,
-        default = "http://localhost:8000/v1",
+        default = "https://api.together.xyz/v1"
     )
 
     parser.add_argument(
         "--input_data_dir",
         type = str,
-        default = "data"
+        default = "/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-qwen3-235b-together"
+    )
+
+    parser.add_argument(
+        "--output_judgments_dir",
+        type = str,
+        default = "judgments-qwen-235b"
     )
 
     parser.add_argument(
@@ -150,7 +162,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_split",
         type = str,
-        default = "test",
+        default = "train",
     )
 
     parser.add_argument(
@@ -188,6 +200,18 @@ if __name__ == "__main__":
         default = "response",
     )
 
+    parser.add_argument(
+        "--disable_reasoning_mode",
+        action = "store_true",
+        help = "Turns off reasoning mode in certain LLMs"
+    )
+
+    parser.add_argument(
+        "--overwrite",
+        action = "store_true",
+        help = "Whether to overwrite existing judgments"
+    )
+
     args = parser.parse_args()
 
     client_kwargs = {
@@ -199,8 +223,18 @@ if __name__ == "__main__":
         "model": args.model_name,
         "max_tokens": 2048,
         "top_p": 1.0,
-        "temperature": 0.5
+        "temperature": 0.5,
     }
+
+    if args.disable_reasoning_mode:
+
+        generation_kwargs.update({
+            "extra_body": {
+                "chat_template_kwargs": {
+                    "enable_thinking": False
+                }
+            },
+        })
 
     judge_config = get_judge_config(
         client_kwargs = client_kwargs,
@@ -217,9 +251,9 @@ if __name__ == "__main__":
         "observations"
     )
 
-    input_judgments_dir = os.path.join(
+    output_judgments_dir = os.path.join(
         args.input_data_dir,
-        "judgments"
+        args.output_judgments_dir
     )
 
     input_screenshots_dir = os.path.join(
@@ -247,6 +281,11 @@ if __name__ == "__main__":
             agent_rank::args.num_agents * args.world_size
         ])
 
+    os.makedirs(
+        output_judgments_dir,
+        exist_ok = True
+    )
+
     progress_bar = tqdm.tqdm(
         desc = "Processing",
         dynamic_ncols = True,
@@ -256,25 +295,26 @@ if __name__ == "__main__":
     worker_fn = partial(
         relabel_judgments,
         dataset = dataset,
+        judge_config = judge_config,
         input_actions_dir = input_actions_dir,
         input_observations_dir = input_observations_dir,
-        input_judgments_dir = input_judgments_dir,
-        judge_config = judge_config,
-        agent_response_key = args.agent_response_key
+        output_judgments_dir = output_judgments_dir,
+        agent_response_key = args.agent_response_key,
+        overwrite = args.overwrite
     )
     
     with Pool(processes = args.num_agents) as pool:
 
-        for domain in pool.imap_unordered(
+        for identifier in pool.imap_unordered(
             worker_fn,
             out_dataset_ids
         ):
             
             progress_bar.update()
 
-            if domain is not None:
+            if identifier is not None:
 
                 progress_bar.set_description(
                     "Processing {}"
-                    .format(domain)
+                    .format(identifier)
                 )

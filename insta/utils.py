@@ -35,11 +35,10 @@ METADATA_KEYS = [
 
 
 VALUE_KEYS = [
-    "task_is_feasible",
-    "is_blocked",
     "success",
-    "future_success",
-    "reasoning_is_correct",
+    "efficiency",
+    "backtracking",
+    "self_correction",
 ]
 
 

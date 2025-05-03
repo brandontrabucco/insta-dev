@@ -167,6 +167,14 @@ def generate_trajectory(
                 url = url
             )
 
+        else: outputs = InstaEnvStepOutput(
+            observation = env.get_obs(),
+            reward = 0.0,
+            done = False,
+            truncated = False,
+            info = {}
+        )
+
         is_finished = outputs is None or (
             isinstance(outputs, InstaEnvStepOutput)
             and outputs.done
@@ -730,7 +738,7 @@ def save_trajectories(
         pass
 
 
-WORKER_DONE: str = "WORKER_DONE"
+DONE_SIGNAL: str = "DONE_SIGNAL"
 
 
 def multiprocessing_wrapper(
@@ -757,8 +765,11 @@ def multiprocessing_wrapper(
     ):
         
         os.environ['VLLM_WORKER_MULTIPROC_METHOD'] = 'spawn'
-        os.environ["CUDA_VISIBLE_DEVICES"] = \
-            str(agent_rank % torch.cuda.device_count())
+
+        if torch.cuda.device_count() > 0:
+
+            os.environ["CUDA_VISIBLE_DEVICES"] = \
+                str(agent_rank % torch.cuda.device_count())
 
         outputs = data_collection_fn(
             dataset = dataset,
@@ -784,7 +795,7 @@ def multiprocessing_wrapper(
 
                 output_queue.put(output)
 
-        output_queue.put(WORKER_DONE)
+        output_queue.put(DONE_SIGNAL)
 
     return worker_fn
 
@@ -973,7 +984,7 @@ def launch_data_collection(
         output = queue.get()
 
         worker_finished = (
-            output == WORKER_DONE
+            output == DONE_SIGNAL
         )
 
         if worker_finished:

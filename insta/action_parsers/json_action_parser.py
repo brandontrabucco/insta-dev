@@ -378,7 +378,7 @@ Suppose you want to open google search:
 }
 ```
 
-Thanks for helping me perform tasks on the web, please follow the instructions carefully. Start your response with a summary of what you have accomplished so far, followed by a step-by-step explanation of your plan and intended action, and finally, provide your action in the JSON format. Limit your response to 200 words."""
+Thanks for helping me perform tasks on the web, please follow the instructions carefully. Start your response with a summary of what you have accomplished so far, followed by a step-by-step explanation of your plan and intended action, and finally, provide your action in the JSON format. Respond in 200 words."""
 
 
 USER_PROMPT_TEMPLATE = """You are currently viewing {current_url}. Here is the viewport rendered in markdown:
@@ -397,7 +397,7 @@ Enter an action in the following JSON schema:
 }}
 ```
 
-Start your response with a summary of what you have accomplished so far, followed by a step-by-step explanation of your plan and intended action, and finally, provide your action in the JSON format. Limit your response to 200 words."""
+Start your response with a summary of what you have accomplished so far, followed by a step-by-step explanation of your plan and intended action, and finally, provide your action in the JSON format. Respond in 200 words."""
 
 
 class JsonActionParser(BaseActionParser):
@@ -442,25 +442,34 @@ class JsonActionParser(BaseActionParser):
         
         """
         
-        match = ACTION_PATTERN.search(
-            response
-        )
+        match = ACTION_PATTERN.search(response)
 
         is_valid = (
             match is not None and 
             "json" in match.groupdict()
         )
 
-        if not is_valid: return BrowserStatus.ERROR
+        if not is_valid:
+    
+            raise ValueError(
+                "Failed to parse action"
+            )
 
         matched_response = match.group("json")
-        function_calls = get_function_calls(json.loads(
+
+        response_dict = json.loads(
             matched_response
-        ))
+        )
+
+        function_calls = get_function_calls(
+            response_dict
+        )
 
         if len(function_calls) == 0:
-
-            return BrowserStatus.ERROR
+    
+            raise ValueError(
+                "Failed to parse action"
+            )
         
         playwright_action = BrowserAction(
             function_calls = function_calls,

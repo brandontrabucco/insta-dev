@@ -293,10 +293,10 @@ class BrowserJudge(Callable):
                     action
                 ))
 
-        trajectory = "\n\n".join(outputs)
+        summary = "\n\n".join(outputs)
         
         return self.user_prompt_template.format(
-            trajectory = trajectory,
+            summary = summary,
             instruction = instruction
         )
 
