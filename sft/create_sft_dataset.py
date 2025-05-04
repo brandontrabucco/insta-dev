@@ -254,7 +254,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_output_dir",
         type = str,
-        default="/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-sft-qwen3-235b-{max_num_examples}x-{success_threshold}s-qwen3-judge"
+        default="/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-sft-qwen3-235b-{max_num_examples}x-{success_threshold}s-{judgments_name}"
     )
 
     parser.add_argument(
