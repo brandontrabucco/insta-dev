@@ -134,6 +134,20 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--max_obs_tokens",
+        type = int,
+        help = "Maximum number of tokens per observation",
+        default = 2048
+    )
+
+    parser.add_argument(
+        "--last_obs",
+        type = int,
+        help = "Maximum number of observations in context",
+        default = 5
+    )
+
+    parser.add_argument(
         "--action_parser",
         type = str,
         default = "simplified_json"
@@ -174,6 +188,18 @@ if __name__ == "__main__":
         default = 1
     )
 
+    parser.add_argument(
+        "--disable_agent_reasoning",
+        action = "store_true",
+        help = "Turns off reasoning mode in certain LLMs"
+    )
+
+    parser.add_argument(
+        "--disable_judge_reasoning",
+        action = "store_true",
+        help = "Turns off reasoning mode in certain LLMs"
+    )
+
     args = parser.parse_args()
 
     agent_client_type = "openai"
@@ -185,18 +211,28 @@ if __name__ == "__main__":
 
     agent_generation_kwargs = {
         "model": args.agent_model_name,
-        "max_tokens": 512,
+        "max_tokens": 1024,
         "top_p": 1.0,
         "temperature": 0.5
     }
+
+    if args.disable_agent_reasoning:
+
+        agent_generation_kwargs.update({
+            "extra_body": {
+                "chat_template_kwargs": {
+                    "enable_thinking": False
+                }
+            },
+        })
 
     agent_config = get_agent_config(
         client_type = agent_client_type,
         client_kwargs = agent_client_kwargs,
         generation_kwargs = agent_generation_kwargs,
         action_parser = args.action_parser,
-        max_obs_tokens = 2048,
-        last_obs = 3,
+        max_obs_tokens = args.max_obs_tokens,
+        last_obs = args.last_obs,
     )
 
     judge_client_type = "openai"
@@ -212,6 +248,16 @@ if __name__ == "__main__":
         "top_p": 1.0,
         "temperature": 0.5
     }
+
+    if args.disable_judge_reasoning:
+
+        judge_generation_kwargs.update({
+            "extra_body": {
+                "chat_template_kwargs": {
+                    "enable_thinking": False
+                }
+            },
+        })
 
     judge_config = get_judge_config(
         client_type = judge_client_type,

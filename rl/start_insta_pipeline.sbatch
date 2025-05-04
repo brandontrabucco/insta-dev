@@ -3,24 +3,28 @@
 #SBATCH --exclude=babel-6-13,babel-4-9,babel-4-29,babel-13-13,babel-4-17,babel-4-1,babel-13-1,babel-8-13
 #SBATCH --output=logs/datagen-%A-%a-%N.out
 #SBATCH --time=12:00:00
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=64G
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=256G
 #SBATCH --nodes=1
-#SBATCH --partition=array
-#SBATCH --gres=gpu:L40S:1
-#SBATCH --array=0-319
+#SBATCH --partition=general
+#SBATCH --gres=gpu:L40S:8
+#SBATCH --array=0-0
+
+# Slurm arguments for parallelism
 
 SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-0}
 SLURM_ARRAY_TASK_COUNT=${SLURM_ARRAY_TASK_COUNT:-1}
 
-NUM_AGENTS=${NUM_AGENTS:-32}
-PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-8}
+NUM_AGENTS=${NUM_AGENTS:-128}
+PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-32}
 
 PLAYWRIGHT_LOG="playwright-${SLURM_ARRAY_TASK_ID}.log"
 PLAYWRIGHT_PORT=$(( 3000 + SLURM_ARRAY_TASK_ID * PLAYWRIGHT_WORKERS ))
 
-export VLLM_LOG="logs/vllm-${SLURM_ARRAY_TASK_ID}.log"
+export LLM_LOG="logs/vllm-${SLURM_ARRAY_TASK_ID}.log"
 AGENT_LLM_ENDPOINT_PORT=$(( 6000 + SLURM_ARRAY_TASK_ID * 2 ))
+
+# Start the browser environment
 
 SINGULARITY_ARGS=(
     --pwd /code/insta -w
@@ -33,18 +37,20 @@ singularity run ${SINGULARITY_ARGS[@]} -w \
 
 sleep ${WAIT_FOR_BROWSER:-90s}
 
+# Arguments for data collection
+
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"btrabucco/Insta-Qwen2.5-1.5B-GRPO-n1"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"Qwen/Qwen3-235B-A22B-FP8"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:${AGENT_LLM_ENDPOINT_PORT}/v1"}
 AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
 
-ROLLOUT_DIR=${ROLLOUT_DIR:-"${NFS_DIR}/btrabucc/insta-150k-v2-qwen-1.5b-grpo-n1-x3"}
+ROLLOUT_DIR=${ROLLOUT_DIR:-"${NFS_DIR}/btrabucc/insta-150k-v2-qwen3-235b"}
 
-JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gpt-4.1-nano"}
-JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://api.openai.com/v1"}
-JUDGE_API_KEY=${JUDGE_API_KEY:-${OPENAI_API_KEY}}
+JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"Qwen/Qwen3-235B-A22B-FP8"}
+JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"http://localhost:${AGENT_LLM_ENDPOINT_PORT}/v1"}
+JUDGE_API_KEY=${JUDGE_API_KEY:-"token-abc123"}
 
 RANK=${RANK:-${SLURM_ARRAY_TASK_ID}}
 WORLD_SIZE=${WORLD_SIZE:-${SLURM_ARRAY_TASK_COUNT}}
@@ -52,7 +58,9 @@ WORLD_SIZE=${WORLD_SIZE:-${SLURM_ARRAY_TASK_COUNT}}
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
 
-VLLM_ARGS=(
+# Array arguments for scripts
+
+LLM_ARGS=(
     --agent_model_name ${AGENT_MODEL_NAME}
     --agent_llm_endpoint ${AGENT_LLM_ENDPOINT}
     --agent_api_key ${AGENT_API_KEY}
@@ -69,14 +77,10 @@ PIPELINE_ARGS=(
     --num_agents ${NUM_AGENTS}
     --rank ${RANK}
     --world_size ${WORLD_SIZE}
-    --action_parser simplified_json
+    --action_parser json
     ${SKIP_FINISHED}
     ${PRUNE_OBSERVATIONS}
 )
-
-export MODEL_NAME=${AGENT_MODEL_NAME}
-export LLM_ENDPOINT_PORT=${AGENT_LLM_ENDPOINT_PORT}
-bash rl/start_rollout_vllm.sh
 
 DATA_ARGS=(
     --observations_dir ${ROLLOUT_DIR}/observations
@@ -85,16 +89,29 @@ DATA_ARGS=(
     --judgments_dir ${ROLLOUT_DIR}/judgments
 )
 
-export HF_HOME=/scratch/btrabucc/hfcache
-huggingface-cli login --token $HUGGINGFACE_ACCESS_TOKEN
+# Start the LLM server
+
+export MODEL_NAME=${AGENT_MODEL_NAME}
+export LLM_ENDPOINT_PORT=${AGENT_LLM_ENDPOINT_PORT}
+bash rl/start_llm_server.sh
+
+# Configure cuda and nvidia
 
 export NCCL_P2P_DISABLE=1
 unset LD_LIBRARY_PATH
 
-python -u rl/rollout_pipeline.py \
+export OUTLINES_CACHE_DIR=/scratch/.tmp-$RANDOM
+export OMP_NUM_THREADS=8
+
+export HF_HOME=${NFS_DIR}/btrabucc/hfcache
+huggingface-cli login --token $HUGGINGFACE_ACCESS_TOKEN
+
+# Start InSTA pipeline
+
+python -u rl/insta_pipeline.py \
+    ${LLM_ARGS[@]} \
     ${PIPELINE_ARGS[@]} \
     ${DATA_ARGS[@]} \
-    ${VLLM_ARGS[@]} \
     > logs/agents-${RANK}.log 2>&1
 
-screen -XS vllm quit
+screen -XS llm-server quit

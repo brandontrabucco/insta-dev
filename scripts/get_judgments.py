@@ -150,7 +150,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output_judgments_dir",
         type = str,
-        default = "judgments-qwen-235b"
+        default = "judgments"
     )
 
     parser.add_argument(

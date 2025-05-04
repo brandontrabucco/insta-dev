@@ -20,7 +20,8 @@ import os
 def select_valid_samples(
     example_dict: dict = None,
     data_dir: str = "data",
-    success_threshold: float = 0.9
+    success_threshold: float = 0.9,
+    judgments_name: str = "judgments-qwen-235b"
 ) -> bool:
 
     observations_dir = os.path.join(
@@ -35,7 +36,7 @@ def select_valid_samples(
 
     judgments_dir = os.path.join(
         data_dir,
-        "judgments"
+        judgments_name
     )
 
     domain = example_dict["domain"]
@@ -253,13 +254,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_output_dir",
         type = str,
-        default="/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-sft-qwen3-235b-{max_num_examples}x-{success_threshold}s"
+        default="/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-sft-qwen3-235b-{max_num_examples}x-{success_threshold}s-qwen3-judge"
     )
 
     parser.add_argument(
         "--success_threshold",
         type = float,
         default = 0.5
+    )
+
+    parser.add_argument(
+        "--judgments_name",
+        type = str,
+        default = "judgments-qwen-235b"
     )
 
     args = parser.parse_args()
@@ -291,7 +298,8 @@ if __name__ == "__main__":
     select_valid_samples = partial(
         select_valid_samples,
         data_dir = args.data_dir,
-        success_threshold = args.success_threshold
+        success_threshold = args.success_threshold,
+        judgments_name = args.judgments_name
     )
     
     dataset = dataset.filter(

@@ -207,12 +207,6 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--output_dir",
-        type = str,
-        default="./qwen-1.5b-filtered"
-    )
-
-    parser.add_argument(
         "--final_model_dir",
         type = str,
         default="./qwen-1.5b-filtered"
@@ -221,7 +215,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max_seq_length",
         type = int,
-        default = 8192
+        default = 16384
     )
 
     parser.add_argument(
@@ -266,7 +260,7 @@ if __name__ == "__main__":
         num_train_epochs = 1,
         warmup_ratio = 0.01,
         logging_steps = 100,
-        output_dir = args.output_dir,
+        output_dir = args.final_model_dir,
         per_device_train_batch_size = 1,
         per_device_eval_batch_size = 1,
         bf16 = args.use_bf16,
