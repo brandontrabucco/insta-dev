@@ -28,7 +28,7 @@ def relabel_judgments(
     dataset: Dataset = None,
     input_actions_dir: str = None,
     input_observations_dir: str = None,
-    output_judgments_dir: str = None,
+    judge_name: str = None,
     judge_config: JudgeConfig = None,
     agent_response_key: str = None,
     overwrite: bool = False,
@@ -59,7 +59,7 @@ def relabel_judgments(
     )
 
     output_judgment_path = os.path.join(
-        output_judgments_dir,
+        judge_name,
         "{}.json".format(identifier)
     )
 
@@ -119,6 +119,9 @@ def relabel_judgments(
     return identifier
 
 
+# for input_data_dir in /data/matrix/projects/rsalakhugroup/btrabucc/qwen3-1.7b-*x-?.?s-qwen3-judge/-rollouts; do python scripts/get_judgments.py --disable_reasoning_mode --input_data_dir $input_data_dir; done
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -144,13 +147,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_data_dir",
         type = str,
-        default = "/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-qwen3-235b-together"
+        default = "/data/matrix/projects/rsalakhugroup/btrabucc/qwen3-1.7b-20000x-0.5s-qwen3-judge/-rollouts"
     )
 
     parser.add_argument(
-        "--output_judgments_dir",
+        "--judge_name",
         type = str,
-        default = "judgments"
+        default = "qwen3-235b-judge"
     )
 
     parser.add_argument(
@@ -162,7 +165,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_split",
         type = str,
-        default = "train",
+        default = "test",
     )
 
     parser.add_argument(
@@ -221,7 +224,7 @@ if __name__ == "__main__":
 
     generation_kwargs = {
         "model": args.model_name,
-        "max_tokens": 2048,
+        "max_tokens": 1024,
         "top_p": 1.0,
         "temperature": 0.5,
     }
@@ -251,9 +254,9 @@ if __name__ == "__main__":
         "observations"
     )
 
-    output_judgments_dir = os.path.join(
+    judge_name = os.path.join(
         args.input_data_dir,
-        args.output_judgments_dir
+        args.judge_name
     )
 
     input_screenshots_dir = os.path.join(
@@ -282,7 +285,7 @@ if __name__ == "__main__":
         ])
 
     os.makedirs(
-        output_judgments_dir,
+        judge_name,
         exist_ok = True
     )
 
@@ -298,7 +301,7 @@ if __name__ == "__main__":
         judge_config = judge_config,
         input_actions_dir = input_actions_dir,
         input_observations_dir = input_observations_dir,
-        output_judgments_dir = output_judgments_dir,
+        judge_name = judge_name,
         agent_response_key = args.agent_response_key,
         overwrite = args.overwrite
     )

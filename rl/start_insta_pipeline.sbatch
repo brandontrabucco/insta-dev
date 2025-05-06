@@ -1,27 +1,27 @@
 #!/bin/bash
 #SBATCH --job-name=insta
 #SBATCH --exclude=babel-6-13,babel-4-9,babel-4-29,babel-13-13,babel-4-17,babel-4-1,babel-13-1,babel-8-13
-#SBATCH --output=logs/datagen-%A-%a-%N.out
-#SBATCH --time=12:00:00
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=256G
+#SBATCH --output=logs/insta-%A-%a-%N.out
+#SBATCH --time=6:00:00
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
 #SBATCH --nodes=1
-#SBATCH --partition=general
-#SBATCH --gres=gpu:L40S:8
-#SBATCH --array=0-0
+#SBATCH --partition=array
+#SBATCH --gres=gpu:L40S:1
+#SBATCH --array=0-39
 
 # Slurm arguments for parallelism
 
 SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-0}
 SLURM_ARRAY_TASK_COUNT=${SLURM_ARRAY_TASK_COUNT:-1}
 
-NUM_AGENTS=${NUM_AGENTS:-128}
-PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-32}
+NUM_AGENTS=${NUM_AGENTS:-8}
+PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-8}
 
 PLAYWRIGHT_LOG="playwright-${SLURM_ARRAY_TASK_ID}.log"
 PLAYWRIGHT_PORT=$(( 3000 + SLURM_ARRAY_TASK_ID * PLAYWRIGHT_WORKERS ))
 
-export LLM_LOG="logs/vllm-${SLURM_ARRAY_TASK_ID}.log"
+export LLM_LOG="logs/llm-${SLURM_ARRAY_TASK_ID}.log"
 AGENT_LLM_ENDPOINT_PORT=$(( 6000 + SLURM_ARRAY_TASK_ID * 2 ))
 
 # Start the browser environment
@@ -42,15 +42,15 @@ sleep ${WAIT_FOR_BROWSER:-90s}
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"Qwen/Qwen3-235B-A22B-FP8"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"${NFS_DIR}/btrabucc/qwen3-1.7b-20000x-0.5s"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:${AGENT_LLM_ENDPOINT_PORT}/v1"}
 AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
 
-ROLLOUT_DIR=${ROLLOUT_DIR:-"${NFS_DIR}/btrabucc/insta-150k-v2-qwen3-235b"}
+ROLLOUT_DIR=${ROLLOUT_DIR:-"${AGENT_MODEL_NAME}-rollouts"}
 
-JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"Qwen/Qwen3-235B-A22B-FP8"}
-JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"http://localhost:${AGENT_LLM_ENDPOINT_PORT}/v1"}
-JUDGE_API_KEY=${JUDGE_API_KEY:-"token-abc123"}
+JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gpt-4.1-nano"}
+JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://api.openai.com/v1"}
+JUDGE_API_KEY=${JUDGE_API_KEY:-${OPENAI_API_KEY}}
 
 RANK=${RANK:-${SLURM_ARRAY_TASK_ID}}
 WORLD_SIZE=${WORLD_SIZE:-${SLURM_ARRAY_TASK_COUNT}}
@@ -71,13 +71,13 @@ LLM_ARGS=(
 
 PIPELINE_ARGS=(
     --dataset data-for-agents/insta-150k-v2
-    --dataset_split train
+    --dataset_split test
     --playwright_port ${PLAYWRIGHT_PORT}
     --playwright_workers ${PLAYWRIGHT_WORKERS}
     --num_agents ${NUM_AGENTS}
     --rank ${RANK}
     --world_size ${WORLD_SIZE}
-    --action_parser json
+    --action_parser simplified_json
     ${SKIP_FINISHED}
     ${PRUNE_OBSERVATIONS}
 )

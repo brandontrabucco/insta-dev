@@ -75,6 +75,7 @@ LLM_ARGS=(
     --judge_model_name ${JUDGE_MODEL_NAME}
     --judge_llm_endpoint ${JUDGE_LLM_ENDPOINT}
     --judge_api_key ${JUDGE_API_KEY}
+    --disable_agent_reasoning
 )
 
 PIPELINE_ARGS=(
@@ -136,4 +137,4 @@ screen -XS llm-server quit
 
 
 
-# Launch: for AGENT_MODEL_NAME in /data/matrix/projects/rsalakhugroup/btrabucc/qwen3-1.7b-*x-?.?s/; do sbatch --export=AGENT_MODEL_NAME=$AGENT_MODEL_NAME eval/start_insta_pipeline.sbatch; done
+# Launch: for AGENT_MODEL_NAME in /data/matrix/projects/rsalakhugroup/btrabucc/qwen3-1.7b-*x-?.?s-qwen3-judge/; do sbatch --export=AGENT_MODEL_NAME=$AGENT_MODEL_NAME eval/start_insta_pipeline.sbatch; done

@@ -20,8 +20,11 @@ import os
 def select_valid_samples(
     example_dict: dict = None,
     data_dir: str = "data",
-    success_threshold: float = 0.9,
-    judgments_name: str = "judgments-qwen-235b"
+    success_threshold: float = 0.5,
+    efficiency_threshold: float = 0.5,
+    backtracking_threshold: float = 0.5,
+    self_correction_threshold: float = 0.5,
+    judge_name: str = "judgments-qwen-235b"
 ) -> bool:
 
     observations_dir = os.path.join(
@@ -36,7 +39,7 @@ def select_valid_samples(
 
     judgments_dir = os.path.join(
         data_dir,
-        judgments_name
+        judge_name
     )
 
     domain = example_dict["domain"]
@@ -73,10 +76,35 @@ def select_valid_samples(
         judgments = json.load(file)
 
     success = judgments["success"]
+    efficiency = judgments["efficiency"]
+    backtracking = judgments["backtracking"]
+    self_correction = judgments["self_correction"]
 
-    valid_domain = (
+    is_success = (
         success is not None and 
         (success_threshold == 0 or success > success_threshold)
+    )
+
+    is_efficient = (
+        efficiency is not None and 
+        (efficiency_threshold == 0 or efficiency > efficiency_threshold)
+    )
+
+    has_backtracked = (
+        backtracking is not None and 
+        (backtracking_threshold == 0 or backtracking > backtracking_threshold)
+    )
+
+    has_self_corrected = (
+        self_correction is not None and 
+        (self_correction_threshold == 0 or self_correction > self_correction_threshold)
+    )
+
+    valid_domain = (
+        is_success and 
+        is_efficient and 
+        has_backtracked and 
+        has_self_corrected
     )
 
     return valid_domain
@@ -254,7 +282,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_output_dir",
         type = str,
-        default="/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-sft-qwen3-235b-{max_num_examples}x-{success_threshold}s-{judgments_name}"
+        default="/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-sft-qwen3-235b-{max_num_examples}x-{success_threshold}s-{judge_name}-behaviors"
     )
 
     parser.add_argument(
@@ -264,7 +292,25 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--judgments_name",
+        "--efficiency_threshold",
+        type = float,
+        default = 0.0
+    )
+
+    parser.add_argument(
+        "--backtracking_threshold",
+        type = float,
+        default = 0.0
+    )
+
+    parser.add_argument(
+        "--self_correction_threshold",
+        type = float,
+        default = 0.0
+    )
+
+    parser.add_argument(
+        "--judge_name",
         type = str,
         default = "judgments-qwen-235b"
     )
@@ -299,7 +345,10 @@ if __name__ == "__main__":
         select_valid_samples,
         data_dir = args.data_dir,
         success_threshold = args.success_threshold,
-        judgments_name = args.judgments_name
+        efficiency_threshold = args.efficiency_threshold,
+        backtracking_threshold = args.backtracking_threshold,
+        self_correction_threshold = args.self_correction_threshold,
+        judge_name = args.judge_name
     )
     
     dataset = dataset.filter(
