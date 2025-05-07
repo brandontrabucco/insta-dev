@@ -95,7 +95,7 @@ DATA_ARGS=(
     --observations_dir ${ROLLOUT_DIR}/observations
     --screenshot_dir ${ROLLOUT_DIR}/screenshots
     --actions_dir ${ROLLOUT_DIR}/actions
-    --judgments_dir ${ROLLOUT_DIR}/judgments
+    --judgments_dir ${ROLLOUT_DIR}/gpt-4.1-nano-judge
 )
 
 INSTA_ARGS=(
@@ -137,4 +137,4 @@ screen -XS llm-server quit
 
 
 
-# Launch: for AGENT_MODEL_NAME in /data/matrix/projects/rsalakhugroup/btrabucc/qwen3-1.7b-*x-?.?s-qwen3-judge/; do sbatch --export=AGENT_MODEL_NAME=$AGENT_MODEL_NAME eval/start_insta_pipeline.sbatch; done
+# for AGENT_MODEL_NAME in /data/matrix/projects/rsalakhugroup/btrabucc/qwen3-1.7b-*x-0.9s-judgments/; do sbatch --export=AGENT_MODEL_NAME=$AGENT_MODEL_NAME eval/start_insta_pipeline.sbatch; done

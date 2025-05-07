@@ -37,7 +37,6 @@ METADATA_KEYS = [
 VALUE_KEYS = [
     "success",
     "efficiency",
-    "backtracking",
     "self_correction",
 ]
 

@@ -21,9 +21,8 @@ def select_valid_samples(
     example_dict: dict = None,
     data_dir: str = "data",
     success_threshold: float = 0.5,
-    efficiency_threshold: float = 0.5,
-    backtracking_threshold: float = 0.5,
-    self_correction_threshold: float = 0.5,
+    efficiency_threshold: float = 0.0,
+    self_correction_threshold: float = 0.0,
     judge_name: str = "judgments-qwen-235b"
 ) -> bool:
 
@@ -77,7 +76,6 @@ def select_valid_samples(
 
     success = judgments["success"]
     efficiency = judgments["efficiency"]
-    backtracking = judgments["backtracking"]
     self_correction = judgments["self_correction"]
 
     is_success = (
@@ -90,12 +88,7 @@ def select_valid_samples(
         (efficiency_threshold == 0 or efficiency > efficiency_threshold)
     )
 
-    has_backtracked = (
-        backtracking is not None and 
-        (backtracking_threshold == 0 or backtracking > backtracking_threshold)
-    )
-
-    has_self_corrected = (
+    is_self_correcting = (
         self_correction is not None and 
         (self_correction_threshold == 0 or self_correction > self_correction_threshold)
     )
@@ -103,8 +96,7 @@ def select_valid_samples(
     valid_domain = (
         is_success and 
         is_efficient and 
-        has_backtracked and 
-        has_self_corrected
+        is_self_correcting
     )
 
     return valid_domain
@@ -274,7 +266,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--max_num_examples",
+        "--max_num_samples",
         type = int,
         default = 5000
     )
@@ -282,7 +274,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_output_dir",
         type = str,
-        default="/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-sft-qwen3-235b-{max_num_examples}x-{success_threshold}s-{judge_name}-behaviors"
+        default="/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-sft-qwen3-235b-{max_num_samples}x-{success_threshold}s-{judge_name}"
     )
 
     parser.add_argument(
@@ -293,12 +285,6 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--efficiency_threshold",
-        type = float,
-        default = 0.0
-    )
-
-    parser.add_argument(
-        "--backtracking_threshold",
         type = float,
         default = 0.0
     )
@@ -346,7 +332,6 @@ if __name__ == "__main__":
         data_dir = args.data_dir,
         success_threshold = args.success_threshold,
         efficiency_threshold = args.efficiency_threshold,
-        backtracking_threshold = args.backtracking_threshold,
         self_correction_threshold = args.self_correction_threshold,
         judge_name = args.judge_name
     )
@@ -355,12 +340,12 @@ if __name__ == "__main__":
         select_valid_samples
     )
 
-    if args.max_num_examples is not None:
+    if args.max_num_samples is not None:
 
         dataset = dataset.select(
             random.Random(0).sample(
                 list(range(len(dataset))),
-                args.max_num_examples
+                min(len(dataset), args.max_num_samples)
             )
         )
 

@@ -147,7 +147,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_data_dir",
         type = str,
-        default = "/data/matrix/projects/rsalakhugroup/btrabucc/qwen3-1.7b-20000x-0.5s-qwen3-judge/-rollouts"
+        default = "/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-qwen3-235b-together"
     )
 
     parser.add_argument(
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_split",
         type = str,
-        default = "test",
+        default = "train",
     )
 
     parser.add_argument(

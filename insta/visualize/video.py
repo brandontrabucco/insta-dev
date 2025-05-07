@@ -65,11 +65,7 @@ def create_video(
     video_dir: str = "data/videos",
     output_height: int = 720,
     output_width: int = 1280,
-    task_is_feasible_threshold: float = 1.0,
-    is_blocked_threshold: float = 0.0,
     success_threshold: float = 1.0,
-    future_success_threshold: float = 1.0,
-    reasoning_is_correct_threshold: float = 1.0
 ) -> str:
 
     domain = target_file_name.replace(".json", "")
@@ -83,16 +79,8 @@ def create_video(
     )
 
     trajectory_in_threshold = (
-        judgment["task_is_feasible"] is not None and
-        judgment["task_is_feasible"] >= task_is_feasible_threshold and
-        judgment["is_blocked"] is not None and
-        judgment["is_blocked"] <= is_blocked_threshold and
         judgment["success"] is not None and
-        judgment["success"] >= success_threshold and
-        judgment["future_success"] is not None and
-        judgment["future_success"] >= future_success_threshold and
-        judgment["reasoning_is_correct"] is not None and
-        judgment["reasoning_is_correct"] >= reasoning_is_correct_threshold
+        judgment["success"] >= success_threshold
     )
 
     if not trajectory_in_threshold:
@@ -276,11 +264,7 @@ def create_demo_videos(
     video_dir: str = "data/videos",
     output_height: int = 720,
     output_width: int = 1280,
-    task_is_feasible_threshold: float = 1.0,
-    is_blocked_threshold: float = 0.0,
     success_threshold: float = 1.0,
-    future_success_threshold: float = 1.0,
-    reasoning_is_correct_threshold: float = 1.0,
 ):
 
     dataset = load_dataset(
@@ -315,11 +299,7 @@ def create_demo_videos(
         video_dir = video_dir,
         output_height = output_height,
         output_width = output_width,
-        task_is_feasible_threshold = task_is_feasible_threshold,
-        is_blocked_threshold = is_blocked_threshold,
         success_threshold = success_threshold,
-        future_success_threshold = future_success_threshold,
-        reasoning_is_correct_threshold = reasoning_is_correct_threshold
     )
 
     with Pool(processes = 32) as pool:
@@ -388,31 +368,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--task_is_feasible_threshold",
-        type = float,
-        default = 1.0
-    )
-
-    parser.add_argument(
-        "--is_blocked_threshold",
-        type = float,
-        default = 0.0
-    )
-
-    parser.add_argument(
         "--success_threshold",
-        type = float,
-        default = 1.0
-    )
-
-    parser.add_argument(
-        "--future_success_threshold",
-        type = float,
-        default = 1.0
-    )
-
-    parser.add_argument(
-        "--reasoning_is_correct_threshold",
         type = float,
         default = 1.0
     )
@@ -428,7 +384,5 @@ if __name__ == "__main__":
         video_dir = args.video_dir,
         output_height = args.output_height,
         output_width = args.output_width,
-        task_is_feasible_threshold = args.task_is_feasible_threshold,
         success_threshold = args.success_threshold,
-        reasoning_is_correct_threshold = args.reasoning_is_correct_threshold
     )

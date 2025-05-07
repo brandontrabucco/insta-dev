@@ -234,7 +234,6 @@ You will provide scores as JSON in a fenced code block:
 {
     "success": float,
     "efficiency": float,
-    "backtracking": float,
     "self_correction": float
 }
 ```
@@ -244,13 +243,10 @@ You will provide scores as JSON in a fenced code block:
 - `success`: Your confidence the desired task has been completed successfully.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-- `efficiency`: Your confidence the script has taken the most efficient path to solve the task.
+- `efficiency`: Your confidence the script has taken the most efficient path to complete the task.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-- `backtracking`: Your confidence the script employed backtracking successfully when attempting to complete the task.
-    - range: 0.0 (not possible) to 1.0 (absolutely certain).
-
-- `self_correction`: Your confidence the script identified and corrected its own mistake successfully when attempting to complete the task.
+- `self_correction`: Your confidence the script has demonstrated self-corrective behaviors during its completion of the task. These behaviors include backtracking to a more promising state, replanning when new information is discovered, and recognizing its own mistakes.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
 Write a 300 word analysis that establishes specific criteria to rigorously evaluate whether the task was completed, followed by which criteria the script has satisfied. After your response, provide your scores as JSON in a fenced code block."""
@@ -272,7 +268,6 @@ You will provide scores as JSON in a fenced code block:
 {{
     "success": float,
     "efficiency": float,
-    "backtracking": float,
     "self_correction": float
 }}
 ```
@@ -282,13 +277,10 @@ You will provide scores as JSON in a fenced code block:
 - `success`: Your confidence the desired task has been completed successfully.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-- `efficiency`: Your confidence the script has taken the most efficient path to solve the task.
+- `efficiency`: Your confidence the script has taken the most efficient path to complete the task.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-- `backtracking`: Your confidence the script employed backtracking successfully when attempting to complete the task.
-    - range: 0.0 (not possible) to 1.0 (absolutely certain).
-
-- `self_correction`: Your confidence the script identified and corrected its own mistake successfully when attempting to complete the task.
+- `self_correction`: Your confidence the script has demonstrated self-corrective behaviors during its completion of the task. These behaviors include backtracking to a more promising state, replanning when new information is discovered, and recognizing its own mistakes.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
 Write a 300 word analysis that establishes specific criteria to rigorously evaluate whether the task was completed, followed by which criteria the script has satisfied. After your response, provide your scores as JSON in a fenced code block."""
@@ -348,6 +340,7 @@ class JsonJudgmentParser(BaseJudgmentParser):
             )
 
         matched_response = match.group("json")
+
         response_dict = json.loads(
             matched_response
         )
@@ -355,7 +348,6 @@ class JsonJudgmentParser(BaseJudgmentParser):
         has_required_keys = (
             "success" in response_dict and
             "efficiency" in response_dict and
-            "backtracking" in response_dict and
             "self_correction" in response_dict
         )
 
@@ -367,13 +359,11 @@ class JsonJudgmentParser(BaseJudgmentParser):
         
         success = response_dict["success"]
         efficiency = response_dict["efficiency"]
-        backtracking = response_dict["backtracking"]
         self_correction = response_dict["self_correction"]
         
         keys_right_type = (
             (isinstance(success, float) or isinstance(success, int)) and
             (isinstance(efficiency, float) or isinstance(efficiency, int)) and
-            (isinstance(backtracking, float) or isinstance(backtracking, int)) and
             (isinstance(self_correction, float) or isinstance(self_correction, int))
         )
 
@@ -386,7 +376,6 @@ class JsonJudgmentParser(BaseJudgmentParser):
         values = {
             "success": float(success),
             "efficiency": float(efficiency),
-            "backtracking": float(backtracking),
             "self_correction": float(self_correction),
         }
         
