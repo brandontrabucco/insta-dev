@@ -28,18 +28,6 @@ if __name__ == "__main__":
         help = 'Directory containing judgment files'
     )
 
-    parser.add_argument(
-        '--dump_sites',
-        type = str,
-        default = None,
-    )
-
-    parser.add_argument(
-        '--load_sites',
-        type = str,
-        default = None,
-    )
-
     args = parser.parse_args()
 
     judgment_file_pattern = os.path.join(
@@ -49,26 +37,7 @@ if __name__ == "__main__":
     all_judgments = []
     all_actions = []
 
-    sites = set()
-
-    if args.load_sites:
-
-        with open(args.load_sites, 'r') as file:
-
-            sites = set(json.load(file))
-
     for judgment_file in glob.glob(judgment_file_pattern):
-
-        if args.load_sites:
-
-            site = (
-                os.path.basename(judgment_file)
-                .removesuffix('.json')
-            )
-
-            if site not in sites:
-
-                continue
 
         with open(judgment_file, 'r') as file:
 
@@ -86,23 +55,6 @@ if __name__ == "__main__":
             actions = json.load(file)
 
         all_actions.append(actions)
-
-        sites.add(
-            os.path.basename(judgment_file)
-            .removesuffix('.json')
-        )
-
-    if args.dump_sites:
-
-        sites = list(sites)
-
-        with open(args.dump_sites, 'w') as file:
-
-            json.dump(
-                sites,
-                file,
-                indent = 4
-            )
 
     total_num_actions = sum(
         len(actions) 
@@ -126,38 +78,31 @@ if __name__ == "__main__":
         average_num_actions
     ))
 
-    average_values = {
-        key: sum(
-            judgment.get(key) or 0.0 
+    def comparator(x, threshold):
+
+        return (
+            x == threshold 
+            if threshold == 1 else 
+            x > threshold
+        )
+
+    def get_cdf_score(value_key, threshold):
+
+        cdf_score = sum(
+            comparator(judgment.get(value_key) or 0, threshold)
             for judgment in all_judgments
         ) / len(all_judgments)
-        for key in VALUE_KEYS
-    }
 
-    print('Average: {}\n'.format(
-        json.dumps(average_values, indent = 4)
-    ))
+        return cdf_score
 
-    fraction_eq_1 = {
-        key: sum(
-            judgment.get(key) == 1 
-            for judgment in all_judgments
-        ) / len(all_judgments)
-        for key in VALUE_KEYS
-    }
+    for threshold in [0.5, 0.7, 0.9, 1.0]:
 
-    print('Fraction conf = 1: {}\n'.format(
-        json.dumps(fraction_eq_1, indent = 4)
-    ))
-
-    fraction_ge_0_5 = {
-        key: sum(
-            (judgment.get(key) or 0) > 0.5
-            for judgment in all_judgments
-        ) / len(all_judgments)
-        for key in VALUE_KEYS
-    }
-
-    print('Fraction conf > 0.5: {}\n'.format(
-        json.dumps(fraction_ge_0_5, indent = 4)
-    ))
+        cdf_scores = {
+            value_key: get_cdf_score(value_key, threshold)
+            for value_key in VALUE_KEYS
+        }
+    
+        print('Judge(Success) {} {}: {}\n'.format(
+            "==" if threshold == 1 else ">",
+            threshold, json.dumps(cdf_scores, indent = 4)
+        ))

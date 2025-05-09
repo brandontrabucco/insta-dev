@@ -189,15 +189,29 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--disable_agent_reasoning",
-        action = "store_true",
-        help = "Turns off reasoning mode in certain LLMs"
+        "--agent_reasoning_effort",
+        type = str,
+        help = "Set reasoning mode in certain LLMs",
+        default = None,
     )
 
     parser.add_argument(
-        "--disable_judge_reasoning",
+        "--judge_reasoning_effort",
+        type = str,
+        help = "Set reasoning mode in certain LLMs",
+        default = None,
+    )
+
+    parser.add_argument(
+        "--agent_disable_thinking_chat_template",
         action = "store_true",
-        help = "Turns off reasoning mode in certain LLMs"
+        help = "Turns off reasoning mode in certain LLMs",
+    )
+
+    parser.add_argument(
+        "--judge_disable_thinking_chat_template",
+        action = "store_true",
+        help = "Turns off reasoning mode in certain LLMs",
     )
 
     args = parser.parse_args()
@@ -216,7 +230,14 @@ if __name__ == "__main__":
         "temperature": 0.5
     }
 
-    if args.disable_agent_reasoning:
+    if args.agent_reasoning_effort:
+
+        agent_generation_kwargs.update({
+            "reasoning_effort": 
+            args.agent_reasoning_effort
+        })
+
+    if args.agent_disable_thinking_chat_template:
 
         agent_generation_kwargs.update({
             "extra_body": {
@@ -249,7 +270,14 @@ if __name__ == "__main__":
         "temperature": 0.5
     }
 
-    if args.disable_judge_reasoning:
+    if args.judge_reasoning_effort:
+
+        judge_generation_kwargs.update({
+            "reasoning_effort": 
+            args.judge_reasoning_effort
+        })
+
+    if args.judge_disable_thinking_chat_template:
 
         judge_generation_kwargs.update({
             "extra_body": {
@@ -262,7 +290,7 @@ if __name__ == "__main__":
     judge_config = get_judge_config(
         client_type = judge_client_type,
         client_kwargs = judge_client_kwargs,
-        generation_kwargs = judge_generation_kwargs
+        generation_kwargs = judge_generation_kwargs,
     )
 
     browser_config = get_browser_config(

@@ -18,25 +18,25 @@ if __name__ == "__main__":
     parser.add_argument(
         "--agent_model_name",
         type = str,
-        default = "Qwen/Qwen3-235B-A22B-fp8-tput"
+        default = "./qwen-1.5b-sft"
     )
 
     parser.add_argument(
         "--agent_api_key",
         type = str,
-        default = os.environ.get("TOGETHER_API_KEY")
+        default = "token-abc123"
     )
 
     parser.add_argument(
         "--agent_llm_endpoint",
         type = str,
-        default = "https://api.together.xyz/v1"
+        default = "http://localhost:8000/v1"
     )
 
     parser.add_argument(
         "--judge_model_name",
         type = str,
-        default = "gpt-4.1-nano"
+        default = "gpt-4o-mini"
     )
 
     parser.add_argument(
@@ -120,6 +120,20 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--agent_response_key",
+        type = str,
+        help = "key for response from the agent",
+        default = "response",
+    )
+
+    parser.add_argument(
+        "--max_actions",
+        type = int,
+        help = "Maximum number of actions to take",
+        default = 30
+    )
+
+    parser.add_argument(
         "--max_obs_tokens",
         type = int,
         help = "Maximum number of tokens per observation",
@@ -131,20 +145,6 @@ if __name__ == "__main__":
         type = int,
         help = "Maximum number of observations in context",
         default = 5
-    )
-
-    parser.add_argument(
-        "--max_actions",
-        type = int,
-        help = "Maximum number of actions to take",
-        default = 30
-    )
-
-    parser.add_argument(
-        "--agent_response_key",
-        type = str,
-        help = "key for response from the agent",
-        default = "response",
     )
 
     parser.add_argument(
@@ -189,15 +189,29 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--disable_agent_reasoning",
-        action = "store_true",
-        help = "Turns off reasoning mode in certain LLMs"
+        "--agent_reasoning_effort",
+        type = str,
+        help = "Set reasoning mode in certain LLMs",
+        default = None,
     )
 
     parser.add_argument(
-        "--disable_judge_reasoning",
+        "--judge_reasoning_effort",
+        type = str,
+        help = "Set reasoning mode in certain LLMs",
+        default = None,
+    )
+
+    parser.add_argument(
+        "--agent_disable_thinking_chat_template",
         action = "store_true",
-        help = "Turns off reasoning mode in certain LLMs"
+        help = "Turns off reasoning mode in certain LLMs",
+    )
+
+    parser.add_argument(
+        "--judge_disable_thinking_chat_template",
+        action = "store_true",
+        help = "Turns off reasoning mode in certain LLMs",
     )
 
     args = parser.parse_args()
@@ -211,12 +225,19 @@ if __name__ == "__main__":
 
     agent_generation_kwargs = {
         "model": args.agent_model_name,
-        "max_tokens": 2048,
+        "max_tokens": 1024,
         "top_p": 1.0,
-        "temperature": 0.5,
+        "temperature": 0.5
     }
 
-    if args.disable_agent_reasoning:
+    if args.agent_reasoning_effort:
+
+        agent_generation_kwargs.update({
+            "reasoning_effort": 
+            args.agent_reasoning_effort
+        })
+
+    if args.agent_disable_thinking_chat_template:
 
         agent_generation_kwargs.update({
             "extra_body": {
@@ -233,7 +254,6 @@ if __name__ == "__main__":
         action_parser = args.action_parser,
         max_obs_tokens = args.max_obs_tokens,
         last_obs = args.last_obs,
-        log_errors = True,
     )
 
     judge_client_type = "openai"
@@ -245,12 +265,19 @@ if __name__ == "__main__":
 
     judge_generation_kwargs = {
         "model": args.judge_model_name,
-        "max_tokens": 2048,
+        "max_tokens": 1024,
         "top_p": 1.0,
-        "temperature": 0.5,
+        "temperature": 0.5
     }
 
-    if args.disable_judge_reasoning:
+    if args.judge_reasoning_effort:
+
+        judge_generation_kwargs.update({
+            "reasoning_effort": 
+            args.judge_reasoning_effort
+        })
+
+    if args.judge_disable_thinking_chat_template:
 
         judge_generation_kwargs.update({
             "extra_body": {
@@ -264,7 +291,6 @@ if __name__ == "__main__":
         client_type = judge_client_type,
         client_kwargs = judge_client_kwargs,
         generation_kwargs = judge_generation_kwargs,
-        log_errors = True,
     )
 
     browser_config = get_browser_config(

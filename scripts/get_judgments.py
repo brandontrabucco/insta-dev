@@ -165,7 +165,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_split",
         type = str,
-        default = "train",
+        default = "test",
     )
 
     parser.add_argument(

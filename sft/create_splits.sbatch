@@ -9,7 +9,6 @@
 
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
-cd ${PROJECT_DIR:-"~/insta-dev"}
 
 NFS_DIR=${NFS_DIR:-"/data/matrix/projects/rsalakhugroup"}
 

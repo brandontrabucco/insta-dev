@@ -1,14 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=insta
-#SBATCH --exclude=babel-6-13,babel-4-9,babel-4-29,babel-13-13,babel-4-17,babel-4-1,babel-13-1,babel-8-13,babel-13-29
-#SBATCH --output=logs/insta-%A-%a-%N.out
+#SBATCH --exclude=shire-1-1,shire-1-6,shire-1-10,shire-2-5,shire-2-9,babel-2-29
+#SBATCH --output=logs/llama-%A-%a-%N.out
 #SBATCH --time=6:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --nodes=1
 #SBATCH --partition=array
-#SBATCH --gres=gpu:L40S:1
-#SBATCH --array=0-39
+#SBATCH --array=0-40%10
 
 
 
@@ -48,11 +47,11 @@ sleep ${WAIT_FOR_BROWSER:-90s}
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"${NFS_DIR}/btrabucc/qwen3-1.7b-20000x-0.5s"}
-AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:${AGENT_LLM_ENDPOINT_PORT}/v1"}
-AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8"}
+AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"https://api.together.xyz/v1"}
+AGENT_API_KEY=${AGENT_API_KEY:-${TOGETHER_API_KEY}}
 
-ROLLOUT_DIR=${ROLLOUT_DIR:-"${AGENT_MODEL_NAME}-rollouts"}
+ROLLOUT_DIR=${ROLLOUT_DIR:-"${NFS_DIR}/btrabucc/insta-150k-v2-llama4-maverick-test"}
 
 JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gpt-4.1-nano"}
 JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://api.openai.com/v1"}
@@ -75,7 +74,6 @@ LLM_ARGS=(
     --judge_model_name ${JUDGE_MODEL_NAME}
     --judge_llm_endpoint ${JUDGE_LLM_ENDPOINT}
     --judge_api_key ${JUDGE_API_KEY}
-    --agent_disable_thinking_chat_template
 )
 
 PIPELINE_ARGS=(
@@ -86,7 +84,7 @@ PIPELINE_ARGS=(
     --num_agents ${NUM_AGENTS}
     --rank ${RANK}
     --world_size ${WORLD_SIZE}
-    --action_parser simplified_json
+    --action_parser json
     ${SKIP_FINISHED}
     ${PRUNE_OBSERVATIONS}
 )
@@ -106,14 +104,6 @@ INSTA_ARGS=(
 
 
 
-# Start the LLM server
-
-export MODEL_NAME=${AGENT_MODEL_NAME}
-export LLM_ENDPOINT_PORT=${AGENT_LLM_ENDPOINT_PORT}
-bash eval/start_llm_server.sh
-
-
-
 # Configure cuda and nvidia
 
 export NCCL_P2P_DISABLE=1
@@ -129,12 +119,6 @@ huggingface-cli login --token $HUGGINGFACE_ACCESS_TOKEN
 
 # Start InSTA pipeline
 
-python -u eval/insta_pipeline.py \
+python -u datagen/insta_pipeline.py \
     ${INSTA_ARGS[@]} \
     > logs/agents-${RANK}.log 2>&1
-
-screen -XS llm-server quit
-
-
-
-# for AGENT_MODEL_NAME in /data/matrix/projects/rsalakhugroup/btrabucc/qwen3-1.7b-*x-0.9s-judgments/; do sbatch --export=AGENT_MODEL_NAME=$AGENT_MODEL_NAME eval/start_insta_pipeline.sbatch; done
