@@ -22,9 +22,9 @@ ACTION_PATTERN = re.compile(
 
 SYSTEM_PROMPT = """You are helping me evaluate a browser automation script. I will share a task provided to the script, and a sequence of webpages and actions produced by the script.
 
-## Understanding The Action Format
+## The Action Format
 
-You will see actions in the following JSON schema:
+The script produces actions as JSON in a fenced code block:
 
 ```json
 {
@@ -34,15 +34,15 @@ You will see actions in the following JSON schema:
 }
 ```
 
-Here is what each key means:
+Actions have the following components:
 
-- `action_key`: The action the script performs.
-- `action_kwargs`: Optional dictionary of action arguments.
-- `target_element_id`: The id of the element the script performs the action on.
+- `action_key`: The name of the selected action.
+- `action_kwargs`: A dictionary of arguments for the action.
+- `target_element_id`: An optional id for the element to call the action on.
 
-## Available Actions
+## Action Definitions
 
-I'm using playwright, a browser automation library, to interact with the page. I'm parsing the value assigned to `action_key` into a method call on the page object, or an element specified by the value assigned to `target_element_id`. Here is an example action:
+I've prepared an API documentation below that defines the actions the script can use to complete the task.
 
 ### Click Action Definition
 
@@ -50,7 +50,7 @@ I'm using playwright, a browser automation library, to interact with the page. I
 
 ### Example Click Action
 
-Here is an example where the script clicks the link `[id: 5] Sales link`:
+Here is an example where the script clicks `[id: 5] Sales link`:
 
 ```json
 {
@@ -66,7 +66,7 @@ Here is an example where the script clicks the link `[id: 5] Sales link`:
 
 ### Example Hover Action
 
-Here is an example where the script hovers over the image `[id: 2] Company Logo image`:
+Here is an example where the script hovers over `[id: 2] Company Logo image`:
 
 ```json
 {
@@ -104,7 +104,7 @@ Here is an example where the script scrolls down the page by 300 pixels:
 
 ### Example Fill Action (Text Input)
 
-Here is an example where the script fills the input `[id: 13] "Name..." (Enter your name text input)` with the text `John Doe`:
+Here is an example where the script fills `[id: 13] "Name..." (Enter your name text input)` with the text `John Doe`:
 
 ```json
 {
@@ -118,9 +118,7 @@ Here is an example where the script fills the input `[id: 13] "Name..." (Enter y
 
 ### Example Fill Action (Range Slider)
 
-Here is an example where the script sets the value of a range slider `[id: 71] "$250 (5)" (range slider min: 0 max: 50 step: 1)` to $1000:
-
-This slider has a range of 0 to 50 with a step of 1, and the value is currently set to 5. The script translates the desired "$1000" to the correct underlying range value.
+Here is an example where the script sets `[id: 71] "$250 (5)" (range slider min: 0 max: 50 step: 1)` to the value of `$1000`. This slider has a range of 0 to 50 with a step of 1, and the value is currently set to `5`. The script translates the desired `$1000` to the correct underlying value of `20`:
 
 ```json
 {
@@ -139,7 +137,7 @@ This slider has a range of 0 to 50 with a step of 1, and the value is currently 
 
 ### Example Select Action
 
-Here is an example where the script selects the option `red` from the dropdown `[id: 67] "blue" (color select from: red, blue, green)`:
+Here is an example where the script selects the option `red` from `[id: 67] "blue" (color select from: red, blue, green)`:
 
 ```json
 {
@@ -158,7 +156,7 @@ Here is an example where the script selects the option `red` from the dropdown `
 
 ### Example Set Checked Action
 
-Here is an example where the script checks the checkbox `[id: 21] "I agree to the terms and conditions" (checkbox)`:
+Here is an example where the script checks `[id: 21] "I agree to the terms and conditions" (checkbox)`:
 
 ```json
 {
@@ -193,13 +191,13 @@ Here is an example where the script goes back to the previous page:
 
 ### Example Goto Action
 
-Here is an example where the script opens google search:
+Here is an example where the script opens DuckDuckGo search:
 
 ```json
 {
     "action_key": "goto",
     "action_kwargs": {
-        "url": "https://www.google.com"
+        "url": "https://www.duckduckgo.com"
     },
     "target_element_id": null
 }
@@ -207,18 +205,18 @@ Here is an example where the script opens google search:
 
 ### Stop Action Definition
 
-- `stop`: Stop the browser when the task is complete, or the answer is known.
-    - `answer`: Optional answer if I requested one.
+- `stop`: Stop when the task is complete, and report the progress.
+    - `answer`: Optional answer from the script.
 
 ### Example Stop Action
 
-Here is an example where the script stops and reports `I'm done!`:
+Here is an example where the script stops and reports its progress:
 
 ```json
 {
     "action_key": "stop",
     "action_kwargs": {
-        "answer": "I'm done!"
+        "answer": "The desired task is now complete."
     },
     "target_element_id": null
 }

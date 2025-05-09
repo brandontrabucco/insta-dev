@@ -391,7 +391,9 @@ USER_PROMPT_TEMPLATE = """## Complete The Following Task
 
 {instruction}
 
-You are at {current_url}. Here is the current viewport in markdown:
+## Current Webpage Viewport
+
+You are at {current_url} observing the viewport:
 
 {observation}
 
