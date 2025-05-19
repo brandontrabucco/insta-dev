@@ -24,7 +24,7 @@ SYSTEM_PROMPT = """You are helping me design challenging tasks for a language mo
 
 ## Your Instructions
 
-Based on materials from the website, design a challenging new task for an expert user
+Based on materials from the website, design a challenging new task for an expert user.
 
 You will provide tasks as JSON in a fenced code block:
 
@@ -46,7 +46,7 @@ Tasks have the following components:
 
 ## Example Tasks
 
-I've prepared a set of example tasks. Use these examples to inspire new challenging tasks.
+I've prepared examples to inspire your task design.
 
 ### awg-fittings.com
 
