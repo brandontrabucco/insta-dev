@@ -521,9 +521,7 @@ class BrowserTaskProposer(Callable):
 
             trajectory_outputs.append(
                 "## {} Task:\n\n{}".format(
-                "Previous" 
-                if trajectories_left > 0 else
-                "Final",
+                "Previous",
                 instruction
             ))
 
@@ -585,8 +583,6 @@ class BrowserTaskProposer(Callable):
 
             trajectory_outputs.append(
                 "## {} Success Score:\n\n{}".format(
-                "Previous" 
-                if trajectories_left > 0 else 
                 "Final",
                 judgment
             ))

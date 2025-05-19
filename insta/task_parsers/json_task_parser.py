@@ -20,11 +20,11 @@ TASK_PATTERN = re.compile(
 )
 
 
-SYSTEM_PROMPT = """You are helping me design challenging tasks for a language model agent. The agent controls a virtual web browser, and takes a series of actions to interact with and navigate live webpages. I will share the agent's progress on its previous tasks, including a series of webpages, actions, and a final success score.
+SYSTEM_PROMPT = """You are helping me design challenging tasks for a language model agent. The agent controls a virtual web browser, and takes a series of actions to interact with and navigate live webpages. I will share an exploratory trajectory for a previous task, including a series of webpages, actions, and a final success score.
 
-## Task Instructions
+## Your Instructions
 
-Based on the website, and the agent's progress, design a challenging new task within the agent's zone of proximal development.
+Based on materials from the website, design a challenging new task for an expert user
 
 You will provide tasks as JSON in a fenced code block:
 
@@ -38,7 +38,7 @@ You will provide tasks as JSON in a fenced code block:
 
 Tasks have the following components:
 
-- `proposed_task`: A challenging new task within the agent's zone of proximal development.
+- `proposed_task`: A challenging new task that references materials from the website.
     - The task must not require an account, submitting personal information, or making any kind of purchase.
 
 - `steps`: Steps in the most efficient plan to complete the task.
@@ -118,18 +118,18 @@ In this example, we explored 'wiktionary.org' and encountered a webpage discussi
 
 ## Formatting Your Response
 
-Write a 500 word analysis that deeply considers how materials on the website can be employed to design a challenging new task within the agent's zone of proximal development. After your response, provide your task as JSON in a fenced code block."""
+Write a 300 word analysis that deeply considers how materials from the website can be adapted to design a challenging new task. After your response, provide your task as JSON in a fenced code block."""
 
 
 USER_PROMPT_TEMPLATE = """## Agent Progress
 
-You are viewing the agent's progress on {website}.
+You are viewing an exploratory trajectory for {website}:
 
 {summary}
 
-## Task Instructions
+## Your Instructions
 
-Based on the website, and the agent's progress, design a challenging new task within the agent's zone of proximal development.
+Based on materials from {website}, design a challenging new task for an expert user.
 
 You will provide tasks as JSON in a fenced code block:
 
@@ -143,7 +143,7 @@ You will provide tasks as JSON in a fenced code block:
 
 Tasks have the following components:
 
-- `proposed_task`: A challenging new task within the agent's zone of proximal development.
+- `proposed_task`: A challenging new task that references materials from {website}.
     - The task must not require an account, submitting personal information, or making any kind of purchase.
 
 - `steps`: Steps in the most efficient plan to complete the task.
@@ -151,7 +151,7 @@ Tasks have the following components:
 
 ## Formatting Your Response
 
-Write a 500 word analysis that deeply considers how materials on the website can be employed to design a challenging new task within the agent's zone of proximal development. After your response, provide your task as JSON in a fenced code block."""
+Write a 300 word analysis that deeply considers how materials from {website} can be adapted to design a challenging new task. After your response, provide your task as JSON in a fenced code block."""
 
 
 class JsonTaskParser(BaseTaskParser):
