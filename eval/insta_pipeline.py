@@ -154,6 +154,74 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--agent_top_p",
+        type = float,
+        help = "Sampling temperature for LLMs",
+        default = 1.0
+    )
+
+    parser.add_argument(
+        "--agent_top_k",
+        type = int,
+        help = "Sampling temperature for LLMs",
+        default = None
+    )
+
+    parser.add_argument(
+        "--agent_temperature",
+        type = float,
+        help = "Sampling temperature for LLMs",
+        default = 0.5
+    )
+
+    parser.add_argument(
+        "--agent_reasoning_effort",
+        type = str,
+        help = "Set reasoning mode in certain LLMs",
+        default = None,
+    )
+
+    parser.add_argument(
+        "--agent_disable_thinking_chat_template",
+        action = "store_true",
+        help = "Turns off reasoning mode in certain LLMs",
+    )
+
+    parser.add_argument(
+        "--judge_top_p",
+        type = float,
+        help = "Sampling temperature for LLMs",
+        default = 1.0
+    )
+
+    parser.add_argument(
+        "--judge_top_k",
+        type = int,
+        help = "Sampling temperature for LLMs",
+        default = None
+    )
+
+    parser.add_argument(
+        "--judge_temperature",
+        type = float,
+        help = "Sampling temperature for LLMs",
+        default = 0.5
+    )
+
+    parser.add_argument(
+        "--judge_reasoning_effort",
+        type = str,
+        help = "Set reasoning mode in certain LLMs",
+        default = None,
+    )
+
+    parser.add_argument(
+        "--judge_disable_thinking_chat_template",
+        action = "store_true",
+        help = "Turns off reasoning mode in certain LLMs",
+    )
+
+    parser.add_argument(
         "--skip_finished",
         action = "store_true",
         help = "Skip finished domains",
@@ -188,32 +256,6 @@ if __name__ == "__main__":
         default = 1
     )
 
-    parser.add_argument(
-        "--agent_reasoning_effort",
-        type = str,
-        help = "Set reasoning mode in certain LLMs",
-        default = None,
-    )
-
-    parser.add_argument(
-        "--judge_reasoning_effort",
-        type = str,
-        help = "Set reasoning mode in certain LLMs",
-        default = None,
-    )
-
-    parser.add_argument(
-        "--agent_disable_thinking_chat_template",
-        action = "store_true",
-        help = "Turns off reasoning mode in certain LLMs",
-    )
-
-    parser.add_argument(
-        "--judge_disable_thinking_chat_template",
-        action = "store_true",
-        help = "Turns off reasoning mode in certain LLMs",
-    )
-
     args = parser.parse_args()
 
     agent_client_type = "openai"
@@ -226,8 +268,9 @@ if __name__ == "__main__":
     agent_generation_kwargs = {
         "model": args.agent_model_name,
         "max_tokens": 1024,
-        "top_p": 1.0,
-        "temperature": 0.5
+        "top_p": args.agent_top_p,
+        "temperature": args.agent_temperature,
+        "extra_body": {}
     }
 
     if args.agent_reasoning_effort:
@@ -239,12 +282,14 @@ if __name__ == "__main__":
 
     if args.agent_disable_thinking_chat_template:
 
-        agent_generation_kwargs.update({
-            "extra_body": {
-                "chat_template_kwargs": {
-                    "enable_thinking": False
-                }
-            },
+        agent_generation_kwargs["extra_body"][
+            "chat_template_kwargs"
+        ] = {"enable_thinking": False}
+
+    if args.agent_top_k is not None:
+
+        agent_generation_kwargs["extra_body"].update({
+            "top_k": args.agent_top_k
         })
 
     agent_config = get_agent_config(
@@ -266,8 +311,9 @@ if __name__ == "__main__":
     judge_generation_kwargs = {
         "model": args.judge_model_name,
         "max_tokens": 1024,
-        "top_p": 1.0,
-        "temperature": 0.5
+        "top_p": args.judge_top_p,
+        "temperature": args.judge_temperature,
+        "extra_body": {}
     }
 
     if args.judge_reasoning_effort:
@@ -279,12 +325,14 @@ if __name__ == "__main__":
 
     if args.judge_disable_thinking_chat_template:
 
-        judge_generation_kwargs.update({
-            "extra_body": {
-                "chat_template_kwargs": {
-                    "enable_thinking": False
-                }
-            },
+        judge_generation_kwargs["extra_body"][
+            "chat_template_kwargs"
+        ] = {"enable_thinking": False}
+
+    if args.judge_top_k is not None:
+
+        judge_generation_kwargs["extra_body"].update({
+            "top_k": args.judge_top_k
         })
 
     judge_config = get_judge_config(

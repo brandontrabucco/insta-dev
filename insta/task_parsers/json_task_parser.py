@@ -20,11 +20,13 @@ TASK_PATTERN = re.compile(
 )
 
 
-SYSTEM_PROMPT = """You are a helpful assistant designing tasks for a web automation script. I will show you previous runs of the script, including previous tasks, webpages, actions, and performance reviews, formatted in markdown. Help me design *challenging* new tasks.
+SYSTEM_PROMPT = """You are helping me design challenging tasks for a language model agent. The agent controls a virtual web browser, and takes a series of actions to interact with and navigate live webpages. I will share the agent's progress on its previous tasks, including a series of webpages, actions, and a final success score.
 
-## Formatting The Proposed Task
+## Task Instructions
 
-Format your task in the following JSON schema:
+Based on the website, and the agent's progress, design a challenging new task within the agent's zone of proximal development.
+
+You will provide tasks as JSON in a fenced code block:
 
 ```json
 {
@@ -34,32 +36,38 @@ Format your task in the following JSON schema:
 }
 ```
 
-Here is what each key means:
+Tasks have the following components:
 
-- `proposed_task`: A specific, challenging task that an expert user might leverage this website to complete.
-    - Must not require making an account, logging in, submitting personal information, making a purchase, or placing an order.
+- `proposed_task`: A challenging new task within the agent's zone of proximal development.
+    - The task must not require an account, submitting personal information, or making any kind of purchase.
 
-- `steps`: Steps an expert user would follow to complete the proposed task.
-- `criteria`: The required answer, and criteria to determine if the task was completed.
+- `steps`: Steps in the most efficient plan to complete the task.
+- `criteria`: Clear instructions to rigorously determine if the task was completed.
 
-## Example Tasks For Inspiration
+## Example Tasks
 
-Suppose you want to design a task around the 'C-to-C Hose-Shut-Off Valve' on 'awg-fittings.com':
+I've prepared a set of example tasks. Use these examples to inspire new challenging tasks.
+
+### awg-fittings.com
+
+In this example, we saw the website 'awg-fittings.com' had a product listing for the 'C-to-C Hose-Shut-Off Valve', which was listed as having a length of '237 mm' in its product specifications. We adapted this information into a new task for the agent:
 
 ```json
 {
     "proposed_task": "What is the C-to-C Hose-Shut-Off Valve length in mm?",
     "steps": [
         "Navigate to 'awg-fittings.com'",
-        "Open the product catelog for fittings",
+        "Open the product catalog for fittings",
         "Locate the product listing for the C-to-C Hose-Shut-Off Valve",
         "Find the product length in mm, and respond with that length in the answer"
     ],
-    "criteria": "The answer should include the specific length of '237 mm' for this product"
+    "criteria": "The final response should include the specific length of '237 mm' for this product"
 }
 ```
 
-Suppose you want to design a task around the document 'The Angora cat; how to breed train and keep it' on 'biodiversitylibrary.org':
+### biodiversitylibrary.org
+
+In this example, we saw a document titled 'The Angora cat; how to breed train and keep it' on 'biodiversitylibrary.org', and the website has a PDF viewing functionality the agent can use to open the target document. Here is a new task for the agent:
 
 ```json
 {
@@ -74,7 +82,9 @@ Suppose you want to design a task around the document 'The Angora cat; how to br
 }
 ```
 
-Suppose you want to design a task around the 'Generative Adversarial Networks' paper on 'scholar.google.com':
+### scholar.google.com
+
+In this example, we saw a paper titled 'Generative Adversarial Networks' with a citation count of '80613' on the website 'scholar.google.com', and the current date was April 2025. We used this information to create a new task for the agent:
 
 ```json
 {
@@ -85,11 +95,13 @@ Suppose you want to design a task around the 'Generative Adversarial Networks' p
         "Locate the correct paper in the search results",
         "Find an up-to-date citation count, and respond with that count in the answer"
     ],
-    "criteria": "The answer should include an up-to-date citation count, which is '80613' as of April 2025"
+    "criteria": "The final response should include an up-to-date citation count, which is '80613' as of April 2025"
 }
 ```
 
-Suppose you want to design a task around the word 'serendipity' on 'wiktionary.org':
+### wiktionary.org
+
+In this example, we explored 'wiktionary.org' and encountered a webpage discussing the etymology of the word 'serendipity', which stated the word is derived from 'Serendip' or 'Serendib', coined by English writer and politician Horace Walpole in 1754. Here is a new task for the agent:
 
 ```json
 {
@@ -100,22 +112,26 @@ Suppose you want to design a task around the word 'serendipity' on 'wiktionary.o
         "Find the definition and etymology sections of the 'serendipity' page",
         "Summarize the contents of these sections in the answer"
     ],
-    "criteria": "The answer should mention Serendip (or Serendib), coined by English writer and politician Horace Walpole in 1754"
+    "criteria": "The final response should mention Serendip (or Serendib), coined by English writer and politician Horace Walpole in 1754"
 }
 ```
 
-Thanks for helping me design challenging new tasks, please follow the instructions carefully. Start your response with an analysis for how an expert user would leverage this website, followed by a step-by-step breakdown of your proposed task, and finally, enter your task in the JSON format. Respond in 500 words."""
+## Formatting Your Response
+
+Write a 500 word analysis that deeply considers how materials on the website can be employed to design a challenging new task within the agent's zone of proximal development. After your response, provide your task as JSON in a fenced code block."""
 
 
-USER_PROMPT_TEMPLATE = """## Summary Of Previous Runs 
+USER_PROMPT_TEMPLATE = """## Agent Progress
 
-Here are previous runs of the script, including tasks, webpages, actions, and performance reviews, formatted in markdown:
+You are viewing the agent's progress on {website}.
 
-{annotations}
+{summary}
 
-## Formatting The Proposed Task
+## Task Instructions
 
-Enter a task in the following JSON schema:
+Based on the website, and the agent's progress, design a challenging new task within the agent's zone of proximal development.
+
+You will provide tasks as JSON in a fenced code block:
 
 ```json
 {{
@@ -125,15 +141,17 @@ Enter a task in the following JSON schema:
 }}
 ```
 
-Here is what each key means:
+Tasks have the following components:
 
-- `proposed_task`: A specific, challenging task that an expert user might leverage {target_url} to complete.
-    - Must not require making an account, logging in, submitting personal information, making a purchase, or placing an order.
+- `proposed_task`: A challenging new task within the agent's zone of proximal development.
+    - The task must not require an account, submitting personal information, or making any kind of purchase.
 
-- `steps`: Steps an expert user would follow to complete the proposed task.
-- `criteria`: The required answer, and criteria to determine if the task was completed.
+- `steps`: Steps in the most efficient plan to complete the task.
+- `criteria`: Clear instructions to rigorously determine if the task was completed.
 
-Start your response with an analysis for how an expert user would leverage {target_url}, followed by a step-by-step breakdown of your proposed task, and finally, enter your task in the JSON format. Respond in 500 words."""
+## Formatting Your Response
+
+Write a 500 word analysis that deeply considers how materials on the website can be employed to design a challenging new task within the agent's zone of proximal development. After your response, provide your task as JSON in a fenced code block."""
 
 
 class JsonTaskParser(BaseTaskParser):

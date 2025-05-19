@@ -103,6 +103,6 @@ if __name__ == "__main__":
         }
     
         print('Judge(Success) {} {}: {}\n'.format(
-            "==" if threshold == 1 else ">",
+            "=" if threshold == 1 else ">",
             threshold, json.dumps(cdf_scores, indent = 4)
         ))

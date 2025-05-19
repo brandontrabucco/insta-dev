@@ -119,7 +119,7 @@ def relabel_judgments(
     return identifier
 
 
-# for input_data_dir in /data/matrix/projects/rsalakhugroup/btrabucc/qwen3-1.7b-*x-?.?s-qwen3-judge/-rollouts; do python scripts/get_judgments.py --disable_reasoning_mode --input_data_dir $input_data_dir; done
+# for input_data_dir in /data/matrix/projects/rsalakhugroup/btrabucc/neurips_scaling_experiment/*; do python annotate/query_judge.py --api_key $GOOGLE_API_KEY --llm_endpoint https://generativelanguage.googleapis.com/v1beta/openai/ --model_name gemini-2.5-flash-preview-04-17 --judge_name gemini-2.5-flash-judge --input_data_dir $input_data_dir; done
 
 
 if __name__ == "__main__":
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_name",
         type = str,
-        default = "Qwen/Qwen3-235B-A22B-fp8-tput",
+        default = "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
     )
 
     parser.add_argument(
@@ -153,19 +153,45 @@ if __name__ == "__main__":
     parser.add_argument(
         "--judge_name",
         type = str,
-        default = "qwen3-235b-judge"
+        default = "llama4-maverick-judge"
     )
 
     parser.add_argument(
         "--dataset",
         type = str,
-        default = "data-for-agents/insta-150k-v2",
+        default = "btrabucco/web-voyager",
     )
 
     parser.add_argument(
         "--dataset_split",
         type = str,
         default = "test",
+    )
+
+    parser.add_argument(
+        "--agent_response_key",
+        type = str,
+        help = "key for response from the agent",
+        default = "response",
+    )
+
+    parser.add_argument(
+        "--overwrite",
+        action = "store_true",
+        help = "Whether to overwrite existing judgments"
+    )
+
+    parser.add_argument(
+        "--reasoning_effort",
+        type = str,
+        help = "Set reasoning mode in certain LLMs",
+        default = None,
+    )
+
+    parser.add_argument(
+        "--disable_thinking_chat_template",
+        action = "store_true",
+        help = "Turns off reasoning mode in certain LLMs"
     )
 
     parser.add_argument(
@@ -196,25 +222,6 @@ if __name__ == "__main__":
         default = 32
     )
 
-    parser.add_argument(
-        "--agent_response_key",
-        type = str,
-        help = "key for response from the agent",
-        default = "response",
-    )
-
-    parser.add_argument(
-        "--disable_reasoning_mode",
-        action = "store_true",
-        help = "Turns off reasoning mode in certain LLMs"
-    )
-
-    parser.add_argument(
-        "--overwrite",
-        action = "store_true",
-        help = "Whether to overwrite existing judgments"
-    )
-
     args = parser.parse_args()
 
     client_kwargs = {
@@ -227,17 +234,21 @@ if __name__ == "__main__":
         "max_tokens": 1024,
         "top_p": 1.0,
         "temperature": 0.5,
+        "extra_body": {}
     }
 
-    if args.disable_reasoning_mode:
+    if args.reasoning_effort:
 
         generation_kwargs.update({
-            "extra_body": {
-                "chat_template_kwargs": {
-                    "enable_thinking": False
-                }
-            },
+            "reasoning_effort": 
+            args.reasoning_effort
         })
+
+    if args.disable_thinking_chat_template:
+
+        generation_kwargs["extra_body"][
+            "chat_template_kwargs"
+        ] = {"enable_thinking": False}
 
     judge_config = get_judge_config(
         client_kwargs = client_kwargs,

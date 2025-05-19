@@ -8,7 +8,7 @@
 #SBATCH --nodes=1
 #SBATCH --partition=array
 #SBATCH --gres=gpu:L40S:1
-#SBATCH --array=0-39
+#SBATCH --array=0-299
 
 
 
@@ -16,6 +16,9 @@
 
 SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-0}
 SLURM_ARRAY_TASK_COUNT=${SLURM_ARRAY_TASK_COUNT:-1}
+
+RANK=${RANK:-${SLURM_ARRAY_TASK_ID}}
+WORLD_SIZE=${WORLD_SIZE:-${SLURM_ARRAY_TASK_COUNT}}
 
 NUM_AGENTS=${NUM_AGENTS:-8}
 PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-8}
@@ -41,28 +44,37 @@ singularity run ${SINGULARITY_ARGS[@]} -w \
 
 sleep ${WAIT_FOR_BROWSER:-90s}
 
+source ~/anaconda3/etc/profile.d/conda.sh
+conda activate insta
+
 
 
 # Arguments for data collection
 
-source ~/anaconda3/etc/profile.d/conda.sh
-conda activate insta
+OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/qwen3-1.7b-10000x-0.9s-qwen3-235b-judge"}
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"${NFS_DIR}/btrabucc/qwen3-1.7b-20000x-0.5s"}
+SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
+PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
+
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"${NFS_DIR}/btrabucc/qwen3-1.7b-10000x-0.9s-qwen3-235b-judge"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:${AGENT_LLM_ENDPOINT_PORT}/v1"}
 AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
 
-ROLLOUT_DIR=${ROLLOUT_DIR:-"${AGENT_MODEL_NAME}-rollouts"}
+ACTION_PARSER=${ACTION_PARSER:-"json"}
 
 JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gpt-4.1-nano"}
 JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://api.openai.com/v1"}
 JUDGE_API_KEY=${JUDGE_API_KEY:-${OPENAI_API_KEY}}
 
-RANK=${RANK:-${SLURM_ARRAY_TASK_ID}}
-WORLD_SIZE=${WORLD_SIZE:-${SLURM_ARRAY_TASK_COUNT}}
+JUDGE_NAME=${JUDGE_NAME:-"gpt-4.1-nano-judge"}
 
-SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
-PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
+
+
+# Arguments for sampling
+
+AGENT_TEMPERATURE=${AGENT_TEMPERATURE:-0.5}
+AGENT_TOP_P=${AGENT_TOP_P:-1}
+AGENT_TOP_K=${AGENT_TOP_K:-50}
 
 
 
@@ -76,30 +88,37 @@ LLM_ARGS=(
     --judge_llm_endpoint ${JUDGE_LLM_ENDPOINT}
     --judge_api_key ${JUDGE_API_KEY}
     --agent_disable_thinking_chat_template
+    --action_parser ${ACTION_PARSER}
+)
+
+SAMPLING_ARGS=(
+    --agent_temperature ${AGENT_TEMPERATURE}
+    --agent_top_p ${AGENT_TOP_P}
+    --agent_top_k ${AGENT_TOP_K}
 )
 
 PIPELINE_ARGS=(
     --dataset data-for-agents/insta-150k-v2
-    --dataset_split test
+    --dataset_split train
     --playwright_port ${PLAYWRIGHT_PORT}
     --playwright_workers ${PLAYWRIGHT_WORKERS}
     --num_agents ${NUM_AGENTS}
     --rank ${RANK}
     --world_size ${WORLD_SIZE}
-    --action_parser simplified_json
     ${SKIP_FINISHED}
     ${PRUNE_OBSERVATIONS}
 )
 
 DATA_ARGS=(
-    --observations_dir ${ROLLOUT_DIR}/observations
-    --screenshot_dir ${ROLLOUT_DIR}/screenshots
-    --actions_dir ${ROLLOUT_DIR}/actions
-    --judgments_dir ${ROLLOUT_DIR}/gpt-4.1-nano-judge
+    --observations_dir ${OUTPUT_DIR}/observations
+    --screenshot_dir ${OUTPUT_DIR}/screenshots
+    --actions_dir ${OUTPUT_DIR}/actions
+    --judgments_dir ${OUTPUT_DIR}/${JUDGE_NAME}
 )
 
 INSTA_ARGS=(
     ${LLM_ARGS[@]}
+    ${SAMPLING_ARGS[@]}
     ${PIPELINE_ARGS[@]}
     ${DATA_ARGS[@]}
 )
@@ -128,6 +147,8 @@ huggingface-cli login --token $HUGGINGFACE_ACCESS_TOKEN
 
 
 # Start InSTA pipeline
+
+echo "Starting pipeline with args ${INSTA_ARGS[@]}"
 
 python -u eval/insta_pipeline.py \
     ${INSTA_ARGS[@]} \

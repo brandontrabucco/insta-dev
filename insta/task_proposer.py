@@ -523,7 +523,7 @@ class BrowserTaskProposer(Callable):
                 "## {} Task:\n\n{}".format(
                 "Previous" 
                 if trajectories_left > 0 else
-                "Last",
+                "Final",
                 instruction
             ))
 
@@ -562,7 +562,7 @@ class BrowserTaskProposer(Callable):
                     "## {} Webpage:\n\n{}".format(
                     "Previous" 
                     if time_left > 0 else 
-                    "Last",
+                    "Final",
                     observation
                 ))
 
@@ -577,17 +577,17 @@ class BrowserTaskProposer(Callable):
                     "## {} Action:\n\n{}".format(
                     "Previous" 
                     if time_left > 0 else 
-                    "Last",
+                    "Final",
                     action
                 ))
 
         if trajectories_left < last_judgments:
 
             trajectory_outputs.append(
-                "## {} Performance Review:\n\n{}".format(
+                "## {} Success Score:\n\n{}".format(
                 "Previous" 
                 if trajectories_left > 0 else 
-                "Last",
+                "Final",
                 judgment
             ))
 
@@ -596,8 +596,8 @@ class BrowserTaskProposer(Callable):
             return None
         
         return self.user_prompt_template.format(
-            annotations = "\n\n".join(trajectory_outputs),
-            target_url = target_url
+            summary = "\n\n".join(trajectory_outputs),
+            website = target_url
         )
 
     def get_user_prompts(

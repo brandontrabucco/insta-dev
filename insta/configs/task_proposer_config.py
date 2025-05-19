@@ -54,7 +54,7 @@ DEFAULT_CLIENT_KWARGS = {
 
 DEFAULT_GENERATION_KWARGS = {
     "model": "Qwen/Qwen2.5-72B-Instruct",
-    "max_tokens": 2048,
+    "max_tokens": 1024,
     "top_p": 1.0,
     "temperature": 0.5
 }

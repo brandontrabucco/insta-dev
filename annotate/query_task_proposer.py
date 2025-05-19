@@ -118,25 +118,48 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_name",
         type = str,
-        default = "meta-llama/Llama-3.3-70B-Instruct",
+        default = "gemini-2.5-flash-preview-04-17",
     )
 
     parser.add_argument(
         "--api_key",
         type = str,
-        default = "token-abc123",
+        default = os.environ.get("GOOGLE_API_KEY"),
     )
 
     parser.add_argument(
         "--llm_endpoint",
         type = str,
-        default = "http://localhost:8000/v1",
+        default = "https://generativelanguage.googleapis.com/v1beta/openai/",
+    )
+
+    parser.add_argument(
+        "--reasoning_effort",
+        type = str,
+        help = "Set reasoning mode in certain LLMs",
+        default = None,
+    )
+
+    parser.add_argument(
+        "--disable_thinking_chat_template",
+        action = "store_true",
+        help = "Turns off reasoning mode in certain LLMs"
     )
 
     parser.add_argument(
         "--input_data_dir",
         type = str,
-        default = "insta-150k-v2-qwen-2.5b-grpo-n1/insta-150k-v2-qwen-2.5b-grpo-n1"
+        default = os.path.join(
+            os.environ.get("NFS_DIR"),
+            "btrabucc/neurips_data_collection",
+            "qwen3-1.7b-10000x-0.9s-qwen3-235b-judge"
+        )
+    )
+
+    parser.add_argument(
+        "--judge_name",
+        type = str,
+        default = "gpt-4.1-nano-judge"
     )
 
     parser.add_argument(
@@ -185,6 +208,12 @@ if __name__ == "__main__":
         default = 32
     )
 
+    parser.add_argument(
+        "--overwrite",
+        action = "store_true",
+        help = "Whether to overwrite existing judgments"
+    )
+
     args = parser.parse_args()
 
     client_kwargs = {
@@ -194,10 +223,24 @@ if __name__ == "__main__":
 
     generation_kwargs = {
         "model": args.model_name,
-        "max_tokens": 2048,
+        "max_tokens": 1024,
         "top_p": 1.0,
-        "temperature": 0.5
+        "temperature": 0.5,
+        "extra_body": {}
     }
+
+    if args.reasoning_effort:
+
+        generation_kwargs.update({
+            "reasoning_effort": 
+            args.reasoning_effort
+        })
+
+    if args.disable_thinking_chat_template:
+
+        generation_kwargs["extra_body"][
+            "chat_template_kwargs"
+        ] = {"enable_thinking": False}
 
     task_proposer_config = get_task_proposer_config(
         client_kwargs = client_kwargs,
@@ -217,7 +260,7 @@ if __name__ == "__main__":
 
     input_judgments_dir = os.path.join(
         args.input_data_dir,
-        "judgments"
+        args.judge_name
     )
 
     input_screenshots_dir = os.path.join(
@@ -237,7 +280,7 @@ if __name__ == "__main__":
 
     all_tasks = []
 
-    if os.path.exists(args.output_tasks_file):
+    if not args.overwrite and os.path.exists(args.output_tasks_file):
 
         with open(args.output_tasks_file, "r") as file:
 
