@@ -121,7 +121,7 @@ In this example, we explored 'wiktionary.org' and encountered a webpage discussi
 Write a 300 word analysis that deeply considers how materials from the website can be adapted to design a challenging new task. After your response, provide your task as JSON in a fenced code block."""
 
 
-USER_PROMPT_TEMPLATE = """## Agent Progress
+USER_PROMPT_TEMPLATE = """## Exploring The Website
 
 You are viewing an exploratory trajectory for {website}:
 
