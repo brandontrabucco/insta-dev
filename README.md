@@ -96,8 +96,7 @@ dataset = [
 
 pipeline = InstaPipeline(
     agent_config = agent_config,
-    judge_config = judge_config,
-    browser_config = browser_config,
+    judge_config = judge_config
 )
 
 trajectories = pipeline.launch(
