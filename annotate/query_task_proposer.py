@@ -2,7 +2,8 @@ from insta import (
     get_task_proposer_config,
     TaskProposerConfig,
     BrowserTaskProposer,
-    DEFAULT_TASK_PROPOSER_CONFIG
+    DEFAULT_TASK_PROPOSER_CONFIG,
+    NULL_TASK_PROPOSAL
 )
 
 from multiprocessing import Pool
@@ -119,6 +120,15 @@ def query_task_proposer(
             ]
         ),
     )
+
+    invalid_task_proposal = (
+        task_proposal is None or 
+        task_proposal == NULL_TASK_PROPOSAL
+    )
+
+    if invalid_task_proposal:
+
+        return None
 
     task_proposal = {
         "proposed_task": task_proposal.proposed_task,

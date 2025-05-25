@@ -2,7 +2,8 @@ from insta import (
     get_judge_config,
     JudgeConfig,
     BrowserJudge,
-    DEFAULT_JUDGE_CONFIG
+    DEFAULT_JUDGE_CONFIG,
+    NULL_JUDGMENT
 )
 
 from multiprocessing import Pool
@@ -102,6 +103,15 @@ def query_judge(
         ],
         instruction = instruction
     )
+
+    invalid_judgment = (
+        judgment is None or 
+        judgment == NULL_JUDGMENT
+    )
+
+    if invalid_judgment:
+
+        return None
 
     judgment_values = {
         key: judgment.values.get(key)

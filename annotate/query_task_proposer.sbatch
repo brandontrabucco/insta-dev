@@ -2,12 +2,12 @@
 #SBATCH --job-name=insta
 #SBATCH --exclude=babel-6-13,babel-4-9,babel-4-29,babel-13-13,babel-4-17,babel-4-1,babel-13-1,babel-8-13,babel-13-29
 #SBATCH --output=logs/task-proposer-%A-%a-%N.out
-#SBATCH --time=12:00:00
+#SBATCH --time=48:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --nodes=1
-#SBATCH --partition=array
-#SBATCH --array=0-7
+#SBATCH --partition=general
+#SBATCH --array=0-0
 
 
 
@@ -28,9 +28,9 @@ conda activate insta
 
 INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/qwen3-1.7b-10000x-0.9s-qwen3-235b-judge"}
 
-OVERWRITE=${OVERWRITE:-"--overwrite"}
+OVERWRITE=${OVERWRITE:-""}
 
-TASK_PROPOSER_MODEL_NAME=${TASK_PROPOSER_MODEL_NAME:-"gemini-2.5-flash-preview-04-17"}
+TASK_PROPOSER_MODEL_NAME=${TASK_PROPOSER_MODEL_NAME:-"gemini-2.5-flash-preview-05-20"}
 TASK_PROPOSER_LLM_ENDPOINT=${TASK_PROPOSER_LLM_ENDPOINT:-"https://generativelanguage.googleapis.com/v1beta/openai/"}
 TASK_PROPOSER_API_KEY=${TASK_PROPOSER_API_KEY:-${GOOGLE_API_KEY}}
 
@@ -56,6 +56,7 @@ PIPELINE_ARGS=(
     --dataset_split train
     --rank ${RANK}
     --world_size ${WORLD_SIZE}
+    --num_workers 4
     ${OVERWRITE}
 )
 

@@ -30,7 +30,7 @@ IDENTIFIER="${MAX_NUM_SAMPLES}x-${SUCCESS_THRESHOLD}s"
 OUTPUT_DATASET_PATH="${DATA_PREFIX}-${IDENTIFIER}-${JUDGE_NAME}"
 
 DATASET_ARGS=(
-    sft/create_dataset.py
+    sft/agent/create_dataset.py
     --data_dir ${INPUT_DATASET_PATH}
     --dataset_output_dir ${OUTPUT_DATASET_PATH}
     --judge_name ${JUDGE_NAME}
