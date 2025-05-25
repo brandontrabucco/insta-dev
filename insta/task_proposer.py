@@ -128,7 +128,7 @@ class BrowserTaskProposer(Callable):
         judgments: List[str],
         instructions: List[str],
         task_proposals: List[str],
-        target_url: str,
+        website: str,
         last_judgments: int = 5,
         last_tasks: int = 5,
         last_trajectories: int = 1,
@@ -159,7 +159,7 @@ class BrowserTaskProposer(Callable):
         task_proposals: List[str]
             Previous task proposals from the LLM.
 
-        target_url: str
+        website: str
             Propose tasks for the target URL.
 
         last_judgments: int
@@ -191,7 +191,7 @@ class BrowserTaskProposer(Callable):
             judgments = judgments,
             instructions = instructions,
             task_proposals = task_proposals,
-            target_url = target_url,
+            website = website,
             last_judgments = last_judgments,
             last_tasks = last_tasks,
             last_trajectories = last_trajectories,
@@ -222,7 +222,7 @@ class BrowserTaskProposer(Callable):
         actions: List[str],
         judgment: str,
         instruction: str,
-        target_url: str
+        website: str
     ) -> BrowserTaskProposal | None:
         """Queries the LLM to propose a task for the agent to complete
         given previous attempts, and evaluations.
@@ -245,7 +245,7 @@ class BrowserTaskProposer(Callable):
             The instruction to provide to the agent, such as a question
             or a command to execute in the browser.
 
-        target_url: str
+        website: str
             Propose tasks for the target URL.
 
         Returns:
@@ -270,7 +270,7 @@ class BrowserTaskProposer(Callable):
             judgments = self.judgments,
             instructions = self.instructions,
             task_proposals = self.task_proposals,
-            target_url = target_url,
+            website = website,
             last_judgments = self.config.last_judgments,
             last_tasks = self.config.last_tasks,
             last_trajectories = self.config.last_trajectories,
@@ -457,7 +457,7 @@ class BrowserTaskProposer(Callable):
         actions: List[str],
         judgment: str,
         instruction: str,
-        target_url: str,
+        website: str,
         trajectories_left: int = None,
         last_judgments: int = 5,
         last_tasks: int = 5,
@@ -487,7 +487,7 @@ class BrowserTaskProposer(Callable):
             The instruction to provide to the agent, such as a question
             or a command to execute in the browser.
 
-        target_url: str
+        website: str
             Propose tasks for the target URL.
 
         trajectories_left: int
@@ -593,7 +593,7 @@ class BrowserTaskProposer(Callable):
         
         return self.user_prompt_template.format(
             summary = "\n\n".join(trajectory_outputs),
-            website = target_url
+            website = website
         )
 
     def get_user_prompts(
@@ -601,7 +601,7 @@ class BrowserTaskProposer(Callable):
         actions: List[List[str]],
         judgments: List[str],
         instructions: List[str],
-        target_url: str,
+        website: str,
         last_judgments: int = 5,
         last_tasks: int = 5,
         last_trajectories: int = 1,
@@ -630,7 +630,7 @@ class BrowserTaskProposer(Callable):
             The instruction to provide to the agent, such as a question
             or a command to execute in the browser.
 
-        target_url: str
+        website: str
             Propose tasks for the target URL.
 
         last_judgments: int
@@ -679,7 +679,7 @@ class BrowserTaskProposer(Callable):
                 actions = trajectory_actions,
                 judgment = trajectory_judgment,
                 instruction = trajectory_instruction,
-                target_url = target_url,
+                website = website,
                 trajectories_left = trajectories_left,
                 last_judgments = last_judgments,
                 last_tasks = last_tasks,
@@ -703,7 +703,7 @@ class BrowserTaskProposer(Callable):
         judgments: List[str],
         instructions: List[str],
         task_proposals: List[str],
-        target_url: str,
+        website: str,
         last_judgments: int = 5,
         last_tasks: int = 5,
         last_trajectories: int = 1,
@@ -735,7 +735,7 @@ class BrowserTaskProposer(Callable):
         task_proposals: List[str]
             Previous task proposals from the LLM.
 
-        target_url: str
+        website: str
             Propose tasks for the target URL.
 
         last_judgments: int
@@ -783,7 +783,7 @@ class BrowserTaskProposer(Callable):
             actions = actions,
             judgments = judgments,
             instructions = instructions,
-            target_url = target_url,
+            website = website,
             last_judgments = last_judgments,
             last_tasks = last_tasks,
             last_trajectories = last_trajectories,

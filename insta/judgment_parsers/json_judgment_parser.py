@@ -20,11 +20,11 @@ ACTION_PATTERN = re.compile(
 )
 
 
-SYSTEM_PROMPT = """You are helping me evaluate a browser automation script. I will share a task provided to the script, and a sequence of webpages and actions produced by the script.
+SYSTEM_PROMPT = """You are helping me evaluate a language model agent that interacts with and navigates live webpages. I will share a task provided to the agent, and a sequence of webpages and actions produced by the agent.
 
 ## The Action Format
 
-The script produces actions as JSON in a fenced code block:
+The agent produces actions as JSON in a fenced code block:
 
 ```json
 {
@@ -42,7 +42,7 @@ Actions have the following components:
 
 ## Action Definitions
 
-I've prepared an API documentation below that defines the actions the script can use to complete the task.
+I've prepared an API documentation below that defines the actions the agent can use to complete the task.
 
 ### Click Action Definition
 
@@ -50,7 +50,7 @@ I've prepared an API documentation below that defines the actions the script can
 
 ### Example Click Action
 
-Here is an example where the script clicks `[id: 5] Sales link`:
+Here is an example where the agent clicks `[id: 5] Sales link`:
 
 ```json
 {
@@ -66,7 +66,7 @@ Here is an example where the script clicks `[id: 5] Sales link`:
 
 ### Example Hover Action
 
-Here is an example where the script hovers over `[id: 2] Company Logo image`:
+Here is an example where the agent hovers over `[id: 2] Company Logo image`:
 
 ```json
 {
@@ -84,7 +84,7 @@ Here is an example where the script hovers over `[id: 2] Company Logo image`:
 
 ### Example Scroll Action
 
-Here is an example where the script scrolls down the page by 300 pixels:
+Here is an example where the agent scrolls down the page by 300 pixels:
 
 ```json
 {
@@ -104,7 +104,7 @@ Here is an example where the script scrolls down the page by 300 pixels:
 
 ### Example Fill Action (Text Input)
 
-Here is an example where the script fills `[id: 13] "Name..." (Enter your name text input)` with the text `John Doe`:
+Here is an example where the agent fills `[id: 13] "Name..." (Enter your name text input)` with the text `John Doe`:
 
 ```json
 {
@@ -118,7 +118,7 @@ Here is an example where the script fills `[id: 13] "Name..." (Enter your name t
 
 ### Example Fill Action (Range Slider)
 
-Here is an example where the script sets `[id: 71] "$250 (5)" (range slider min: 0 max: 50 step: 1)` to the value of `$1000`. This slider has a range of 0 to 50 with a step of 1, and the value is currently set to `5`. The script translates the desired `$1000` to the correct underlying value of `20`:
+Here is an example where the agent sets `[id: 71] "$250 (5)" (range slider min: 0 max: 50 step: 1)` to the value of `$1000`. This slider has a range of 0 to 50 with a step of 1, and the value is currently set to `5`. The agent translates the desired `$1000` to the correct underlying value of `20`:
 
 ```json
 {
@@ -137,7 +137,7 @@ Here is an example where the script sets `[id: 71] "$250 (5)" (range slider min:
 
 ### Example Select Action
 
-Here is an example where the script selects the option `red` from `[id: 67] "blue" (color select from: red, blue, green)`:
+Here is an example where the agent selects the option `red` from `[id: 67] "blue" (color select from: red, blue, green)`:
 
 ```json
 {
@@ -156,7 +156,7 @@ Here is an example where the script selects the option `red` from `[id: 67] "blu
 
 ### Example Set Checked Action
 
-Here is an example where the script checks `[id: 21] "I agree to the terms and conditions" (checkbox)`:
+Here is an example where the agent checks `[id: 21] "I agree to the terms and conditions" (checkbox)`:
 
 ```json
 {
@@ -174,7 +174,7 @@ Here is an example where the script checks `[id: 21] "I agree to the terms and c
 
 ### Example Go Back Action
 
-Here is an example where the script goes back to the previous page:
+Here is an example where the agent goes back to the previous page:
 
 ```json
 {
@@ -191,7 +191,7 @@ Here is an example where the script goes back to the previous page:
 
 ### Example Goto Action
 
-Here is an example where the script opens DuckDuckGo search:
+Here is an example where the agent opens DuckDuckGo search:
 
 ```json
 {
@@ -206,11 +206,11 @@ Here is an example where the script opens DuckDuckGo search:
 ### Stop Action Definition
 
 - `stop`: Stop when the task is complete, and report the progress.
-    - `answer`: Optional answer from the script.
+    - `answer`: Optional answer from the agent.
 
 ### Example Stop Action
 
-Here is an example where the script stops and reports its progress:
+Here is an example where the agent stops and reports its progress:
 
 ```json
 {
@@ -224,7 +224,7 @@ Here is an example where the script stops and reports its progress:
 
 ## Evaluation Instructions
 
-Based on the progress of the script, you are helping me determine if the desired task has been completed successfully. 
+Based on the agent's trajectory, you are helping me determine if the agent's task has been completed successfully. 
 
 You will provide scores as JSON in a fenced code block:
 
@@ -238,16 +238,16 @@ You will provide scores as JSON in a fenced code block:
 
 ### Score Definitions
 
-- `success`: Your confidence the desired task has been completed successfully.
+- `success`: Your confidence the agent's task has been completed successfully.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-- `efficiency`: Your confidence the script has taken the most efficient path to complete the task.
+- `efficiency`: Your confidence the agent has taken the most efficient path to complete the task.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-- `self_correction`: Your confidence the script has demonstrated self-corrective behaviors during its completion of the task. These behaviors include backtracking to a more promising state, replanning when new information is discovered, and recognizing its own mistakes.
+- `self_correction`: Your confidence the agent has demonstrated self-corrective behaviors during its completion of the task. These behaviors include backtracking to a more promising state, replanning when new information is discovered, and recognizing its own mistakes.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-Write a 300 word analysis that establishes specific criteria to rigorously evaluate whether the task was completed, followed by which criteria the script has satisfied. After your response, provide your scores as JSON in a fenced code block."""
+Write a 300 word analysis that establishes rigorous success criteria for the task, and determines which criteria the agent has satisfied. After your response, provide your scores as JSON in a fenced code block."""
 
 
 USER_PROMPT_TEMPLATE = """## Evaluate The Following Task
@@ -258,7 +258,7 @@ USER_PROMPT_TEMPLATE = """## Evaluate The Following Task
 
 ## Evaluation Instructions
 
-Based on the progress of the script, you are helping me determine if the desired task has been completed successfully. 
+Based on the agent's trajectory, you are helping me determine if the agent's task has been completed successfully. 
 
 You will provide scores as JSON in a fenced code block:
 
@@ -272,16 +272,16 @@ You will provide scores as JSON in a fenced code block:
 
 ### Score Definitions
 
-- `success`: Your confidence the desired task has been completed successfully.
+- `success`: Your confidence the agent's task has been completed successfully.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-- `efficiency`: Your confidence the script has taken the most efficient path to complete the task.
+- `efficiency`: Your confidence the agent has taken the most efficient path to complete the task.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-- `self_correction`: Your confidence the script has demonstrated self-corrective behaviors during its completion of the task. These behaviors include backtracking to a more promising state, replanning when new information is discovered, and recognizing its own mistakes.
+- `self_correction`: Your confidence the agent has demonstrated self-corrective behaviors during its completion of the task. These behaviors include backtracking to a more promising state, replanning when new information is discovered, and recognizing its own mistakes.
     - range: 0.0 (not possible) to 1.0 (absolutely certain).
 
-Write a 300 word analysis that establishes specific criteria to rigorously evaluate whether the task was completed, followed by which criteria the script has satisfied. After your response, provide your scores as JSON in a fenced code block."""
+Write a 300 word analysis that establishes rigorous success criteria for the task, and determines which criteria the agent has satisfied. After your response, provide your scores as JSON in a fenced code block."""
 
 
 class JsonJudgmentParser(BaseJudgmentParser):

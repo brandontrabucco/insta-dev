@@ -20,11 +20,11 @@ TASK_PATTERN = re.compile(
 )
 
 
-SYSTEM_PROMPT = """You are helping me design challenging tasks for a language model agent. The agent controls a virtual web browser, and takes a series of actions to interact with and navigate live webpages. I will share an exploratory trajectory for a previous task, including a series of webpages, actions, and a final success score.
+SYSTEM_PROMPT = """You are helping me design tasks for a language model agent that interacts with and navigates live webpages. I instructed the agent to complete an initial task on a website, and I will share a sequence of webpages, actions, and a final success score produced by the agent.
 
 ## Your Instructions
 
-Based on materials from the website, design a challenging new task for an expert user.
+Based on the agent's trajectory, you are helping me design challenging tasks as if you were a real user on the website.
 
 You will provide tasks as JSON in a fenced code block:
 
@@ -32,42 +32,42 @@ You will provide tasks as JSON in a fenced code block:
 {
     "proposed_task": str,
     "steps": List[str],
-    "criteria": str
+    "criteria": List[str]
 }
 ```
 
 Tasks have the following components:
 
-- `proposed_task`: A challenging new task that references materials from the website.
-    - The task must not require an account, submitting personal information, or making any kind of purchase.
-
-- `steps`: Steps in the most efficient plan to complete the task.
-- `criteria`: Clear instructions to rigorously determine if the task was completed.
+- `proposed_task`: A challenging task that a real user wants to accomplish on the website.
+- `steps`: Steps in the most efficient trajectory that completes the task.
+- `criteria`: Rigorous success criteria to determine if the agent completes the task.
 
 ## Example Tasks
 
-I've prepared examples to inspire your task design.
+I've prepared some examples to inspire your task design.
 
 ### awg-fittings.com
 
-In this example, we saw the website 'awg-fittings.com' had a product listing for the 'C-to-C Hose-Shut-Off Valve', which was listed as having a length of '237 mm' in its product specifications. We adapted this information into a new task for the agent:
+In this example, we explored the website 'awg-fittings.com' and saw a product listing for the 'C-to-C Hose-Shut-Off Valve', which was listed as having a length of '237 mm' in its product specifications.
 
 ```json
 {
-    "proposed_task": "What is the C-to-C Hose-Shut-Off Valve length in mm?",
+    "proposed_task": "What is the C-to-C Hose-Shut-Off Valve length in mm on AWG Fittings?",
     "steps": [
         "Navigate to 'awg-fittings.com'",
         "Open the product catalog for fittings",
         "Locate the product listing for the C-to-C Hose-Shut-Off Valve",
         "Find the product length in mm, and respond with that length in the answer"
     ],
-    "criteria": "The final response should include the specific length of '237 mm' for this product"
+    "criteria": [
+        "Cites the specific length of '237 mm' for this product"
+    ]
 }
 ```
 
 ### biodiversitylibrary.org
 
-In this example, we saw a document titled 'The Angora cat; how to breed train and keep it' on 'biodiversitylibrary.org', and the website has a PDF viewing functionality the agent can use to open the target document. Here is a new task for the agent:
+In this example, we explored 'biodiversitylibrary.org', saw a document titled 'The Angora cat; how to breed train and keep it', and the website had an embedded PDF reader agents can use to open the document.
 
 ```json
 {
@@ -78,13 +78,15 @@ In this example, we saw a document titled 'The Angora cat; how to breed train an
         "Click on the title of the document in the search results",
         "Confirm the correct document is displayed in an embedded PDF reader"
     ],
-    "criteria": "The final webpage should display the correct document in an embedded PDF reader"
+    "criteria": [
+        "Displays the correct document in an embedded PDF reader"
+    ]
 }
 ```
 
 ### scholar.google.com
 
-In this example, we saw a paper titled 'Generative Adversarial Networks' with a citation count of '80613' on the website 'scholar.google.com', and the current date was April 2025. We used this information to create a new task for the agent:
+In this example, we explored 'scholar.google.com' and saw a paper titled 'Generative Adversarial Networks' with a citation count of '80613' in the search results (as of today's date).
 
 ```json
 {
@@ -95,13 +97,16 @@ In this example, we saw a paper titled 'Generative Adversarial Networks' with a 
         "Locate the correct paper in the search results",
         "Find an up-to-date citation count, and respond with that count in the answer"
     ],
-    "criteria": "The final response should include an up-to-date citation count, which is '80613' as of April 2025"
+    "criteria": [
+        "Has an up-to-date citation count, which is '80613' as of April 2025",
+        "The answer matches the citation count for the correct paper in the search results"
+    ]
 }
 ```
 
 ### wiktionary.org
 
-In this example, we explored 'wiktionary.org' and encountered a webpage discussing the etymology of the word 'serendipity', which stated the word is derived from 'Serendip' or 'Serendib', coined by English writer and politician Horace Walpole in 1754. Here is a new task for the agent:
+In this example, we explored 'wiktionary.org' and saw a webpage discussing the definition and etymology of the word 'serendipity', which is derived from 'Serendip' or 'Serendib', and was coined by English writer and politician Horace Walpole in 1754.
 
 ```json
 {
@@ -112,24 +117,27 @@ In this example, we explored 'wiktionary.org' and encountered a webpage discussi
         "Find the definition and etymology sections of the 'serendipity' page",
         "Summarize the contents of these sections in the answer"
     ],
-    "criteria": "The final response should mention Serendip (or Serendib), coined by English writer and politician Horace Walpole in 1754"
+    "criteria": [
+        "Mentions the word is derived from Serendip (or Serendib)",
+        "States it was coined by English writer and politician Horace Walpole in 1754"
+    ]
 }
 ```
 
 ## Formatting Your Response
 
-Write a 300 word analysis that deeply considers how materials from the website can be adapted to design a challenging new task. After your response, provide your task as JSON in a fenced code block."""
+Write a 300 word analysis that establishes what real users want to accomplish on the website, and highlights key information we saw on the website. After your response, provide your task as JSON in a fenced code block."""
 
 
-USER_PROMPT_TEMPLATE = """## Exploring The Website
+USER_PROMPT_TEMPLATE = """## Design A Task For This Website
 
-You are viewing an exploratory trajectory for {website}:
+You are viewing the agent's trajectory.
 
 {summary}
 
 ## Your Instructions
 
-Based on materials from {website}, design a challenging new task for an expert user.
+Based on the agent's trajectory, you are helping me design challenging tasks as if you were a real user on {website}.
 
 You will provide tasks as JSON in a fenced code block:
 
@@ -137,21 +145,19 @@ You will provide tasks as JSON in a fenced code block:
 {{
     "proposed_task": str,
     "steps": List[str],
-    "criteria": str
+    "criteria": List[str]
 }}
 ```
 
 Tasks have the following components:
 
-- `proposed_task`: A challenging new task that references materials from {website}.
-    - The task must not require an account, submitting personal information, or making any kind of purchase.
-
-- `steps`: Steps in the most efficient plan to complete the task.
-- `criteria`: Clear instructions to rigorously determine if the task was completed.
+- `proposed_task`: A challenging task that a real user wants to accomplish on {website}.
+- `steps`: Steps in the most efficient trajectory that completes the task.
+- `criteria`: Rigorous success criteria to determine if the agent completes the task.
 
 ## Formatting Your Response
 
-Write a 300 word analysis that deeply considers how materials from {website} can be adapted to design a challenging new task. After your response, provide your task as JSON in a fenced code block."""
+Write a 300 word analysis that establishes what real users want to accomplish on {website}, and highlights key information we saw on {website}. After your response, provide your task as JSON in a fenced code block."""
 
 
 class JsonTaskParser(BaseTaskParser):
@@ -231,9 +237,8 @@ class JsonTaskParser(BaseTaskParser):
         
         keys_right_type = (
             (isinstance(proposed_task, str) and (len(proposed_task) > 0)) and
-            (isinstance(steps, list) and (len(steps) > 0) and all([
-                isinstance(x, str) for x in steps])) and
-            (isinstance(criteria, str) and (len(criteria) > 0))
+            (isinstance(steps, list) and (len(steps) > 0)) and
+            (isinstance(criteria, list) and (len(criteria) > 0))
         )
 
         if not keys_right_type:
@@ -245,7 +250,7 @@ class JsonTaskParser(BaseTaskParser):
         task_dict = {
             "proposed_task": str(proposed_task),
             "steps": list(steps),
-            "criteria": str(criteria),
+            "criteria": list(criteria),
         }
         
         browser_task = BrowserTaskProposal(

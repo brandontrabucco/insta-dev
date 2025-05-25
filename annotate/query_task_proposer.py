@@ -15,89 +15,109 @@ from datasets import (
 
 import argparse
 import random
+
 import tqdm
 import json
 import os
 
 
-def get_task_proposals(
-    example_id: int,
-    dataset: Dataset = None,
-    input_actions_dir: str = None,
-    input_observations_dir: str = None,
-    input_judgments_dir: str = None,
+DEFAULT_AGENT_RESPONSE_KEY = "response"
+DEFAULT_JUDGE_RESPONSE_KEY = "response"
+
+
+def query_task_proposer(
+    example_id: int, dataset: Dataset,
     task_proposer_config: TaskProposerConfig = 
-    DEFAULT_TASK_PROPOSER_CONFIG
-):
-    
-    task_proposer = BrowserTaskProposer(
-        config = task_proposer_config
-    )
+    DEFAULT_TASK_PROPOSER_CONFIG,
+    input_observations_dir: str = None,
+    input_actions_dir: str = None,
+    input_judgments_dir: str = None,
+    output_tasks_dir: str = None,
+    agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
+    judge_response_key: str = DEFAULT_JUDGE_RESPONSE_KEY,
+    overwrite: bool = False,
+) -> str | None:
 
     example_dict = dataset[example_id]
 
-    domain = example_dict["domain"]
-    task = example_dict["task"]
+    website = example_dict.get(
+        "url", example_dict.get("domain")
+    )
 
-    input_actions_path = os.path.join(
-        input_actions_dir,
-        "{}.json".format(domain)
+    instruction = example_dict.get(
+        "instruction", example_dict.get("task")
+    )
+
+    identifier = example_dict.get(
+        "identifier", website
     )
 
     input_observations_path = os.path.join(
         input_observations_dir,
-        "{}.json".format(domain)
+        "{}.json".format(identifier)
+    )
+
+    input_actions_path = os.path.join(
+        input_actions_dir,
+        "{}.json".format(identifier)
     )
 
     input_judgment_path = os.path.join(
         input_judgments_dir,
-        "{}.json".format(domain)
+        "{}.json".format(identifier)
+    )
+
+    output_task_path = os.path.join(
+        output_tasks_dir,
+        "{}.json".format(identifier)
     )
 
     valid_example = (
         os.path.exists(input_actions_path)
         and os.path.exists(input_observations_path)
         and os.path.exists(input_judgment_path)
+        and (overwrite or not os.path.exists(output_task_path))
     )
 
     if not valid_example:
 
-        return None, None
-
-    with open(input_actions_path, "r") as file:
-        
-        actions = json.load(
-            file
-        )
+        return None
 
     with open(input_observations_path, "r") as file:
         
-        observations = json.load(
-            file
-        )
+        try: observations = json.load(file)
+        except: return None
+
+    with open(input_actions_path, "r") as file:
+        
+        try: actions = json.load(file)
+        except: return None
 
     with open(input_judgment_path, "r") as file:
-        
-        judgment = json.load(
-            file
-        )
+
+        try: judgment = json.load(file)
+        except: return None
+    
+    task_proposer = BrowserTaskProposer(
+        config = task_proposer_config
+    )
 
     task_proposal = task_proposer(
+        instruction = instruction,
+        website = website,
         observations = [
-            x.get("processed_text")
+            x["processed_text"]
             for x in observations
         ],
         actions = [
-            x.get("response")
+            x[agent_response_key]
             for x in actions
         ],
         judgment = (
-            judgment.get("response")
+            judgment[
+                judge_response_key
+            ]
         ),
-        instruction = (
-            task
-        ),
-        target_url = domain
     )
 
     task_proposal = {
@@ -108,7 +128,15 @@ def get_task_proposals(
         "matched_response": task_proposal.matched_response,
     }
 
-    return domain, task_proposal
+    with open(output_task_path, "w") as file:
+        
+        json.dump(
+            task_proposal,
+            file,
+            indent = 4
+        )
+
+    return identifier
 
 
 if __name__ == "__main__":
@@ -116,56 +144,73 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--model_name",
+        "--input_data_dir",
+        type = str,
+        default = "/data/matrix/projects/rsalakhugroup/btrabucc/neurips_data_collection/qwen3-1.7b-10000x-0.9s-qwen3-235b-judge"
+    )
+
+    parser.add_argument(
+        "--task_proposer_model_name",
         type = str,
         default = "gemini-2.5-flash-preview-04-17",
     )
 
     parser.add_argument(
-        "--api_key",
+        "--task_proposer_api_key",
         type = str,
         default = os.environ.get("GOOGLE_API_KEY"),
     )
 
     parser.add_argument(
-        "--llm_endpoint",
+        "--task_proposer_llm_endpoint",
         type = str,
         default = "https://generativelanguage.googleapis.com/v1beta/openai/",
     )
 
     parser.add_argument(
-        "--reasoning_effort",
+        "--task_proposer_top_p",
+        type = float,
+        help = "Sampling Top p for LLMs",
+        default = 1.0
+    )
+
+    parser.add_argument(
+        "--task_proposer_top_k",
+        type = int,
+        help = "Sampling Top k for LLMs",
+        default = None
+    )
+
+    parser.add_argument(
+        "--task_proposer_temperature",
+        type = float,
+        help = "Sampling temperature for LLMs",
+        default = 0.5
+    )
+
+    parser.add_argument(
+        "--task_proposer_reasoning_effort",
         type = str,
         help = "Set reasoning mode in certain LLMs",
         default = None,
     )
 
     parser.add_argument(
-        "--disable_thinking_chat_template",
+        "--task_proposer_disable_thinking_chat_template",
         action = "store_true",
         help = "Turns off reasoning mode in certain LLMs"
     )
 
     parser.add_argument(
-        "--input_data_dir",
+        "--task_proposer_name",
         type = str,
-        default = os.path.join(
-            os.environ.get("NFS_DIR"),
-            "btrabucc/neurips_data_collection",
-            "qwen3-1.7b-10000x-0.9s-qwen3-235b-judge"
-        )
+        default = "gemini-2.5-flash-task-proposer"
     )
 
     parser.add_argument(
         "--judge_name",
         type = str,
-        default = "gpt-4.1-nano-judge"
-    )
-
-    parser.add_argument(
-        "--output_tasks_file",
-        type = str,
-        default = "insta-150k-v3.json"
+        default = "qwen3-235b-judge"
     )
 
     parser.add_argument(
@@ -178,6 +223,26 @@ if __name__ == "__main__":
         "--dataset_split",
         type = str,
         default = "train",
+    )
+
+    parser.add_argument(
+        "--agent_response_key",
+        type = str,
+        help = "key for response from the agent",
+        default = "response",
+    )
+
+    parser.add_argument(
+        "--judge_response_key",
+        type = str,
+        help = "key for response from the agent",
+        default = "response",
+    )
+
+    parser.add_argument(
+        "--overwrite",
+        action = "store_true",
+        help = "Whether to overwrite existing judgments"
     )
 
     parser.add_argument(
@@ -202,55 +267,53 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--num_agents",
+        "--num_workers",
         type = int,
         help = "Number of agents per machine",
         default = 32
     )
 
-    parser.add_argument(
-        "--overwrite",
-        action = "store_true",
-        help = "Whether to overwrite existing judgments"
-    )
-
     args = parser.parse_args()
 
-    client_kwargs = {
-        "api_key": args.api_key,
-        "base_url": args.llm_endpoint
+    task_proposer_client_type = "openai"
+
+    task_proposer_client_kwargs = {
+        "api_key": args.task_proposer_api_key,
+        "base_url": args.task_proposer_llm_endpoint
     }
 
-    generation_kwargs = {
-        "model": args.model_name,
+    task_proposer_generation_kwargs = {
+        "model": args.task_proposer_model_name,
         "max_tokens": 1024,
-        "top_p": 1.0,
-        "temperature": 0.5,
+        "top_p": args.task_proposer_top_p,
+        "temperature": args.task_proposer_temperature,
         "extra_body": {}
     }
 
-    if args.reasoning_effort:
+    if args.task_proposer_reasoning_effort:
 
-        generation_kwargs.update({
+        task_proposer_generation_kwargs.update({
             "reasoning_effort": 
-            args.reasoning_effort
+            args.task_proposer_reasoning_effort
         })
 
-    if args.disable_thinking_chat_template:
+    if args.task_proposer_disable_thinking_chat_template:
 
-        generation_kwargs["extra_body"][
+        task_proposer_generation_kwargs["extra_body"][
             "chat_template_kwargs"
         ] = {"enable_thinking": False}
 
-    task_proposer_config = get_task_proposer_config(
-        client_kwargs = client_kwargs,
-        generation_kwargs = generation_kwargs,
-        log_errors = True
-    )
+    if args.task_proposer_top_k is not None:
 
-    input_actions_dir = os.path.join(
-        args.input_data_dir,
-        "actions"
+        task_proposer_generation_kwargs["extra_body"].update({
+            "top_k": args.task_proposer_top_k
+        })
+
+    task_proposer_config = get_task_proposer_config(
+        client_type = task_proposer_client_type,
+        client_kwargs = task_proposer_client_kwargs,
+        generation_kwargs = task_proposer_generation_kwargs,
+        log_errors = True,
     )
 
     input_observations_dir = os.path.join(
@@ -258,14 +321,19 @@ if __name__ == "__main__":
         "observations"
     )
 
+    input_actions_dir = os.path.join(
+        args.input_data_dir,
+        "actions"
+    )
+
     input_judgments_dir = os.path.join(
         args.input_data_dir,
         args.judge_name
     )
 
-    input_screenshots_dir = os.path.join(
+    output_tasks_dir = os.path.join(
         args.input_data_dir,
-        "screenshots"
+        args.task_proposer_name
     )
 
     dataset = load_dataset(
@@ -278,34 +346,20 @@ if __name__ == "__main__":
     random.seed(args.seed)
     random.shuffle(dataset_ids)
 
-    all_tasks = []
-
-    if not args.overwrite and os.path.exists(args.output_tasks_file):
-
-        with open(args.output_tasks_file, "r") as file:
-
-            all_tasks = json.load(file)
-
-        finished_domains = set([
-            example_dict['domain']
-            for example_dict in all_tasks
-        ])
-
-        dataset_ids = [
-            example_idx for example_idx in dataset_ids
-            if dataset[example_idx]["domain"]
-            not in finished_domains
-        ]
-
     out_dataset_ids = []
 
     for agent_rank in range(
-            args.rank * args.num_agents,
-            (args.rank + 1) * args.num_agents):
+            args.rank * args.num_workers,
+            (args.rank + 1) * args.num_workers):
 
         out_dataset_ids.extend(dataset_ids[
-            agent_rank::args.num_agents * args.world_size
+            agent_rank::args.num_workers * args.world_size
         ])
+
+    os.makedirs(
+        output_tasks_dir,
+        exist_ok = True
+    )
 
     progress_bar = tqdm.tqdm(
         desc = "Processing",
@@ -314,49 +368,29 @@ if __name__ == "__main__":
     )
 
     worker_fn = partial(
-        get_task_proposals,
-        dataset = dataset,
-        input_actions_dir = input_actions_dir,
+        query_task_proposer, dataset = dataset,
+        task_proposer_config = task_proposer_config,
         input_observations_dir = input_observations_dir,
+        input_actions_dir = input_actions_dir,
         input_judgments_dir = input_judgments_dir,
-        task_proposer_config = task_proposer_config
+        output_tasks_dir = output_tasks_dir,
+        agent_response_key = args.agent_response_key,
+        judge_response_key = args.judge_response_key,
+        overwrite = args.overwrite,
     )
     
-    with Pool(processes = args.num_agents) as pool:
+    with Pool(processes = args.num_workers) as pool:
 
-        for domain, task_dict in pool.imap_unordered(
+        for identifier in pool.imap_unordered(
             worker_fn,
             out_dataset_ids
         ):
             
             progress_bar.update()
 
-            if domain is not None and task_dict is not None:
+            if identifier is not None:
 
                 progress_bar.set_description(
                     "Processing {}"
-                    .format(domain)
+                    .format(identifier)
                 )
-
-                all_tasks.append({
-                    "domain": domain,
-                    **task_dict
-                })
-                
-                if len(all_tasks) % 100 == 0:
-
-                    with open(args.output_tasks_file, "w") as file:
-
-                        json.dump(
-                            all_tasks,
-                            file,
-                            indent = 4
-                        )
-
-    with open(args.output_tasks_file, "w") as file:
-
-        json.dump(
-            all_tasks,
-            file,
-            indent = 4
-        )

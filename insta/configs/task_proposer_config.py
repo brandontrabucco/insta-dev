@@ -31,7 +31,7 @@ class BrowserTaskProposal:
 
     proposed_task: str = None
     steps: List[str] = None
-    criteria: str = None
+    criteria: List[str] = None
 
     response: str = None
     matched_response: str = None

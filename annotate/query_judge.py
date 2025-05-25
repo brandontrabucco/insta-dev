@@ -1,11 +1,8 @@
 from insta import (
     get_judge_config,
     JudgeConfig,
-    BrowserJudge
-)
-
-from insta.utils import (
-    VALUE_KEYS
+    BrowserJudge,
+    DEFAULT_JUDGE_CONFIG
 )
 
 from multiprocessing import Pool
@@ -18,19 +15,26 @@ from datasets import (
 
 import argparse
 import random
+
 import tqdm
 import json
 import os
 
+from insta.utils import (
+    VALUE_KEYS
+)
 
-def relabel_judgments(
-    example_id: int,
-    dataset: Dataset = None,
-    input_actions_dir: str = None,
+
+DEFAULT_AGENT_RESPONSE_KEY = "response"
+
+
+def query_judge(
+    example_id: int, dataset: Dataset,
+    judge_config: JudgeConfig = DEFAULT_JUDGE_CONFIG,
     input_observations_dir: str = None,
-    judge_name: str = None,
-    judge_config: JudgeConfig = None,
-    agent_response_key: str = None,
+    input_actions_dir: str = None,
+    output_judgments_dir: str = None,
+    agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     overwrite: bool = False,
 ):
 
@@ -59,7 +63,7 @@ def relabel_judgments(
     )
 
     output_judgment_path = os.path.join(
-        judge_name,
+        output_judgments_dir,
         "{}.json".format(identifier)
     )
 
@@ -75,11 +79,13 @@ def relabel_judgments(
 
     with open(input_observations_path, "r") as file:
         
-        observations = json.load(file)
+        try: observations = json.load(file)
+        except: return None
 
     with open(input_actions_path, "r") as file:
         
-        actions = json.load(file)
+        try: actions = json.load(file)
+        except: return None
     
     judge = BrowserJudge(
         config = judge_config
@@ -119,53 +125,84 @@ def relabel_judgments(
     return identifier
 
 
-# for input_data_dir in /data/matrix/projects/rsalakhugroup/btrabucc/neurips_scaling_experiment/*; do python annotate/query_judge.py --api_key $GOOGLE_API_KEY --llm_endpoint https://generativelanguage.googleapis.com/v1beta/openai/ --model_name gemini-2.5-flash-preview-04-17 --judge_name gemini-2.5-flash-judge --input_data_dir $input_data_dir; done
-
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--model_name",
+        "--input_data_dir",
         type = str,
-        default = "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+        default = "/data/matrix/projects/rsalakhugroup/btrabucc/neurips_data_collection/qwen3-1.7b-10000x-0.9s-qwen3-235b-judge"
     )
 
     parser.add_argument(
-        "--api_key",
+        "--judge_model_name",
+        type = str,
+        default = "Qwen/Qwen3-235B-A22B-fp8-tput",
+    )
+
+    parser.add_argument(
+        "--judge_api_key",
         type = str,
         default = os.environ.get("TOGETHER_API_KEY")
     )
 
     parser.add_argument(
-        "--llm_endpoint",
+        "--judge_llm_endpoint",
         type = str,
         default = "https://api.together.xyz/v1"
     )
 
     parser.add_argument(
-        "--input_data_dir",
+        "--judge_top_p",
+        type = float,
+        help = "Sampling Top p for LLMs",
+        default = 1.0
+    )
+
+    parser.add_argument(
+        "--judge_top_k",
+        type = int,
+        help = "Sampling Top k for LLMs",
+        default = None
+    )
+
+    parser.add_argument(
+        "--judge_temperature",
+        type = float,
+        help = "Sampling temperature for LLMs",
+        default = 0.5
+    )
+
+    parser.add_argument(
+        "--judge_reasoning_effort",
         type = str,
-        default = "/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-qwen3-235b-together"
+        help = "Set reasoning mode in certain LLMs",
+        default = None,
+    )
+
+    parser.add_argument(
+        "--judge_disable_thinking_chat_template",
+        action = "store_true",
+        help = "Turns off reasoning mode in certain LLMs"
     )
 
     parser.add_argument(
         "--judge_name",
         type = str,
-        default = "llama4-maverick-judge"
+        default = "qwen3-235b-judge"
     )
 
     parser.add_argument(
         "--dataset",
         type = str,
-        default = "btrabucco/web-voyager",
+        default = "data-for-agents/insta-150k-v2",
     )
 
     parser.add_argument(
         "--dataset_split",
         type = str,
-        default = "test",
+        default = "train",
     )
 
     parser.add_argument(
@@ -179,19 +216,6 @@ if __name__ == "__main__":
         "--overwrite",
         action = "store_true",
         help = "Whether to overwrite existing judgments"
-    )
-
-    parser.add_argument(
-        "--reasoning_effort",
-        type = str,
-        help = "Set reasoning mode in certain LLMs",
-        default = None,
-    )
-
-    parser.add_argument(
-        "--disable_thinking_chat_template",
-        action = "store_true",
-        help = "Turns off reasoning mode in certain LLMs"
     )
 
     parser.add_argument(
@@ -216,7 +240,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--num_agents",
+        "--num_workers",
         type = int,
         help = "Number of agents per machine",
         default = 32
@@ -224,40 +248,45 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    client_kwargs = {
-        "api_key": args.api_key,
-        "base_url": args.llm_endpoint
+    judge_client_type = "openai"
+
+    judge_client_kwargs = {
+        "api_key": args.judge_api_key,
+        "base_url": args.judge_llm_endpoint
     }
 
-    generation_kwargs = {
-        "model": args.model_name,
+    judge_generation_kwargs = {
+        "model": args.judge_model_name,
         "max_tokens": 1024,
-        "top_p": 1.0,
-        "temperature": 0.5,
+        "top_p": args.judge_top_p,
+        "temperature": args.judge_temperature,
         "extra_body": {}
     }
 
-    if args.reasoning_effort:
+    if args.judge_reasoning_effort:
 
-        generation_kwargs.update({
+        judge_generation_kwargs.update({
             "reasoning_effort": 
-            args.reasoning_effort
+            args.judge_reasoning_effort
         })
 
-    if args.disable_thinking_chat_template:
+    if args.judge_disable_thinking_chat_template:
 
-        generation_kwargs["extra_body"][
+        judge_generation_kwargs["extra_body"][
             "chat_template_kwargs"
         ] = {"enable_thinking": False}
 
-    judge_config = get_judge_config(
-        client_kwargs = client_kwargs,
-        generation_kwargs = generation_kwargs
-    )
+    if args.judge_top_k is not None:
 
-    input_actions_dir = os.path.join(
-        args.input_data_dir,
-        "actions"
+        judge_generation_kwargs["extra_body"].update({
+            "top_k": args.judge_top_k
+        })
+
+    judge_config = get_judge_config(
+        client_type = judge_client_type,
+        client_kwargs = judge_client_kwargs,
+        generation_kwargs = judge_generation_kwargs,
+        log_errors = True,
     )
 
     input_observations_dir = os.path.join(
@@ -265,14 +294,14 @@ if __name__ == "__main__":
         "observations"
     )
 
-    judge_name = os.path.join(
+    input_actions_dir = os.path.join(
         args.input_data_dir,
-        args.judge_name
+        "actions"
     )
 
-    input_screenshots_dir = os.path.join(
+    output_judgments_dir = os.path.join(
         args.input_data_dir,
-        "screenshots"
+        args.judge_name
     )
 
     dataset = load_dataset(
@@ -288,15 +317,15 @@ if __name__ == "__main__":
     out_dataset_ids = []
 
     for agent_rank in range(
-            args.rank * args.num_agents,
-            (args.rank + 1) * args.num_agents):
+            args.rank * args.num_workers,
+            (args.rank + 1) * args.num_workers):
 
         out_dataset_ids.extend(dataset_ids[
-            agent_rank::args.num_agents * args.world_size
+            agent_rank::args.num_workers * args.world_size
         ])
 
     os.makedirs(
-        judge_name,
+        output_judgments_dir,
         exist_ok = True
     )
 
@@ -307,17 +336,16 @@ if __name__ == "__main__":
     )
 
     worker_fn = partial(
-        relabel_judgments,
-        dataset = dataset,
+        query_judge, dataset = dataset,
         judge_config = judge_config,
-        input_actions_dir = input_actions_dir,
         input_observations_dir = input_observations_dir,
-        judge_name = judge_name,
+        input_actions_dir = input_actions_dir,
+        output_judgments_dir = output_judgments_dir,
         agent_response_key = args.agent_response_key,
         overwrite = args.overwrite
     )
     
-    with Pool(processes = args.num_agents) as pool:
+    with Pool(processes = args.num_workers) as pool:
 
         for identifier in pool.imap_unordered(
             worker_fn,
