@@ -138,7 +138,7 @@ class BrowserJudge(Callable):
 
         """
         
-        messages = self.get_context(
+        messages = self.get_prompts(
             instruction = instruction,
             observations = observations,
             actions = actions,
@@ -300,7 +300,7 @@ class BrowserJudge(Callable):
             instruction = instruction
         )
 
-    def get_context(
+    def get_prompts(
         self, observations: List[str], 
         actions: List[str],
         instruction: str,

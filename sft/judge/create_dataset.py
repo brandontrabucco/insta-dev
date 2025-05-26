@@ -1,12 +1,12 @@
 from datasets import load_dataset
 
-from insta.configs.task_proposer_config import (
-    TaskProposerConfig,
-    get_task_proposer_config,
-    DEFAULT_TASK_PROPOSER_CONFIG
+from insta.configs.judge_config import (
+    JudgeConfig,
+    get_judge_config,
+    DEFAULT_JUDGE_CONFIG
 )
 
-from insta.task_proposer import BrowserTaskProposer
+from insta.judge import BrowserJudge
 from functools import partial
 
 from typing import List, Dict, Any
@@ -20,10 +20,6 @@ import os
 def select_valid_samples(
     example_dict: dict,
     input_data_dir: str = None,
-    task_len_threshold: int = 100,
-    steps_threshold: int = 3,
-    criteria_threshold: int = 3,
-    task_proposer_name: str = "gemini-2.5-flash-task-proposer",
     judge_name: str = "qwen3-235b-judge",
 ) -> bool:
 
@@ -40,11 +36,6 @@ def select_valid_samples(
     judgments_dir = os.path.join(
         input_data_dir,
         judge_name
-    )
-
-    tasks_dir = os.path.join(
-        input_data_dir,
-        task_proposer_name
     )
 
     domain = example_dict.get(
@@ -71,11 +62,6 @@ def select_valid_samples(
                 judgments_dir,
                 "{}.json".format(identifier)
             )
-        ) and os.path.exists(
-            os.path.join(
-                tasks_dir,
-                "{}.json".format(identifier)
-            )
         )
     )
 
@@ -83,81 +69,73 @@ def select_valid_samples(
 
         return False
     
-    task_path = os.path.join(
-        tasks_dir,
+    judgment_path = os.path.join(
+        judgments_dir,
         "{}.json".format(domain)
     )     
 
-    with open(task_path, "r") as file:
+    with open(judgment_path, "r") as file:
 
-        try: task_dict = json.load(file)
+        try: judgment = json.load(file)
         except json.JSONDecodeError: return False
 
-    proposed_task = task_dict["proposed_task"]
-    steps = task_dict["steps"]
-    criteria = task_dict["criteria"]
+    success = judgment["success"]
+    efficiency = judgment["efficiency"]
+    self_correction = judgment["self_correction"]
 
-    proposed_task_valid = (
-        proposed_task is not None and 
-        (task_len_threshold == 0 or len(proposed_task) > task_len_threshold)
+    success_valid = (
+        success is not None and 
+        isinstance(success, float) and
+        (success >= 0 and success <= 1)
     )
 
-    steps_valid = (
-        steps is not None and 
-        (steps_threshold == 0 or len(steps) > steps_threshold)
+    efficiency_valid = (
+        efficiency is not None and 
+        isinstance(efficiency, float) and
+        (efficiency >= 0 and efficiency <= 1)
     )
 
-    criteria_valid = (
-        criteria is not None and 
-        (criteria_threshold == 0 or len(criteria) > criteria_threshold)
+    self_correction_valid = (
+        self_correction is not None and 
+        isinstance(self_correction, float) and
+        (self_correction >= 0 and self_correction <= 1)
     )
 
     valid_example = (
-        proposed_task_valid and 
-        steps_valid and 
-        criteria_valid
+        success_valid and 
+        efficiency_valid and 
+        self_correction_valid
     )
 
     return valid_example
 
 
 def get_prompts(
-    website: str = None,
-    previous_task: str = None,
     observations: List[Dict[str, Any]] = None,
     actions: List[Dict[str, Any]] = None,
+    instruction: str = None,
     judgment: Dict[str, Any] = None,
-    proposed_task: Dict[str, Any] = None,
-    task_proposer: BrowserTaskProposer = None,
+    judge: BrowserJudge = None,
     agent_response_key: str = "response",
-    judge_response_key: str = "response",
 ) -> List[Dict[str, str]]:
 
-    prompts = task_proposer.get_prompts(
-        website = website,
-        instructions = [previous_task],
-        observations = [[
+    prompts = judge.get_prompts(
+        observations = [
             x['processed_text'] 
             for x in observations
-        ]],
-        actions = [[
+        ],
+        actions = [
             x[agent_response_key] 
             for x in actions
-        ]],
-        judgments = [
-            judgment[judge_response_key]
         ],
-        task_proposals = [],
-        last_judgments = task_proposer.config.last_judgments,
-        last_tasks = task_proposer.config.last_tasks,
-        last_trajectories = task_proposer.config.last_trajectories,
-        last_actions = task_proposer.config.last_actions,
-        last_obs = task_proposer.config.last_obs,
+        instruction = instruction,
+        last_actions = judge.config.last_actions,
+        last_obs = judge.config.last_obs,
     )
 
     prompts.append({
         "role": "assistant",
-        "content": proposed_task["response"]
+        "content": judgment["response"]
     })
 
     return prompts
@@ -165,14 +143,12 @@ def get_prompts(
 
 def unpack_examples(
     website: str = None,
-    previous_task: str = None,
+    instruction: str = None,
     observations_dir: str = None,
     actions_dir: str = None,
     judgments_dir: str = None,
-    tasks_dir: str = None,
-    task_proposer: BrowserTaskProposer = None,
+    judge: BrowserJudge = None,
     agent_response_key: str = "response",
-    judge_response_key: str = "response",
 ) -> List[List[Dict[str, str]]]:
     
     observations_path = os.path.join(
@@ -187,11 +163,6 @@ def unpack_examples(
 
     judgment_path = os.path.join(
         judgments_dir,
-        "{}.json".format(website)
-    )
-
-    task_path = os.path.join(
-        tasks_dir,
         "{}.json".format(website)
     )
 
@@ -213,22 +184,13 @@ def unpack_examples(
 
         except json.JSONDecodeError: return []
 
-    with open(task_path, "r") as file:
-
-        try: proposed_task = json.load(file)
-        
-        except json.JSONDecodeError: return []
-
     prompts = get_prompts(
-        website = website,
-        previous_task = previous_task,
         observations = observations,
         actions = actions,
+        instruction = instruction,
         judgment = judgment,
-        proposed_task = proposed_task,
-        task_proposer = task_proposer,
+        judge = judge,
         agent_response_key = agent_response_key,
-        judge_response_key = judge_response_key,
     )
 
     valid_prompts = all([
@@ -246,11 +208,9 @@ def unpack_examples(
 def process_dataset(
     examples: dict,
     input_data_dir: str = None,
-    task_proposer_name: str = "gemini-2.5-flash-task-proposer",
     judge_name: str = "qwen3-235b-judge",
-    task_proposer: BrowserTaskProposer = None,
+    judge: BrowserJudge = None,
     agent_response_key: str = "response",
-    judge_response_key: str = "response",
 ) -> dict:
 
     observations_dir = os.path.join(
@@ -268,31 +228,24 @@ def process_dataset(
         judge_name
     )
 
-    tasks_dir = os.path.join(
-        input_data_dir,
-        task_proposer_name
-    )
-
     websites = examples["domain"]
-    previous_tasks = examples["task"]
+    instructions = examples["task"]
 
     examples = []
     
-    for website, previous_task in zip(
+    for website, instruction in zip(
         websites,
-        previous_tasks
+        instructions
     ):
 
         examples.extend(unpack_examples(
             website = website,
-            previous_task = previous_task,
+            instruction = instruction,
             observations_dir = observations_dir,
             actions_dir = actions_dir,
             judgments_dir = judgments_dir,
-            tasks_dir = tasks_dir,
-            task_proposer = task_proposer,
             agent_response_key = agent_response_key,
-            judge_response_key = judge_response_key
+            judge = judge,
         ))
 
     output_dict = {
@@ -330,25 +283,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_output_dir",
         type = str,
-        default="/data/matrix/projects/rsalakhugroup/btrabucc/neurips_sft_task_proposer/{max_num_samples}x-{task_proposer_name}-{judge_name}"
-    )
-
-    parser.add_argument(
-        "--last_judgments",
-        type = int,
-        default = 5
-    )
-
-    parser.add_argument(
-        "--last_tasks",
-        type = int,
-        default = 5
-    )
-
-    parser.add_argument(
-        "--last_trajectories",
-        type = int,
-        default = 1
+        default="/data/matrix/projects/rsalakhugroup/btrabucc/neurips_sft_judge/{max_num_samples}x-{judge_name}"
     )
 
     parser.add_argument(
@@ -376,44 +311,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--task_len_threshold",
-        type = int,
-        default = 100
-    )
-
-    parser.add_argument(
-        "--steps_threshold",
-        type = int,
-        default = 3
-    )
-
-    parser.add_argument(
-        "--criteria_threshold",
-        type = int,
-        default = 3
-    )
-
-    parser.add_argument(
         "--judge_name",
         type = str,
         default = "qwen3-235b-judge"
     )
 
     parser.add_argument(
-        "--task_proposer_name",
-        type = str,
-        default = "gemini-2.5-flash-task-proposer"
-    )
-
-    parser.add_argument(
         "--agent_response_key",
-        type = str,
-        help = "key for response from the agent",
-        default = "response",
-    )
-
-    parser.add_argument(
-        "--judge_response_key",
         type = str,
         help = "key for response from the agent",
         default = "response",
@@ -432,30 +336,23 @@ if __name__ == "__main__":
         split = args.dataset_split
     )
 
-    task_proposer_config = get_task_proposer_config(
-        last_judgments = args.last_judgments,
-        last_tasks = args.last_tasks,
-        last_trajectories = args.last_trajectories,
+    judge_config = get_judge_config(
         last_actions = args.last_actions,
         last_obs = args.last_obs,
         max_obs_tokens = args.max_obs_length,
-        task_parser = "simplified_json"
+        judgment_parser = "simplified_json"
     )
 
-    task_proposer: BrowserTaskProposer = BrowserTaskProposer(
-        config = task_proposer_config
+    judge: BrowserJudge = BrowserJudge(
+        config = judge_config
     )
 
     # client cannot be pickled
-    task_proposer.llm_client = None
+    judge.llm_client = None
 
     select_valid_samples = partial(
         select_valid_samples,
         input_data_dir = args.input_data_dir,
-        task_len_threshold = args.task_len_threshold,
-        steps_threshold = args.steps_threshold,
-        criteria_threshold = args.criteria_threshold,
-        task_proposer_name = args.task_proposer_name,
         judge_name = args.judge_name,
     )
     
@@ -476,11 +373,9 @@ if __name__ == "__main__":
     process_dataset = partial(
         process_dataset,
         input_data_dir = args.input_data_dir,
-        task_proposer_name = args.task_proposer_name,
         judge_name = args.judge_name,
         agent_response_key = args.agent_response_key,
-        judge_response_key = args.judge_response_key,
-        task_proposer = task_proposer
+        judge = judge
     )
 
     dataset = dataset.map(
