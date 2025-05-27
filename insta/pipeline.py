@@ -59,12 +59,35 @@ DEFAULT_ACTIONS_DIR = "data/actions"
 DEFAULT_JUDGMENTS_DIR = "data/judgments"
 
 
-DEFAULT_AGENT_RESPONSE_KEY = "matched_response"
+DEFAULT_AGENT_RESPONSE_KEY = "response"
 
 
 DEFAULT_MAX_ACTIONS = 30
 DEFAULT_SKIP_FINISHED = False
 DEFAULT_PRUNE_OBSERVATIONS = False
+
+
+DEFAULT_ADD_STEPS_TO_AGENT = False
+DEFAULT_ADD_CRITERIA_TO_AGENT = False
+DEFAULT_ADD_STEPS_TO_JUDGE = False
+DEFAULT_ADD_CRITERIA_TO_JUDGE = False
+
+
+AGENT_STEPS_TEMPLATE = (
+    "{instruction}\n\nYou may follow these steps:\n{steps}"
+)
+
+JUDGE_STEPS_TEMPLATE = (
+    "{instruction}\n\nThe agent must follow these steps:\n{steps}"
+)
+
+AGENT_CRITERIA_TEMPLATE = (
+    "{instruction}\n\nPlease satisfy these criteria:\n{criteria}"
+)
+
+JUDGE_CRITERIA_TEMPLATE = (
+    "{instruction}\n\nThe agent must satisfy these criteria:\n{criteria}"
+)
 
 
 DEFAULT_SEED = 123
@@ -88,6 +111,8 @@ def generate_trajectory(
     judge: BrowserJudge | JudgeConfig,
     env: InstaEnv | BrowserConfig,
     url: str, instruction: str,
+    agent_instruction: str = None,
+    judge_instruction: str = None,
     max_actions: int = DEFAULT_MAX_ACTIONS,
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
 ) -> Tuple[List[Dict], List[Dict], Dict]:
@@ -140,12 +165,22 @@ def generate_trajectory(
             config = env
         )
 
+    agent_instruction = (
+        agent_instruction or 
+        instruction
+    )
+
+    judge_instruction = (
+        judge_instruction or
+        instruction
+    )
+
     observations = []
     actions = []
 
     action = NULL_ACTION
 
-    for t in range(max_actions):
+    for timestep in range(max_actions):
 
         outputs = None
 
@@ -159,7 +194,7 @@ def generate_trajectory(
                 action = action
             )
 
-        elif t == 0:
+        elif timestep == 0:
 
             agent.reset()
 
@@ -205,7 +240,7 @@ def generate_trajectory(
         
         action = agent(
             observation = obs.processed_text,
-            instruction = instruction,
+            instruction = agent_instruction,
             current_url = obs.current_url
         )
 
@@ -241,7 +276,7 @@ def generate_trajectory(
             x[agent_response_key]
             for x in actions
         ],
-        instruction = instruction
+        instruction = judge_instruction
     )
 
     judgment_values = {
@@ -274,6 +309,10 @@ def iter_trajectories(
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
+    add_steps_to_agent: bool = DEFAULT_ADD_STEPS_TO_AGENT,
+    add_criteria_to_agent: bool = DEFAULT_ADD_CRITERIA_TO_AGENT,
+    add_steps_to_judge: bool = DEFAULT_ADD_STEPS_TO_JUDGE,
+    add_criteria_to_judge: bool = DEFAULT_ADD_CRITERIA_TO_JUDGE,
 ) -> Generator[InstaPipelineOutput, None, None]:
     """Run the InSTA pipeline for internet-scale data collection, and yield
     the observations, actions, and judgments for each task.
@@ -396,16 +435,62 @@ def iter_trajectories(
         example_dict = dataset[example_id]
 
         domain = example_dict.get(
-            "url", example_dict.get("domain")
+            "website", example_dict.get("domain")
         )
 
         instruction = example_dict.get(
             "instruction", example_dict.get("task")
         )
 
+        agent_instruction = judge_instruction = instruction
+
         identifier = example_dict.get(
             "identifier", domain
         )
+
+        steps = example_dict.get(
+            "steps", []
+        )
+
+        criteria = example_dict.get(
+            "criteria", []
+        )
+
+        if add_steps_to_agent and len(steps) > 0:
+
+            agent_instruction = AGENT_STEPS_TEMPLATE.format(
+                instruction = agent_instruction, steps = "\n".join(
+                    "{n}. {x}".format(n = idx + 1, x = part)
+                    for idx, part in enumerate(steps)
+                )
+            )
+
+        if add_criteria_to_agent and len(criteria) > 0:
+
+            agent_instruction = AGENT_CRITERIA_TEMPLATE.format(
+                instruction = agent_instruction, criteria = "\n".join(
+                    "{n}. {x}".format(n = idx + 1, x = part)
+                    for idx, part in enumerate(criteria)
+                )
+            )
+
+        if add_steps_to_judge and len(steps) > 0:
+
+            judge_instruction = JUDGE_STEPS_TEMPLATE.format(
+                instruction = judge_instruction, steps = "\n".join(
+                    "{n}. {x}".format(n = idx + 1, x = part)
+                    for idx, part in enumerate(steps)
+                )
+            )
+
+        if add_criteria_to_judge and len(criteria) > 0:
+
+            judge_instruction = JUDGE_CRITERIA_TEMPLATE.format(
+                instruction = judge_instruction, criteria = "\n".join(
+                    "{n}. {x}".format(n = idx + 1, x = part)
+                    for idx, part in enumerate(criteria)
+                )
+            )
 
         progress_bar.set_description(
             "Processing: {}".format(
@@ -473,6 +558,8 @@ def iter_trajectories(
             generate_trajectory,
             env = env, agent = agent, judge = judge,
             url = url, instruction = instruction,
+            agent_instruction = agent_instruction,
+            judge_instruction = judge_instruction,
             max_actions = max_actions,
             agent_response_key = agent_response_key,
             catch_errors = True,
@@ -582,6 +669,10 @@ def list_trajectories(
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
+    add_steps_to_agent: bool = DEFAULT_ADD_STEPS_TO_AGENT,
+    add_criteria_to_agent: bool = DEFAULT_ADD_CRITERIA_TO_AGENT,
+    add_steps_to_judge: bool = DEFAULT_ADD_STEPS_TO_JUDGE,
+    add_criteria_to_judge: bool = DEFAULT_ADD_CRITERIA_TO_JUDGE,
 ) -> List[InstaPipelineOutput]:
     """Run the InSTA pipeline for internet-scale data collection, and list
     the observations, actions, and judgments for each task.
@@ -651,6 +742,10 @@ def list_trajectories(
         agent_response_key = agent_response_key,
         skip_finished = skip_finished,
         prune_observations = prune_observations,
+        add_steps_to_agent = add_steps_to_agent,
+        add_criteria_to_agent = add_criteria_to_agent,
+        add_steps_to_judge = add_steps_to_judge,
+        add_criteria_to_judge = add_criteria_to_judge,
     ))
 
 
@@ -670,6 +765,10 @@ def save_trajectories(
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
+    add_steps_to_agent: bool = DEFAULT_ADD_STEPS_TO_AGENT,
+    add_criteria_to_agent: bool = DEFAULT_ADD_CRITERIA_TO_AGENT,
+    add_steps_to_judge: bool = DEFAULT_ADD_STEPS_TO_JUDGE,
+    add_criteria_to_judge: bool = DEFAULT_ADD_CRITERIA_TO_JUDGE,
 ) -> None:
     """Run the InSTA pipeline for internet-scale data collection, and save
     the observations, actions, and judgments for each task.
@@ -733,6 +832,10 @@ def save_trajectories(
         agent_response_key = agent_response_key,
         skip_finished = skip_finished,
         prune_observations = prune_observations,
+        add_steps_to_agent = add_steps_to_agent,
+        add_criteria_to_agent = add_criteria_to_agent,
+        add_steps_to_judge = add_steps_to_judge,
+        add_criteria_to_judge = add_criteria_to_judge,
     ):
         
         pass
@@ -755,6 +858,10 @@ def multiprocessing_wrapper(
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
+    add_steps_to_agent: bool = DEFAULT_ADD_STEPS_TO_AGENT,
+    add_criteria_to_agent: bool = DEFAULT_ADD_CRITERIA_TO_AGENT,
+    add_steps_to_judge: bool = DEFAULT_ADD_STEPS_TO_JUDGE,
+    add_criteria_to_judge: bool = DEFAULT_ADD_CRITERIA_TO_JUDGE,
 ):
 
     def worker_fn(
@@ -786,7 +893,11 @@ def multiprocessing_wrapper(
             max_actions = max_actions,
             agent_response_key = agent_response_key,
             skip_finished = skip_finished,
-            prune_observations = prune_observations
+            prune_observations = prune_observations,
+            add_steps_to_agent = add_steps_to_agent,
+            add_criteria_to_agent = add_criteria_to_agent,
+            add_steps_to_judge = add_steps_to_judge,
+            add_criteria_to_judge = add_criteria_to_judge,
         )
         
         if outputs is not None:
@@ -818,6 +929,10 @@ def launch_data_collection(
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
+    add_steps_to_agent: bool = DEFAULT_ADD_STEPS_TO_AGENT,
+    add_criteria_to_agent: bool = DEFAULT_ADD_CRITERIA_TO_AGENT,
+    add_steps_to_judge: bool = DEFAULT_ADD_STEPS_TO_JUDGE,
+    add_criteria_to_judge: bool = DEFAULT_ADD_CRITERIA_TO_JUDGE,
     seed: int = DEFAULT_SEED,
     return_trajectories: bool = DEFAULT_RETURN_TRAJECTORIES,
     num_agents: int = DEFAULT_NUM_AGENTS,
@@ -907,6 +1022,10 @@ def launch_data_collection(
         agent_response_key = agent_response_key,
         skip_finished = skip_finished,
         prune_observations = prune_observations,
+        add_steps_to_agent = add_steps_to_agent,
+        add_criteria_to_agent = add_criteria_to_agent,
+        add_steps_to_judge = add_steps_to_judge,
+        add_criteria_to_judge = add_criteria_to_judge,
     )
 
     browser_config_dict = asdict(browser_config)
@@ -1045,7 +1164,11 @@ class InstaPipeline(Callable):
                  max_actions: int = DEFAULT_MAX_ACTIONS,
                  agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
                  skip_finished: bool = DEFAULT_SKIP_FINISHED,
-                 prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS):
+                 prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
+                 add_steps_to_agent: bool = DEFAULT_ADD_STEPS_TO_AGENT,
+                 add_criteria_to_agent: bool = DEFAULT_ADD_CRITERIA_TO_AGENT,
+                 add_steps_to_judge: bool = DEFAULT_ADD_STEPS_TO_JUDGE,
+                 add_criteria_to_judge: bool = DEFAULT_ADD_CRITERIA_TO_JUDGE):
         """Initialize the InSTA pipeline for internet-scale data collection,
         creates a browser, LLM agent, and LLM judge, then runs the agent
         to attempt web navigation tasks from the InSTA-150k dataset.
@@ -1110,6 +1233,11 @@ class InstaPipeline(Callable):
         self.agent_response_key = agent_response_key
         self.skip_finished = skip_finished
         self.prune_observations = prune_observations
+
+        self.add_steps_to_agent = add_steps_to_agent
+        self.add_criteria_to_agent = add_criteria_to_agent
+        self.add_steps_to_judge = add_steps_to_judge
+        self.add_criteria_to_judge = add_criteria_to_judge
 
     def generate_trajectory(
         self, url: str, instruction: str
@@ -1243,6 +1371,10 @@ class InstaPipeline(Callable):
             agent_response_key = self.agent_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
+            add_steps_to_agent = self.add_steps_to_agent,
+            add_criteria_to_agent = self.add_criteria_to_agent,
+            add_steps_to_judge = self.add_steps_to_judge,
+            add_criteria_to_judge = self.add_criteria_to_judge,
         )
 
     def list_trajectories(
@@ -1294,6 +1426,10 @@ class InstaPipeline(Callable):
             agent_response_key = self.agent_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
+            add_steps_to_agent = self.add_steps_to_agent,
+            add_criteria_to_agent = self.add_criteria_to_agent,
+            add_steps_to_judge = self.add_steps_to_judge,
+            add_criteria_to_judge = self.add_criteria_to_judge,
         )
 
     def save_trajectories(self, dataset: List[Dict[str, str]]) -> None:
@@ -1337,6 +1473,10 @@ class InstaPipeline(Callable):
             agent_response_key = self.agent_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
+            add_steps_to_agent = self.add_steps_to_agent,
+            add_criteria_to_agent = self.add_criteria_to_agent,
+            add_steps_to_judge = self.add_steps_to_judge,
+            add_criteria_to_judge = self.add_criteria_to_judge,
         )
 
     def launch(
@@ -1373,11 +1513,8 @@ class InstaPipeline(Callable):
 
         return launch_data_collection(
             dataset, agent_config = self.agent_config,
-            judge_config = self.judge_config,
-            browser_config = self.browser_config,
-            rank = self.rank,
-            world_size = self.world_size,
-            seed = self.seed,
+            judge_config = self.judge_config, browser_config = self.browser_config,
+            rank = self.rank, world_size = self.world_size, seed = self.seed,
             observations_dir = self.observations_dir,
             screenshot_dir = self.screenshot_dir,
             actions_dir = self.actions_dir,
@@ -1386,6 +1523,10 @@ class InstaPipeline(Callable):
             agent_response_key = self.agent_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
+            add_steps_to_agent = self.add_steps_to_agent,
+            add_criteria_to_agent = self.add_criteria_to_agent,
+            add_steps_to_judge = self.add_steps_to_judge,
+            add_criteria_to_judge = self.add_criteria_to_judge,
             return_trajectories = return_trajectories,
             num_agents = num_agents,
             playwright_workers = playwright_workers,

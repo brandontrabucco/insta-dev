@@ -36,13 +36,13 @@ def query_task_proposer(
     output_tasks_dir: str = None,
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     judge_response_key: str = DEFAULT_JUDGE_RESPONSE_KEY,
-    overwrite: bool = False,
+    skip_finished: bool = False,
 ) -> str | None:
 
     example_dict = dataset[example_id]
 
     website = example_dict.get(
-        "url", example_dict.get("domain")
+        "website", example_dict.get("domain")
     )
 
     instruction = example_dict.get(
@@ -77,7 +77,7 @@ def query_task_proposer(
         os.path.exists(input_actions_path)
         and os.path.exists(input_observations_path)
         and os.path.exists(input_judgment_path)
-        and (overwrite or not os.path.exists(output_task_path))
+        and not (skip_finished and os.path.exists(output_task_path))
     )
 
     if not valid_example:
@@ -87,16 +87,19 @@ def query_task_proposer(
     with open(input_observations_path, "r") as file:
         
         try: observations = json.load(file)
+
         except: return None
 
     with open(input_actions_path, "r") as file:
         
         try: actions = json.load(file)
+
         except: return None
 
     with open(input_judgment_path, "r") as file:
 
         try: judgment = json.load(file)
+
         except: return None
     
     task_proposer = BrowserTaskProposer(
@@ -250,9 +253,10 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--overwrite",
+        "--skip_finished",
         action = "store_true",
-        help = "Whether to overwrite existing judgments"
+        help = "Whether to skip existing task proposals",
+        default = False
     )
 
     parser.add_argument(
@@ -280,7 +284,7 @@ if __name__ == "__main__":
         "--num_workers",
         type = int,
         help = "Number of agents per machine",
-        default = 32
+        default = 8
     )
 
     args = parser.parse_args()
@@ -386,7 +390,7 @@ if __name__ == "__main__":
         output_tasks_dir = output_tasks_dir,
         agent_response_key = args.agent_response_key,
         judge_response_key = args.judge_response_key,
-        overwrite = args.overwrite,
+        skip_finished = args.skip_finished,
     )
     
     with Pool(processes = args.num_workers) as pool:

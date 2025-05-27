@@ -6,6 +6,11 @@ from insta import (
     NULL_JUDGMENT
 )
 
+from insta.pipeline import (
+    JUDGE_STEPS_TEMPLATE,
+    JUDGE_CRITERIA_TEMPLATE
+)
+
 from multiprocessing import Pool
 from functools import partial
 
@@ -26,32 +31,59 @@ from insta.utils import (
 )
 
 
-DEFAULT_AGENT_RESPONSE_KEY = "response"
-
-
 def query_judge(
     example_id: int, dataset: Dataset,
     judge_config: JudgeConfig = DEFAULT_JUDGE_CONFIG,
     input_observations_dir: str = None,
     input_actions_dir: str = None,
     output_judgments_dir: str = None,
-    agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
-    overwrite: bool = False,
+    agent_response_key: str = "response",
+    add_steps_to_judge: bool = True,
+    add_criteria_to_judge: bool = True,
+    skip_finished: bool = False,
 ):
 
     example_dict = dataset[example_id]
 
     domain = example_dict.get(
-        "url", example_dict.get("domain")
+        "website", example_dict.get("domain")
     )
 
     instruction = example_dict.get(
         "instruction", example_dict.get("task")
     )
 
+    judge_instruction = instruction
+
     identifier = example_dict.get(
         "identifier", domain
     )
+
+    steps = example_dict.get(
+        "steps", []
+    )
+
+    criteria = example_dict.get(
+        "criteria", []
+    )
+
+    if add_steps_to_judge and len(steps) > 0:
+
+        judge_instruction = JUDGE_STEPS_TEMPLATE.format(
+            instruction = judge_instruction, steps = "\n".join(
+                "{n}. {x}".format(n = idx + 1, x = part)
+                for idx, part in enumerate(steps)
+            )
+        )
+
+    if add_criteria_to_judge and len(criteria) > 0:
+
+        judge_instruction = JUDGE_CRITERIA_TEMPLATE.format(
+            instruction = judge_instruction, criteria = "\n".join(
+                "{n}. {x}".format(n = idx + 1, x = part)
+                for idx, part in enumerate(criteria)
+            )
+        )
 
     input_observations_path = os.path.join(
         input_observations_dir,
@@ -71,7 +103,7 @@ def query_judge(
     valid_example = (
         os.path.exists(input_actions_path)
         and os.path.exists(input_observations_path)
-        and (overwrite or not os.path.exists(output_judgment_path))
+        and not (skip_finished and os.path.exists(output_judgment_path))
     )
 
     if not valid_example:
@@ -81,11 +113,13 @@ def query_judge(
     with open(input_observations_path, "r") as file:
         
         try: observations = json.load(file)
+
         except: return None
 
     with open(input_actions_path, "r") as file:
         
         try: actions = json.load(file)
+
         except: return None
     
     judge = BrowserJudge(
@@ -101,7 +135,7 @@ def query_judge(
             x[agent_response_key]
             for x in actions
         ],
-        instruction = instruction
+        instruction = judge_instruction,
     )
 
     invalid_judgment = (
@@ -198,6 +232,20 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--add_steps_to_judge",
+        action = "store_true",
+        help = "Add the steps to the instruction",
+        default = False
+    )
+
+    parser.add_argument(
+        "--add_criteria_to_judge",
+        action = "store_true",
+        help = "Add the success criteria to the instruction",
+        default = False
+    )
+
+    parser.add_argument(
         "--judge_name",
         type = str,
         default = "qwen3-235b-judge"
@@ -223,9 +271,10 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--overwrite",
+        "--skip_finished",
         action = "store_true",
-        help = "Whether to overwrite existing judgments"
+        help = "Whether to skip existing judgments",
+        default = False
     )
 
     parser.add_argument(
@@ -253,7 +302,7 @@ if __name__ == "__main__":
         "--num_workers",
         type = int,
         help = "Number of agents per machine",
-        default = 32
+        default = 8
     )
 
     args = parser.parse_args()
@@ -282,9 +331,15 @@ if __name__ == "__main__":
 
     if args.judge_disable_thinking_chat_template:
 
-        judge_generation_kwargs["extra_body"][
-            "chat_template_kwargs"
-        ] = {"enable_thinking": False}
+        if "chat_template_kwargs" not in judge_generation_kwargs["extra_body"]:
+
+            judge_generation_kwargs["extra_body"].update({
+                "chat_template_kwargs": {}
+            })
+
+        judge_generation_kwargs["extra_body"]["chat_template_kwargs"].update({
+            "enable_thinking": False
+        })
 
     if args.judge_top_k is not None:
 
@@ -352,7 +407,9 @@ if __name__ == "__main__":
         input_actions_dir = input_actions_dir,
         output_judgments_dir = output_judgments_dir,
         agent_response_key = args.agent_response_key,
-        overwrite = args.overwrite
+        add_steps_to_judge = args.add_steps_to_judge,
+        add_criteria_to_judge = args.add_criteria_to_judge,
+        skip_finished = args.skip_finished
     )
     
     with Pool(processes = args.num_workers) as pool:

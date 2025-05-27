@@ -236,6 +236,34 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--add_steps_to_agent",
+        action = "store_true",
+        help = "Add the steps to the instruction",
+        default = False
+    )
+
+    parser.add_argument(
+        "--add_criteria_to_agent",
+        action = "store_true",
+        help = "Add the success criteria to the instruction",
+        default = False
+    )
+
+    parser.add_argument(
+        "--add_steps_to_judge",
+        action = "store_true",
+        help = "Add the steps to the instruction",
+        default = False
+    )
+
+    parser.add_argument(
+        "--add_criteria_to_judge",
+        action = "store_true",
+        help = "Add the success criteria to the instruction",
+        default = False
+    )
+
+    parser.add_argument(
         "--seed",
         type = int,
         help = "Seed for the dataset",
@@ -282,9 +310,15 @@ if __name__ == "__main__":
 
     if args.agent_disable_thinking_chat_template:
 
-        agent_generation_kwargs["extra_body"][
-            "chat_template_kwargs"
-        ] = {"enable_thinking": False}
+        if "chat_template_kwargs" not in agent_generation_kwargs["extra_body"]:
+
+            agent_generation_kwargs["extra_body"].update({
+                "chat_template_kwargs": {}
+            })
+
+        agent_generation_kwargs["extra_body"]["chat_template_kwargs"].update({
+            "enable_thinking": False
+        })
 
     if args.agent_top_k is not None:
 
@@ -325,9 +359,15 @@ if __name__ == "__main__":
 
     if args.judge_disable_thinking_chat_template:
 
-        judge_generation_kwargs["extra_body"][
-            "chat_template_kwargs"
-        ] = {"enable_thinking": False}
+        if "chat_template_kwargs" not in judge_generation_kwargs["extra_body"]:
+
+            judge_generation_kwargs["extra_body"].update({
+                "chat_template_kwargs": {}
+            })
+
+        judge_generation_kwargs["extra_body"]["chat_template_kwargs"].update({
+            "enable_thinking": False
+        })
 
     if args.judge_top_k is not None:
 
@@ -360,6 +400,10 @@ if __name__ == "__main__":
         agent_response_key = args.agent_response_key,
         skip_finished = args.skip_finished,
         prune_observations = args.prune_observations,
+        add_steps_to_agent = args.add_steps_to_agent,
+        add_criteria_to_agent = args.add_criteria_to_agent,
+        add_steps_to_judge = args.add_steps_to_judge,
+        add_criteria_to_judge = args.add_criteria_to_judge
     )
 
     dataset = load_dataset(

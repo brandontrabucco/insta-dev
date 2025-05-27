@@ -35,10 +35,12 @@ def load_tasks(
 
             try: task_dict = json.load(file)
 
-            except: continue
+            except json.JSONDecodeError as error:
+                
+                continue
 
         output_example = {
-            "domain": domain,
+            "website": domain,
             "instruction": task_dict["proposed_task"],
             "steps": task_dict["steps"],
             "criteria": task_dict["criteria"],
@@ -60,7 +62,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_data_dir",
         type = str,
-        default = "/data/matrix/projects/rsalakhugroup/btrabucc/neurips_data_collection/qwen3-1.7b-10000x-0.9s-qwen3-235b-judge"
+        default = "/data/matrix/projects/rsalakhugroup/btrabucc/neurips_data_collection/qwen3-1.7b-10000x-0.9s-qwen3-235b-judge-test"
     )
 
     parser.add_argument(
@@ -78,7 +80,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_split",
         type = str,
-        default = "train"
+        default = "test"
     )
 
     args = parser.parse_args()

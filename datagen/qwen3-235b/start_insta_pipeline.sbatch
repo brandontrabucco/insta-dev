@@ -50,7 +50,7 @@ conda activate insta
 
 # Arguments for data collection
 
-OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_web_voyager/qwen3-235b"}
+OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/qwen3-235b-test"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
@@ -59,13 +59,25 @@ AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"Qwen/Qwen3-235B-A22B-fp8-tput"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"https://api.together.xyz/v1"}
 AGENT_API_KEY=${AGENT_API_KEY:-${TOGETHER_API_KEY}}
 
+JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"Qwen/Qwen3-235B-A22B-fp8-tput"}
+JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://api.together.xyz/v1"}
+JUDGE_API_KEY=${JUDGE_API_KEY:-${TOGETHER_API_KEY}}
+
+JUDGE_NAME=${JUDGE_NAME:-"qwen3-235b-judge"}
+
+ADD_STEPS_TO_AGENT=${ADD_STEPS_TO_AGENT:-"--add_steps_to_agent"}
+ADD_CRITERIA_TO_AGENT=${ADD_CRITERIA_TO_AGENT:-"--add_criteria_to_agent"}
+
+ADD_STEPS_TO_JUDGE=${ADD_STEPS_TO_JUDGE:-"--add_steps_to_judge"}
+ADD_CRITERIA_TO_JUDGE=${ADD_CRITERIA_TO_JUDGE:-"--add_criteria_to_judge"}
+
+AGENT_DISABLE_THINKING_CHAT_TEMPLATE=${AGENT_DISABLE_THINKING_CHAT_TEMPLATE:-"--agent_disable_thinking_chat_template"}
+JUDGE_DISABLE_THINKING_CHAT_TEMPLATE=${JUDGE_DISABLE_THINKING_CHAT_TEMPLATE:-"--judge_disable_thinking_chat_template"}
+
+AGENT_REASONING_EFFORT=${AGENT_REASONING_EFFORT:-""}
+JUDGE_REASONING_EFFORT=${JUDGE_REASONING_EFFORT:-""}
+
 ACTION_PARSER=${ACTION_PARSER:-"json"}
-
-JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gpt-4.1-nano"}
-JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://api.openai.com/v1"}
-JUDGE_API_KEY=${JUDGE_API_KEY:-${OPENAI_API_KEY}}
-
-JUDGE_NAME=${JUDGE_NAME:-"gpt-4.1-nano-judge"}
 
 
 
@@ -75,18 +87,28 @@ LLM_ARGS=(
     --agent_model_name ${AGENT_MODEL_NAME}
     --agent_llm_endpoint ${AGENT_LLM_ENDPOINT}
     --agent_api_key ${AGENT_API_KEY}
+    ${ADD_STEPS_TO_AGENT}
+    ${ADD_CRITERIA_TO_AGENT}
     --judge_model_name ${JUDGE_MODEL_NAME}
     --judge_llm_endpoint ${JUDGE_LLM_ENDPOINT}
     --judge_api_key ${JUDGE_API_KEY}
-    --agent_disable_thinking_chat_template
-    --action_parser ${ACTION_PARSER}
+    ${ADD_STEPS_TO_JUDGE}
+    ${ADD_CRITERIA_TO_JUDGE}
+)
+
+SAMPLING_ARGS=(
+    ${AGENT_DISABLE_THINKING_CHAT_TEMPLATE}
+    ${AGENT_REASONING_EFFORT}
+    ${JUDGE_DISABLE_THINKING_CHAT_TEMPLATE}
+    ${JUDGE_REASONING_EFFORT}
 )
 
 PIPELINE_ARGS=(
-    --dataset btrabucco/web-voyager
+    --dataset data-for-agents/insta-150k-v3
     --dataset_split test
     --playwright_port ${PLAYWRIGHT_PORT}
     --playwright_workers ${PLAYWRIGHT_WORKERS}
+    --action_parser ${ACTION_PARSER}
     --num_agents ${NUM_AGENTS}
     --rank ${RANK}
     --world_size ${WORLD_SIZE}
@@ -103,6 +125,7 @@ DATA_ARGS=(
 
 INSTA_ARGS=(
     ${LLM_ARGS[@]}
+    ${SAMPLING_ARGS[@]}
     ${PIPELINE_ARGS[@]}
     ${DATA_ARGS[@]}
 )

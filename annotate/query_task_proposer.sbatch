@@ -7,7 +7,7 @@
 #SBATCH --mem=64G
 #SBATCH --nodes=1
 #SBATCH --partition=general
-#SBATCH --array=0-0
+#SBATCH --array=0-7
 
 
 
@@ -19,6 +19,8 @@ SLURM_ARRAY_TASK_COUNT=${SLURM_ARRAY_TASK_COUNT:-1}
 RANK=${RANK:-${SLURM_ARRAY_TASK_ID}}
 WORLD_SIZE=${WORLD_SIZE:-${SLURM_ARRAY_TASK_COUNT}}
 
+export NFS_DIR=${NFS_DIR:-/data/matrix/projects/rsalakhugroup}
+
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
 
@@ -26,13 +28,16 @@ conda activate insta
 
 # Arguments for data collection
 
-INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/qwen3-1.7b-10000x-0.9s-qwen3-235b-judge"}
+INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/qwen3-1.7b-10000x-0.9s-qwen3-235b-judge-test"}
 
-OVERWRITE=${OVERWRITE:-""}
+SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 
 TASK_PROPOSER_MODEL_NAME=${TASK_PROPOSER_MODEL_NAME:-"gemini-2.5-flash-preview-05-20"}
 TASK_PROPOSER_LLM_ENDPOINT=${TASK_PROPOSER_LLM_ENDPOINT:-"https://generativelanguage.googleapis.com/v1beta/openai/"}
 TASK_PROPOSER_API_KEY=${TASK_PROPOSER_API_KEY:-${GOOGLE_API_KEY}}
+
+TASK_PROPOSER_DISABLE_THINKING_CHAT_TEMPLATE=${TASK_PROPOSER_DISABLE_THINKING_CHAT_TEMPLATE:-""}
+TASK_PROPOSER_REASONING_EFFORT=${TASK_PROPOSER_REASONING_EFFORT:-"--task_proposer_reasoning_effort none"}
 
 JUDGE_NAME=${JUDGE_NAME:-"qwen3-235b-judge"}
 TASK_PROPOSER_NAME=${TASK_PROPOSER_NAME:-"gemini-2.5-flash-task-proposer"}
@@ -45,24 +50,32 @@ LLM_ARGS=(
     --task_proposer_model_name ${TASK_PROPOSER_MODEL_NAME}
     --task_proposer_llm_endpoint ${TASK_PROPOSER_LLM_ENDPOINT}
     --task_proposer_api_key ${TASK_PROPOSER_API_KEY}
-    --task_proposer_reasoning_effort none
+)
+
+SAMPLING_ARGS=(
+    ${TASK_PROPOSER_DISABLE_THINKING_CHAT_TEMPLATE}
+    ${TASK_PROPOSER_REASONING_EFFORT}
 )
 
 PIPELINE_ARGS=(
+    --dataset data-for-agents/insta-150k-v2
+    --dataset_split test
+    --rank ${RANK}
+    --world_size ${WORLD_SIZE}
+    ${SKIP_FINISHED}
+)
+
+DATA_ARGS=(
     --input_data_dir ${INPUT_DATA_DIR}
     --judge_name ${JUDGE_NAME}
     --task_proposer_name ${TASK_PROPOSER_NAME}
-    --dataset data-for-agents/insta-150k-v2
-    --dataset_split train
-    --rank ${RANK}
-    --world_size ${WORLD_SIZE}
-    --num_workers 4
-    ${OVERWRITE}
 )
 
 ANNOTATE_ARGS=(
     ${LLM_ARGS[@]}
+    ${SAMPLING_ARGS[@]}
     ${PIPELINE_ARGS[@]}
+    ${DATA_ARGS[@]}
 )
 
 

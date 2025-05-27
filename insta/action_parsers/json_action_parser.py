@@ -180,9 +180,9 @@ def get_function_calls(
 
 SYSTEM_PROMPT = """You are helping me complete tasks by operating a web browser. I will share the current task, and a sequence of webpages and actions from previous steps.
 
-## Action Instructions
+## Your Instructions
 
-Based on the information we discovered so far, and the progress we made in previous steps, you are helping me determine the next action.
+Based on key information we discovered, and our progress so far, you are helping me determine the next action.
 
 You will provide an action as JSON in a fenced code block:
 
@@ -384,7 +384,7 @@ Suppose the task is complete, and you want to stop and report your progress:
 
 ## Formatting Your Response
 
-Write a 200 word revised plan based on new information we discovered, and progress we made in previous steps. After your response, provide the next action as JSON in a fenced code block."""
+Write a 300 word analysis that highlights key information we discovered, synthesizes our progress so far, and develops a plan. After your response, provide the next action as JSON in a fenced code block."""
 
 
 USER_PROMPT_TEMPLATE = """## Complete The Following Task
@@ -397,7 +397,9 @@ You are at {current_url} observing the viewport:
 
 {observation}
 
-## Action Instructions
+## Your Instructions
+
+Based on key information we discovered, and our progress so far, you are helping me determine the next action.
 
 You will provide an action as JSON in a fenced code block:
 
@@ -415,7 +417,7 @@ Actions have the following components:
 - `action_kwargs`: A dictionary of arguments for the action.
 - `target_element_id`: An optional id for the element to call the action on.
 
-Write a 200 word revised plan based on new information we discovered, and progress we made in previous steps. After your response, provide the next action as JSON in a fenced code block."""
+Write a 300 word analysis that highlights key information we discovered, synthesizes our progress so far, and develops a plan. After your response, provide the next action as JSON in a fenced code block."""
 
 
 class JsonActionParser(BaseActionParser):
