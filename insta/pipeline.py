@@ -58,23 +58,19 @@ DEFAULT_SCREENSHOT_DIR = "data/screenshots"
 DEFAULT_ACTIONS_DIR = "data/actions"
 DEFAULT_JUDGMENTS_DIR = "data/judgments"
 
-
 DEFAULT_AGENT_RESPONSE_KEY = "response"
-
 
 DEFAULT_MAX_ACTIONS = 30
 DEFAULT_SKIP_FINISHED = False
 DEFAULT_PRUNE_OBSERVATIONS = False
-
 
 DEFAULT_ADD_STEPS_TO_AGENT = False
 DEFAULT_ADD_CRITERIA_TO_AGENT = False
 DEFAULT_ADD_STEPS_TO_JUDGE = False
 DEFAULT_ADD_CRITERIA_TO_JUDGE = False
 
-
 AGENT_STEPS_TEMPLATE = (
-    "{instruction}\n\nYou may follow these steps:\n{steps}"
+    "{instruction}\n\nPlease follow these steps:\n{steps}"
 )
 
 JUDGE_STEPS_TEMPLATE = (
@@ -89,13 +85,11 @@ JUDGE_CRITERIA_TEMPLATE = (
     "{instruction}\n\nThe agent must satisfy these criteria:\n{criteria}"
 )
 
-
-DEFAULT_SEED = 123
+DEFAULT_SEED = 0
 DEFAULT_RANK = 0
 DEFAULT_WORLD_SIZE = 1
 
-
-DEFAULT_NUM_AGENTS = 32
+DEFAULT_NUM_AGENTS = 8
 DEFAULT_PLAYWRIGHT_WORKERS = 8
 DEFAULT_RETURN_TRAJECTORIES = False
 

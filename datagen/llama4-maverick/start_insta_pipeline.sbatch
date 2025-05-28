@@ -50,6 +50,9 @@ conda activate insta
 
 # Arguments for data collection
 
+DATASET=${DATASET:-"data-for-agents/insta-150k-v3"}
+DATASET_SPLIT=${DATASET_SPLIT:-"train"}
+
 OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/llama4-maverick-test"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
@@ -104,8 +107,6 @@ SAMPLING_ARGS=(
 )
 
 PIPELINE_ARGS=(
-    --dataset data-for-agents/insta-150k-v3
-    --dataset_split test
     --playwright_port ${PLAYWRIGHT_PORT}
     --playwright_workers ${PLAYWRIGHT_WORKERS}
     --action_parser ${ACTION_PARSER}
@@ -121,6 +122,8 @@ DATA_ARGS=(
     --screenshot_dir ${OUTPUT_DIR}/screenshots
     --actions_dir ${OUTPUT_DIR}/actions
     --judgments_dir ${OUTPUT_DIR}/${JUDGE_NAME}
+    --dataset ${DATASET}
+    --dataset_split ${DATASET_SPLIT}
 )
 
 INSTA_ARGS=(
