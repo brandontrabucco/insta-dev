@@ -2,7 +2,8 @@ from insta.utils import (
     VALUE_KEYS
 )
 
-import glob
+import numpy as np
+
 import json
 import argparse
 import os
@@ -15,46 +16,94 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        '--actions_dir',
+        '--input_data_dir',
         type = str,
-        default = 'data/actions',
-        help = 'Directory containing judgment files'
+        help = 'Directory containing trajectory data',
+        required = True
     )
 
     parser.add_argument(
-        '--judgments_dir',
+        '--judge_name',
         type = str,
-        default = 'data/judgments',
-        help = 'Directory containing judgment files'
+        help = 'Name of the judge',
+        required = True
+    )
+
+    parser.add_argument(
+        '--remove_null',
+        action = 'store_true',
+        help = 'Remove null judgments and actions'
     )
 
     args = parser.parse_args()
 
-    judgment_file_pattern = os.path.join(
-        args.judgments_dir, '*.json'
+    judgments_dir = os.path.join(
+        args.input_data_dir,
+        args.judge_name
+    )
+
+    actions_dir = os.path.join(
+        args.input_data_dir,
+        "actions"
+    )
+
+    observations_dir = os.path.join(
+        args.input_data_dir,
+        "observations"
     )
 
     all_judgments = []
     all_actions = []
 
-    for judgment_file in glob.glob(judgment_file_pattern):
+    for judgment_file in os.listdir(judgments_dir):
+
+        identifier = judgment_file.replace(
+            ".json", ""
+        )
+
+        judgment_file = os.path.join(
+            judgments_dir,
+            "{}.json".format(identifier)
+        )
+
+        actions_file = os.path.join(
+            actions_dir,
+            "{}.json".format(identifier)
+        )
+
+        observations_file = os.path.join(
+            observations_dir,
+            "{}.json".format(identifier)
+        )
 
         with open(judgment_file, 'r') as file:
 
             judgment = json.load(file)
 
-        all_judgments.append(judgment)
-
-        actions_file = os.path.join(
-            args.actions_dir,
-            os.path.basename(judgment_file)
-        )
 
         with open(actions_file, 'r') as file:
 
             actions = json.load(file)
 
-        all_actions.append(actions)
+        data_collection_error = (
+            judgment['response'] is None or
+            np.mean([action_dict['response'] is None for action_dict in actions]) > 0
+        )
+
+        if args.remove_null and data_collection_error:
+
+            print("Removing: {}".format(
+                identifier
+            ))
+
+            os.remove(judgment_file)
+            os.remove(actions_file)
+            os.remove(observations_file)
+
+        if not (args.remove_null and data_collection_error):
+
+            all_judgments.append(judgment)
+            all_actions.append(actions)
 
     total_num_actions = sum(
         len(actions) 
@@ -95,7 +144,7 @@ if __name__ == "__main__":
 
         return cdf_score
 
-    for threshold in [0.5, 0.7, 0.9, 1.0]:
+    for threshold in [0.5, 0.7, 1.0]:
 
         cdf_scores = {
             value_key: get_cdf_score(value_key, threshold)

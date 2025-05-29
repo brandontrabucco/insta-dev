@@ -19,7 +19,7 @@ MODEL_DIR=${MODEL_DIR:-"${NFS_DIR}/btrabucc/neurips_sft_task_proposer/models"}
 export HF_HOME=${NFS_DIR}/btrabucc/hfcache
 huggingface-cli login --token $HUGGINGFACE_ACCESS_TOKEN
 
-ACCELERATE_CONFIG=${ACCELERATE_CONFIG:-"sft/accelerate_config.yaml"}
+ACCELERATE_CONFIG=${ACCELERATE_CONFIG:-"sft/accelerate.yaml"}
 MODEL_NAME=${MODEL_NAME:-"Qwen/Qwen3-1.7B"}
 
 ALL_TASK_PROPOSER_NAMES=${ALL_TASK_PROPOSER_NAMES:-"gemini-2.5-flash-task-proposer"}
@@ -37,9 +37,9 @@ TARGET_MODEL="${MODEL_DIR}/qwen3-1.7b-${IDENTIFIER}"
 LAUNCH_ARGS=(
     --config_file ${ACCELERATE_CONFIG}
     sft/train_sft.py
-    --dataset_path ${TARGET_SPLIT}
     --model_name ${MODEL_NAME}
-    --final_model_dir ${TARGET_MODEL}
+    --dataset_path ${DATASET_PATH}
+    --final_model_dir ${FINAL_MODEL_DIR}
     --max_seq_length 12288
     --use_bf16
 )

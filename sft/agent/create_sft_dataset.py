@@ -17,9 +17,26 @@ import json
 import os
 
 
+def comparator(x, threshold):
+
+    if x is None:
+
+        return False
+
+    elif threshold == 0:
+        
+        return True
+    
+    elif threshold == 1:
+
+        return x == threshold 
+
+    return x > threshold
+
+
 def select_valid_samples(
     example_dict: dict = None,
-    data_dir: str = "data",
+    input_data_dir: str = "data",
     success_threshold: float = 0.5,
     efficiency_threshold: float = 0.0,
     self_correction_threshold: float = 0.0,
@@ -27,37 +44,43 @@ def select_valid_samples(
 ) -> bool:
 
     observations_dir = os.path.join(
-        data_dir,
+        input_data_dir,
         "observations"
     )
 
     actions_dir = os.path.join(
-        data_dir,
+        input_data_dir,
         "actions"
     )
 
     judgments_dir = os.path.join(
-        data_dir,
+        input_data_dir,
         judge_name
     )
 
-    domain = example_dict["domain"]
+    domain = example_dict.get(
+        "website", example_dict.get("domain")
+    )
+
+    identifier = example_dict.get(
+        "identifier", domain
+    )
             
     valid_domain = (
         os.path.exists(
             os.path.join(
                 observations_dir,
-                "{}.json".format(domain)
+                "{}.json".format(identifier)
             )
         ) and os.path.exists(
             os.path.join(
                 actions_dir,
-                "{}.json".format(domain)
+                "{}.json".format(identifier)
             )
         ) and os.path.exists(
             os.path.join(
                 judgments_dir,
-                "{}.json".format(domain)
+                "{}.json".format(identifier)
             )
         )
     )
@@ -68,11 +91,14 @@ def select_valid_samples(
     
     judgments_path = os.path.join(
         judgments_dir,
-        "{}.json".format(domain)
+        "{}.json".format(identifier)
     )     
 
     with open(judgments_path, "r") as file:
-        judgments = json.load(file)
+
+        try: judgments = json.load(file)
+
+        except json.JSONDecodeError: return False
 
     success = judgments["success"]
     efficiency = judgments["efficiency"]
@@ -80,23 +106,22 @@ def select_valid_samples(
 
     is_success = (
         success is not None and 
-        (success_threshold == 0 or success > success_threshold)
+        comparator(success, success_threshold)
     )
 
     is_efficient = (
         efficiency is not None and 
-        (efficiency_threshold == 0 or efficiency > efficiency_threshold)
+        comparator(efficiency, efficiency_threshold)
     )
 
     is_self_correcting = (
         self_correction is not None and 
-        (self_correction_threshold == 0 or self_correction > self_correction_threshold)
+        comparator(self_correction, self_correction_threshold)
     )
 
     valid_domain = (
-        is_success and 
-        is_efficient and 
-        is_self_correcting
+        (is_success and is_efficient) or
+        (is_success and is_self_correcting)
     )
 
     return valid_domain
@@ -139,7 +164,7 @@ def get_prompts(
 
 
 def unpack_examples(
-    domain: str = None,
+    identifier: str = None,
     instruction: str = None,
     observations_dir: str = None,
     actions_dir: str = None,
@@ -148,19 +173,29 @@ def unpack_examples(
     
     observations_path = os.path.join(
         observations_dir,
-        "{}.json".format(domain)
+        "{}.json".format(identifier)
     )
 
     actions_path = os.path.join(
         actions_dir,
-        "{}.json".format(domain)
+        "{}.json".format(identifier)
     )
 
     with open(observations_path, "r") as file:
-        observations = json.load(file)
+
+        try: observations = json.load(file)
+
+        except json.JSONDecodeError:
+            
+            return []
 
     with open(actions_path, "r") as file:
-        actions = json.load(file)
+
+        try: actions = json.load(file)
+
+        except json.JSONDecodeError:
+            
+            return []
 
     examples = []
 
@@ -189,32 +224,49 @@ def unpack_examples(
 
 def process_dataset(
     examples: dict,
-    data_dir: str = None,
+    input_data_dir: str = None,
     agent: BrowserAgent = None,
 ) -> dict:
 
     observations_dir = os.path.join(
-        data_dir,
+        input_data_dir,
         "observations"
     )
 
     actions_dir = os.path.join(
-        data_dir,
+        input_data_dir,
         "actions"
     )
 
-    domains = examples["domain"]
-    instructions = examples["task"]
+    if "identifier" in examples:
+
+        websites = examples["identifier"]
+
+    elif "website" in examples:
+
+        websites = examples["website"]
+
+    elif "domain" in examples:
+
+        websites = examples["domain"]
+
+    if "instruction" in examples:
+
+        instructions = examples["instruction"]
+
+    elif "task" in examples:
+
+        instructions = examples["task"]
 
     examples = []
     
-    for domain, instruction in zip(
-        domains,
+    for identifier, instruction in zip(
+        websites,
         instructions
     ):
 
         examples.extend(unpack_examples(
-            domain = domain,
+            identifier = identifier,
             instruction = instruction,
             observations_dir = observations_dir,
             actions_dir = actions_dir,
@@ -238,7 +290,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_name",
         type = str,
-        default="data-for-agents/insta-150k-v2"
+        default="data-for-agents/insta-150k-v3"
     )
 
     parser.add_argument(
@@ -248,7 +300,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--data_dir",
+        "--input_data_dir",
         type = str,
         default="/data/matrix/projects/rsalakhugroup/btrabucc/insta-150k-v2-qwen3-235b-together"
     )
@@ -298,7 +350,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--judge_name",
         type = str,
-        default = "judgments-qwen-235b"
+        default = "qwen3-235b-judge"
     )
 
     args = parser.parse_args()
@@ -329,7 +381,7 @@ if __name__ == "__main__":
 
     select_valid_samples = partial(
         select_valid_samples,
-        data_dir = args.data_dir,
+        input_data_dir = args.input_data_dir,
         success_threshold = args.success_threshold,
         efficiency_threshold = args.efficiency_threshold,
         self_correction_threshold = args.self_correction_threshold,
@@ -351,7 +403,7 @@ if __name__ == "__main__":
 
     process_dataset = partial(
         process_dataset,
-        data_dir = args.data_dir,
+        input_data_dir = args.input_data_dir,
         agent = agent
     )
 

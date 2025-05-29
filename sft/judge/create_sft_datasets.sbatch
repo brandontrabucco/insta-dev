@@ -28,7 +28,7 @@ IDENTIFIER="${MAX_NUM_SAMPLES}x-${JUDGE_NAME}"
 TARGET_SPLIT="${SPLIT_DIR}/${IDENTIFIER}"
 
 DATASET_ARGS=(
-    sft/judge/create_dataset.py
+    sft/judge/create_sft_dataset.py
     --input_data_dir ${INPUT_DATA_DIR}
     --dataset_output_dir ${TARGET_SPLIT}
     --judge_name ${JUDGE_NAME}

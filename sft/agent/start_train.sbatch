@@ -13,18 +13,18 @@ conda activate insta
 
 NFS_DIR=${NFS_DIR:-"/data/matrix/projects/rsalakhugroup"}
 
-DATA_PREFIX=${DATA_PREFIX:-"${NFS_DIR}/btrabucc/insta-150k-v2-sft-qwen3-235b"}
-MODEL_PREFIX=${MODEL_PREFIX:-"${NFS_DIR}/btrabucc/qwen3-1.7b"}
+DATA_PREFIX=${DATA_PREFIX:-"${NFS_DIR}/btrabucc/neurips_sft/gemini-2.5-flash-train"}
+MODEL_PREFIX=${MODEL_PREFIX:-"${NFS_DIR}/btrabucc/neurips_sft/qwen3-1.7b-sft-gemini-2.5-flash"}
 
 export HF_HOME=${NFS_DIR}/btrabucc/hfcache
 huggingface-cli login --token $HUGGINGFACE_ACCESS_TOKEN
 
-ACCELERATE_CONFIG=${ACCELERATE_CONFIG:-"sft/accelerate_config.yaml"}
+ACCELERATE_CONFIG=${ACCELERATE_CONFIG:-"sft/accelerate.yaml"}
 MODEL_NAME=${MODEL_NAME:-"Qwen/Qwen3-1.7B"}
 
-ALL_JUDGE_NAMES=${ALL_JUDGE_NAMES:-"qwen3-235b-judge gpt-4.1-nano-judge"}
+ALL_JUDGE_NAMES=${ALL_JUDGE_NAMES:-"gemini-2.5-flash-judge"}
 ALL_MAX_NUM_SAMPLES=${ALL_MAX_NUM_SAMPLES:-"10000"}
-ALL_SUCCESS_THRESHOLDS=${ALL_SUCCESS_THRESHOLDS:-"0.9"}
+ALL_SUCCESS_THRESHOLDS=${ALL_SUCCESS_THRESHOLDS:-"1.0"}
 
 for JUDGE_NAME in ${ALL_JUDGE_NAMES}; do
 for MAX_NUM_SAMPLES in ${ALL_MAX_NUM_SAMPLES}; do

@@ -71,12 +71,13 @@ def select_valid_samples(
     
     judgment_path = os.path.join(
         judgments_dir,
-        "{}.json".format(domain)
+        "{}.json".format(identifier)
     )     
 
     with open(judgment_path, "r") as file:
 
         try: judgment = json.load(file)
+
         except json.JSONDecodeError: return False
 
     success = judgment["success"]
@@ -142,7 +143,7 @@ def get_prompts(
 
 
 def unpack_examples(
-    website: str = None,
+    identifier: str = None,
     instruction: str = None,
     observations_dir: str = None,
     actions_dir: str = None,
@@ -153,36 +154,42 @@ def unpack_examples(
     
     observations_path = os.path.join(
         observations_dir,
-        "{}.json".format(website)
+        "{}.json".format(identifier)
     )
 
     actions_path = os.path.join(
         actions_dir,
-        "{}.json".format(website)
+        "{}.json".format(identifier)
     )
 
     judgment_path = os.path.join(
         judgments_dir,
-        "{}.json".format(website)
+        "{}.json".format(identifier)
     )
 
     with open(observations_path, "r") as file:
         
         try: observations = json.load(file)
 
-        except json.JSONDecodeError: return []
+        except json.JSONDecodeError:
+            
+            return []
 
     with open(actions_path, "r") as file:
 
         try: actions = json.load(file)
 
-        except json.JSONDecodeError: return []
+        except json.JSONDecodeError:
+            
+            return []
 
     with open(judgment_path, "r") as file:
 
         try: judgment = json.load(file)
 
-        except json.JSONDecodeError: return []
+        except json.JSONDecodeError:
+            
+            return []
 
     prompts = get_prompts(
         observations = observations,
@@ -228,18 +235,35 @@ def process_dataset(
         judge_name
     )
 
-    websites = examples["domain"]
-    instructions = examples["task"]
+    if "identifier" in examples:
+
+        websites = examples["identifier"]
+
+    elif "website" in examples:
+
+        websites = examples["website"]
+
+    elif "domain" in examples:
+
+        websites = examples["domain"]
+
+    if "instruction" in examples:
+
+        instructions = examples["instruction"]
+
+    elif "task" in examples:
+
+        instructions = examples["task"]
 
     examples = []
     
-    for website, instruction in zip(
+    for identifier, instruction in zip(
         websites,
         instructions
     ):
 
         examples.extend(unpack_examples(
-            website = website,
+            identifier = identifier,
             instruction = instruction,
             observations_dir = observations_dir,
             actions_dir = actions_dir,

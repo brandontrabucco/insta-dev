@@ -169,7 +169,7 @@ def get_function_calls(
         function_calls.append(
             FunctionCall(
                 dotpath = "stop",
-                args = "'{}'".format(
+                args = "{}".format(
                     action_kwargs.get("answer")
                 )
             )
@@ -178,11 +178,11 @@ def get_function_calls(
     return function_calls
 
 
-SYSTEM_PROMPT = """You are helping me complete tasks by operating a web browser. I will share the current task, and a sequence of webpages and actions from previous steps.
+SYSTEM_PROMPT = """You are an agent that interacts with and navigates live webpages. Our goal is to complete the user's task by harnessing a virtual web browser.
 
 ## Your Instructions
 
-Based on key information we discovered, and our progress so far, you are helping me determine the next action.
+Based on key information we discover, and our progress on the task, you are helping me determine the next action.
 
 You will provide an action as JSON in a fenced code block:
 
@@ -384,7 +384,7 @@ Suppose the task is complete, and you want to stop and report your progress:
 
 ## Formatting Your Response
 
-Write a 300 word analysis that highlights key information we discovered, synthesizes our progress so far, and develops a plan. After your response, provide the next action as JSON in a fenced code block."""
+Write a 300 word analysis that highlights key information we discover, synthesizes our progress on the task, and develops a plan. After your response, provide the next action as JSON in a fenced code block."""
 
 
 USER_PROMPT_TEMPLATE = """## Complete The Following Task
@@ -399,7 +399,7 @@ You are at {current_url} observing the viewport:
 
 ## Your Instructions
 
-Based on key information we discovered, and our progress so far, you are helping me determine the next action.
+Based on key information we discover, and our progress on the task, you are helping me determine the next action.
 
 You will provide an action as JSON in a fenced code block:
 
@@ -417,7 +417,7 @@ Actions have the following components:
 - `action_kwargs`: A dictionary of arguments for the action.
 - `target_element_id`: An optional id for the element to call the action on.
 
-Write a 300 word analysis that highlights key information we discovered, synthesizes our progress so far, and develops a plan. After your response, provide the next action as JSON in a fenced code block."""
+Write a 300 word analysis that highlights key information we discover, synthesizes our progress on the task, and develops a plan. After your response, provide the next action as JSON in a fenced code block."""
 
 
 class JsonActionParser(BaseActionParser):
