@@ -13,13 +13,13 @@
 
 # Slurm arguments for parallelism
 
+export NFS_DIR=${NFS_DIR:-/data/matrix/projects/rsalakhugroup}
+
 SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-0}
 SLURM_ARRAY_TASK_COUNT=${SLURM_ARRAY_TASK_COUNT:-1}
 
 RANK=${RANK:-${SLURM_ARRAY_TASK_ID}}
 WORLD_SIZE=${WORLD_SIZE:-${SLURM_ARRAY_TASK_COUNT}}
-
-export NFS_DIR=${NFS_DIR:-/data/matrix/projects/rsalakhugroup}
 
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
@@ -28,7 +28,10 @@ conda activate insta
 
 # Arguments for data collection
 
-INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/qwen3-1.7b-10000x-0.9s-qwen3-235b-judge-test"}
+DATASET=${DATASET:-"data-for-agents/insta-150k-v3"}
+DATASET_SPLIT=${DATASET_SPLIT:-"train"}
+
+INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/gemini-2.5-flash-train"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 
@@ -62,8 +65,6 @@ SAMPLING_ARGS=(
 )
 
 PIPELINE_ARGS=(
-    --dataset data-for-agents/insta-150k-v2
-    --dataset_split test
     --rank ${RANK}
     --world_size ${WORLD_SIZE}
     ${SKIP_FINISHED}
@@ -72,9 +73,12 @@ PIPELINE_ARGS=(
 DATA_ARGS=(
     --input_data_dir ${INPUT_DATA_DIR}
     --judge_name ${JUDGE_NAME}
+    --dataset ${DATASET}
+    --dataset_split ${DATASET_SPLIT}
 )
 
 ANNOTATE_ARGS=(
+    annotate/query_judge.py
     ${LLM_ARGS[@]}
     ${SAMPLING_ARGS[@]}
     ${PIPELINE_ARGS[@]}
@@ -85,4 +89,4 @@ ANNOTATE_ARGS=(
 
 # Annotate trajectories using the judge
 
-python -u annotate/query_judge.py ${ANNOTATE_ARGS[@]}
+python -u ${ANNOTATE_ARGS[@]}

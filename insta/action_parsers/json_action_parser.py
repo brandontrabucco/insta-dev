@@ -384,7 +384,7 @@ Suppose the task is complete, and you want to stop and report your progress:
 
 ## Formatting Your Response
 
-Write a 300 word analysis that highlights key information we discover, synthesizes our progress on the task, and develops a plan. After your response, provide the next action as JSON in a fenced code block."""
+Write a 300 word analysis that highlights key information we have discovered, synthesizes our progress on the task, and develops a plan. After your response, provide the next action as JSON in a fenced code block."""
 
 
 USER_PROMPT_TEMPLATE = """## Complete The Following Task
@@ -417,7 +417,7 @@ Actions have the following components:
 - `action_kwargs`: A dictionary of arguments for the action.
 - `target_element_id`: An optional id for the element to call the action on.
 
-Write a 300 word analysis that highlights key information we discover, synthesizes our progress on the task, and develops a plan. After your response, provide the next action as JSON in a fenced code block."""
+Write a 300 word analysis that highlights key information we have discovered, synthesizes our progress on the task, and develops a plan. After your response, provide the next action as JSON in a fenced code block."""
 
 
 class JsonActionParser(BaseActionParser):

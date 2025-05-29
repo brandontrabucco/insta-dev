@@ -13,13 +13,13 @@
 
 # Slurm arguments for parallelism
 
+export NFS_DIR=${NFS_DIR:-/data/matrix/projects/rsalakhugroup}
+
 SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-0}
 SLURM_ARRAY_TASK_COUNT=${SLURM_ARRAY_TASK_COUNT:-1}
 
 RANK=${RANK:-${SLURM_ARRAY_TASK_ID}}
 WORLD_SIZE=${WORLD_SIZE:-${SLURM_ARRAY_TASK_COUNT}}
-
-export NFS_DIR=${NFS_DIR:-/data/matrix/projects/rsalakhugroup}
 
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate insta
@@ -27,6 +27,9 @@ conda activate insta
 
 
 # Arguments for data collection
+
+DATASET=${DATASET:-"data-for-agents/insta-150k-v3"}
+DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
 INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/qwen3-1.7b-10000x-0.9s-qwen3-235b-judge-test"}
 
@@ -58,8 +61,6 @@ SAMPLING_ARGS=(
 )
 
 PIPELINE_ARGS=(
-    --dataset data-for-agents/insta-150k-v2
-    --dataset_split test
     --rank ${RANK}
     --world_size ${WORLD_SIZE}
     ${SKIP_FINISHED}
@@ -69,9 +70,12 @@ DATA_ARGS=(
     --input_data_dir ${INPUT_DATA_DIR}
     --judge_name ${JUDGE_NAME}
     --task_proposer_name ${TASK_PROPOSER_NAME}
+    --dataset ${DATASET}
+    --dataset_split ${DATASET_SPLIT}
 )
 
 ANNOTATE_ARGS=(
+    annotate/query_task_proposer.py
     ${LLM_ARGS[@]}
     ${SAMPLING_ARGS[@]}
     ${PIPELINE_ARGS[@]}
@@ -82,4 +86,4 @@ ANNOTATE_ARGS=(
 
 # Annotate trajectories using the task proposer
 
-python -u annotate/query_task_proposer.py ${ANNOTATE_ARGS[@]}
+python -u ${ANNOTATE_ARGS[@]}
