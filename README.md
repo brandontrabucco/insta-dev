@@ -104,7 +104,7 @@ trajectories = pipeline.launch(
 )
 ```
 
-The `trajectories` variable returned by the pipeline is an instance of `InstaPipelineOutput`, which is a named tuple with `observations`, `actions`, and `judgment` keys. The `observations` key points to a list, where each element is a `dict` containing text, screenshots, and metadata from the browser. The `actions` key points to a list, where each element is a `dict` containing the LLM agent response, and parsed action. Finally, the `judgment` key points to a dict containing scores from the judge, which can be used to filter the data.
+The `trajectories` variable returned by the pipeline is a list of `InstaPipelineOutput` instances, which are named tuples with `observations`, `actions`, and `judgment` keys. The `observations` key points to a list, where each element is a `dict` containing text, screenshots, and metadata from the browser. The `actions` key points to a list, where each element is a `dict` containing the LLM agent response, and parsed action. Finally, the `judgment` key points to a dict containing scores from the judge, which can be used to filter the data.
 
 The `InstaPipeline` is the main entry point for this code, and can serve as an efficient distributed rollout pipeline for data collection, and an efficient serving engine for runninh your trained agents.
 
