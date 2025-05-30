@@ -91,7 +91,7 @@ judge_config = get_judge_config(
 )
 
 dataset = [
-    {"url": "duckduckgo.com", "instruction": "retrieve a news article on US politics"},
+    {"website": "duckduckgo.com", "instruction": "retrieve a news article on US politics"},
 ]
 
 pipeline = InstaPipeline(
