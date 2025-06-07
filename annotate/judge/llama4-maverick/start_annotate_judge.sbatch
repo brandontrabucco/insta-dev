@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --nodes=1
-#SBATCH --partition=array
+#SBATCH --partition=general
 #SBATCH --array=0-7
 
 
