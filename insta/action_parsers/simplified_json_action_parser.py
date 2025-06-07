@@ -3,12 +3,14 @@ from insta.action_parsers.json_action_parser import (
 )
 
 
-SYSTEM_PROMPT = """You are a helpful assistant operating a web browser."""
+SYSTEM_PROMPT = """You are an agent that interacts with and navigates live webpages. Our goal is to complete an internet-based task by operating a virtual web browser."""
 
 
-USER_PROMPT_TEMPLATE = """You are currently viewing {current_url}. Here is the viewport rendered in markdown:
+USER_PROMPT_TEMPLATE = """You are at {current_url} observing the viewport:
 
 {observation}
+
+## Complete The Following Task
 
 {instruction}"""
 

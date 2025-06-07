@@ -24,7 +24,7 @@ from insta.markdown import (
 from typing import Tuple
 
 
-FAILED_MESSAGE = "The page has failed to parse into markdown. Please check the logs for more information, and file a bug report to: https://github.com/data-for-agents/environment/issues"
+FAILED_MESSAGE = "The page has failed to parse into markdown. Please check the logs for more information, and file a bug report to: https://github.com/data-for-agents/insta/issues"
 
 
 CATCH_PARSE_ERRORS = True

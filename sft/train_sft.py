@@ -46,7 +46,7 @@ def preprocess_messages(
     input_ids: List[int] = []
     mask: List[int] = []
 
-    for chat_turn in messages:
+    for turn_idx, chat_turn in enumerate(messages):
         
         chat_turn_text = tokenizer.apply_chat_template(
             [chat_turn],
@@ -59,8 +59,12 @@ def preprocess_messages(
             add_special_tokens = False
         )
 
+        is_assistant_message = (
+            chat_turn["role"] == "assistant"
+        )
+
         chat_turn_mask = [
-            1 if chat_turn["role"] == "assistant" else 0
+            1 if is_assistant_message else 0
         ] * len(chat_turn_tokens)
 
         input_ids.extend(chat_turn_tokens)
@@ -201,13 +205,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--dataset_path",
+        "--sft_dataset_path",
         type = str,
         default="./insta-150k-v2-filtered"
     )
 
     parser.add_argument(
-        "--final_model_dir",
+        "--sft_model_path",
         type = str,
         default="./qwen-1.5b-filtered"
     )
@@ -225,6 +229,12 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--num_epochs",
+        type = int,
+        default = 1
+    )
+
+    parser.add_argument(
         "--use_bf16",
         action = "store_true"
     )
@@ -232,7 +242,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     insta_dataset = load_from_disk(
-        args.dataset_path
+        args.sft_dataset_path
     )
 
     if args.max_num_examples is not None:
@@ -257,10 +267,10 @@ if __name__ == "__main__":
         adam_beta1 = 0.9,
         adam_beta2 = 0.999,
         adam_epsilon = 1e-8,
-        num_train_epochs = 1,
+        num_train_epochs = args.num_epochs,
         warmup_ratio = 0.01,
         logging_steps = 100,
-        output_dir = args.final_model_dir,
+        output_dir = args.sft_model_path,
         per_device_train_batch_size = 1,
         per_device_eval_batch_size = 1,
         bf16 = args.use_bf16,
@@ -293,9 +303,9 @@ if __name__ == "__main__":
     trainer.train()
 
     trainer.save_model(
-        args.final_model_dir
+        args.sft_model_path
     )
 
     tokenizer.save_pretrained(
-        args.final_model_dir
+        args.sft_model_path
     )

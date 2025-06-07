@@ -76,10 +76,38 @@ if __name__ == "__main__":
             "{}.json".format(identifier)
         )
 
+        valid_example = (
+            os.path.exists(actions_file) and 
+            os.path.exists(observations_file) and
+            os.path.exists(judgment_file)
+        )
+
+        if args.remove_null and not valid_example:
+
+            if os.path.exists(judgment_file):
+
+                os.remove(judgment_file)
+
+            if os.path.exists(actions_file):
+
+                os.remove(actions_file)
+
+            if os.path.exists(observations_file):
+
+                os.remove(observations_file)
+
+            print("Removing: {}".format(
+                identifier
+            ))
+
+        elif not args.remove_null \
+                and not valid_example:
+            
+            continue
+
         with open(judgment_file, 'r') as file:
 
             judgment = json.load(file)
-
 
         with open(actions_file, 'r') as file:
 
@@ -92,18 +120,29 @@ if __name__ == "__main__":
 
         if args.remove_null and data_collection_error:
 
+            if os.path.exists(judgment_file):
+
+                os.remove(judgment_file)
+
+            if os.path.exists(actions_file):
+
+                os.remove(actions_file)
+
+            if os.path.exists(observations_file):
+
+                os.remove(observations_file)
+
             print("Removing: {}".format(
                 identifier
             ))
 
-            os.remove(judgment_file)
-            os.remove(actions_file)
-            os.remove(observations_file)
+        elif not args.remove_null \
+                and data_collection_error:
+            
+            continue
 
-        if not (args.remove_null and data_collection_error):
-
-            all_judgments.append(judgment)
-            all_actions.append(actions)
+        all_judgments.append(judgment)
+        all_actions.append(actions)
 
     total_num_actions = sum(
         len(actions) 

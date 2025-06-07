@@ -2,11 +2,11 @@
 #SBATCH --job-name=insta
 #SBATCH --exclude=shire-1-1,shire-1-6,shire-1-10,shire-2-5,shire-2-9,babel-2-29
 #SBATCH --output=logs/gemini-%A-%a-%N.out
-#SBATCH --time=6:00:00
+#SBATCH --time=4:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --nodes=1
-#SBATCH --partition=general
+#SBATCH --partition=preempt
 #SBATCH --array=0-7
 
 

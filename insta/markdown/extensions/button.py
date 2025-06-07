@@ -2,7 +2,6 @@ from insta.markdown.schemas import (
     register_schema,
     remove_newlines,
     DEFAULT_INDENT_VALUE,
-    ALL_SCHEMA_NAMES,
     EMPTY_TEXT,
     clean_label,
 )
@@ -22,6 +21,9 @@ from insta.configs.browser_config import (
 from typing import List
 
 
+DEFAULT_TITLE = "#"
+
+
 @register_schema(
     "insta_button",
     priority = 0,
@@ -31,24 +33,13 @@ from typing import List
 )
 class InSTAButtonSchema(InSTABaseSchema):
 
-    transitions = [
-        "insta_button",
-        "insta_checkbox",
-        "insta_image",
-        "insta_input",
-        "insta_link",
-        "insta_range",
-        "insta_select",
-        "insta_textarea",
-        *ALL_SCHEMA_NAMES
-    ]
-
     tags = [
         'button'
     ]
 
     attributes = {"role": [
-        'button'
+        'button',
+        'option'
     ]}
 
     def format(
@@ -77,6 +68,10 @@ class InSTAButtonSchema(InSTABaseSchema):
             "type", None
         )
 
+        button_role = node.html_element.attrib.get(
+            "role", 'button'
+        )
+
         button_title_outputs = []
 
         if len(button_title) > 0:
@@ -93,9 +88,10 @@ class InSTAButtonSchema(InSTABaseSchema):
 
         title = " ".join(
             button_title_outputs
-        ) or "#"
+        ) or DEFAULT_TITLE
 
-        return "[id: {id}] {title} button".format(
+        return "[id: {id}] {title} {role}".format(
             id = backend_node_id,
-            title = title
+            title = title,
+            role = button_role
         )

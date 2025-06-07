@@ -178,7 +178,7 @@ def get_function_calls(
     return function_calls
 
 
-SYSTEM_PROMPT = """You are an agent that interacts with and navigates live webpages. Our goal is to complete the user's task by harnessing a virtual web browser.
+SYSTEM_PROMPT = """You are an agent that interacts with and navigates live webpages. Our goal is to complete an internet-based task by operating a virtual web browser.
 
 ## Your Instructions
 
@@ -387,15 +387,13 @@ Suppose the task is complete, and you want to stop and report your progress:
 Write a 300 word analysis that highlights key information we have discovered, synthesizes our progress on the task, and develops a plan. After your response, provide the next action as JSON in a fenced code block."""
 
 
-USER_PROMPT_TEMPLATE = """## Complete The Following Task
-
-{instruction}
-
-## Current Webpage Viewport
-
-You are at {current_url} observing the viewport:
+USER_PROMPT_TEMPLATE = """You are at {current_url} observing the viewport:
 
 {observation}
+
+## Complete The Following Task
+
+{instruction}
 
 ## Your Instructions
 

@@ -1,5 +1,6 @@
 from insta.markdown.schemas import (
-    MarkdownSchema
+    MarkdownSchema,
+    ALL_SCHEMA_NAMES
 )
 
 from insta.configs.browser_config import (
@@ -9,7 +10,26 @@ from insta.configs.browser_config import (
 import lxml.html
 
 
+ALL_INSTA_SCHEMA_NAMES = [
+    "insta_button",
+    "insta_checkbox",
+    "insta_form",
+    "insta_image",
+    "insta_input",
+    "insta_link",
+    "insta_range",
+    "insta_select",
+    "insta_textarea",
+    "insta_dropdown",
+]
+
+
 class InSTABaseSchema(MarkdownSchema):
+
+    transitions = [
+        *ALL_INSTA_SCHEMA_NAMES,
+        *ALL_SCHEMA_NAMES
+    ]
     
     def match(
         self, html_element: lxml.html.HtmlElement,

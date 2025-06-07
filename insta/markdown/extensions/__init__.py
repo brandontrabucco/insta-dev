@@ -33,3 +33,7 @@ from insta.markdown.extensions.select import (
 from insta.markdown.extensions.textarea import (
     InSTATextareaSchema
 )
+
+from insta.markdown.extensions.dropdown import (
+    InSTADropdownSchema
+)

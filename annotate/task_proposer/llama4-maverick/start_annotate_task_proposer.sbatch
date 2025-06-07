@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=insta
 #SBATCH --exclude=babel-6-13,babel-4-9,babel-4-29,babel-13-13,babel-4-17,babel-4-1,babel-13-1,babel-8-13,babel-13-29
-#SBATCH --output=logs/judge-%A-%a-%N.out
+#SBATCH --output=logs/task-proposer-%A-%a-%N.out
 #SBATCH --time=48:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
@@ -35,33 +35,29 @@ INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/ge
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 
-JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"Qwen/Qwen3-235B-A22B-fp8-tput"}
-JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://api.together.xyz/v1"}
-JUDGE_API_KEY=${JUDGE_API_KEY:-${TOGETHER_API_KEY}}
+TASK_PROPOSER_MODEL_NAME=${TASK_PROPOSER_MODEL_NAME:-"meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8"}
+TASK_PROPOSER_LLM_ENDPOINT=${TASK_PROPOSER_LLM_ENDPOINT:-"https://api.together.xyz/v1"}
+TASK_PROPOSER_API_KEY=${TASK_PROPOSER_API_KEY:-${TOGETHER_API_KEY}}
 
-ADD_STEPS_TO_JUDGE=${ADD_STEPS_TO_JUDGE:-"--add_steps_to_judge"}
-ADD_CRITERIA_TO_JUDGE=${ADD_CRITERIA_TO_JUDGE:-"--add_criteria_to_judge"}
+JUDGE_NAME=${JUDGE_NAME:-"llama4-maverick-judge"}
+TASK_PROPOSER_NAME=${TASK_PROPOSER_NAME:-"llama4-maverick-task-proposer"}
 
-JUDGE_DISABLE_THINKING_CHAT_TEMPLATE=${JUDGE_DISABLE_THINKING_CHAT_TEMPLATE:-"--judge_disable_thinking_chat_template"}
-JUDGE_REASONING_EFFORT=${JUDGE_REASONING_EFFORT:-""}
-
-JUDGE_NAME=${JUDGE_NAME:-"qwen3-235b-judge"}
+TASK_PROPOSER_DISABLE_THINKING_CHAT_TEMPLATE=${TASK_PROPOSER_DISABLE_THINKING_CHAT_TEMPLATE:-""}
+TASK_PROPOSER_REASONING_EFFORT=${TASK_PROPOSER_REASONING_EFFORT:-"--task_proposer_reasoning_effort none"}
 
 
 
 # Array arguments for scripts
 
 LLM_ARGS=(
-    --judge_model_name ${JUDGE_MODEL_NAME}
-    --judge_llm_endpoint ${JUDGE_LLM_ENDPOINT}
-    --judge_api_key ${JUDGE_API_KEY}
-    ${ADD_STEPS_TO_JUDGE}
-    ${ADD_CRITERIA_TO_JUDGE}
+    --task_proposer_model_name ${TASK_PROPOSER_MODEL_NAME}
+    --task_proposer_llm_endpoint ${TASK_PROPOSER_LLM_ENDPOINT}
+    --task_proposer_api_key ${TASK_PROPOSER_API_KEY}
 )
 
 SAMPLING_ARGS=(
-    ${JUDGE_DISABLE_THINKING_CHAT_TEMPLATE}
-    ${JUDGE_REASONING_EFFORT}
+    ${TASK_PROPOSER_DISABLE_THINKING_CHAT_TEMPLATE}
+    ${TASK_PROPOSER_REASONING_EFFORT}
 )
 
 PIPELINE_ARGS=(
@@ -73,12 +69,13 @@ PIPELINE_ARGS=(
 DATA_ARGS=(
     --input_data_dir ${INPUT_DATA_DIR}
     --judge_name ${JUDGE_NAME}
+    --task_proposer_name ${TASK_PROPOSER_NAME}
     --dataset ${DATASET}
     --dataset_split ${DATASET_SPLIT}
 )
 
 ANNOTATE_ARGS=(
-    annotate/query_judge.py
+    annotate/task_proposer/query_task_proposer.py
     ${LLM_ARGS[@]}
     ${SAMPLING_ARGS[@]}
     ${PIPELINE_ARGS[@]}
@@ -87,6 +84,6 @@ ANNOTATE_ARGS=(
 
 
 
-# Annotate trajectories using the judge
+# Annotate trajectories using the task proposer
 
 python -u ${ANNOTATE_ARGS[@]}

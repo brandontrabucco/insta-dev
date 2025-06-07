@@ -2,7 +2,6 @@ from insta.markdown.schemas import (
     register_schema,
     remove_newlines,
     DEFAULT_INDENT_VALUE,
-    ALL_SCHEMA_NAMES,
     EMPTY_TEXT,
     clean_label,
 )
@@ -29,6 +28,8 @@ BUTTON_TYPES = [
     "image"
 ]
 
+DEFAULT_TITLE = "#"
+
 
 @register_schema(
     "insta_input",
@@ -38,18 +39,6 @@ BUTTON_TYPES = [
     ]
 )
 class InSTAInputSchema(InSTABaseSchema):
-
-    transitions = [
-        "insta_button",
-        "insta_checkbox",
-        "insta_image",
-        "insta_input",
-        "insta_link",
-        "insta_range",
-        "insta_select",
-        "insta_textarea",
-        *ALL_SCHEMA_NAMES
-    ]
 
     attributes = {"role": [
         'input',
@@ -93,10 +82,25 @@ class InSTAInputSchema(InSTABaseSchema):
             node.html_element.attrib.get("placeholder") or ""
         )
 
+        labeled_by = node.html_element.attrib.get(
+            "aria-labelledby"
+        )
+
+        label = node.html_element.getroottree().find(
+            ".//*[@id='{}']".format(
+                labeled_by
+            )
+        )
+
+        label = "" if label is None else "".join(
+            label.itertext()
+        ) 
+
         title = (
             clean_label(node.html_element.attrib.get("name")) or 
             clean_label(node.html_element.attrib.get("title")) or 
-            clean_label(node.html_element.attrib.get("aria-label")) or ""
+            clean_label(node.html_element.attrib.get("aria-label")) or 
+            (label if label not in EMPTY_TEXT else "")
         )
 
         title_outputs = []
@@ -152,7 +156,7 @@ class InSTAInputSchema(InSTABaseSchema):
 
             title = " ".join(
                 button_title_outputs
-            ) or "#"
+            ) or DEFAULT_TITLE
 
             return "[id: {id}] {title} button".format(
                 id = backend_node_id,

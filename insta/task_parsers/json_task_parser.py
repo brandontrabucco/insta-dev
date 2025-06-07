@@ -60,7 +60,7 @@ In this example, we explored the website 'awg-fittings.com' and saw a product li
         "Find the product length in mm, and respond with that length in the answer"
     ],
     "criteria": [
-        "Cites the specific length of '237 mm' for this product"
+        "Cite the specific length of '237 mm' for this product"
     ]
 }
 ```
@@ -79,7 +79,7 @@ In this example, we explored 'biodiversitylibrary.org', saw a document titled 'T
         "Confirm the correct document is displayed in an embedded PDF reader"
     ],
     "criteria": [
-        "Displays the correct document in an embedded PDF reader"
+        "Display the correct document in an embedded PDF reader"
     ]
 }
 ```
@@ -98,7 +98,7 @@ In this example, we explored 'scholar.google.com' and saw a paper titled 'Genera
         "Find an up-to-date citation count, and respond with that count in the answer"
     ],
     "criteria": [
-        "Has an up-to-date citation count, which is '80613' as of April 2025",
+        "Have an up-to-date citation count, which is '80613' as of April 2025",
         "The answer matches the citation count for the correct paper in the search results"
     ]
 }
@@ -118,8 +118,8 @@ In this example, we explored 'wiktionary.org' and saw a webpage discussing the d
         "Summarize the contents of these sections in the answer"
     ],
     "criteria": [
-        "Mentions the word is derived from Serendip (or Serendib)",
-        "States it was coined by English writer and politician Horace Walpole in 1754"
+        "Mention the word is derived from Serendip (or Serendib)",
+        "State it was coined by English writer and politician Horace Walpole in 1754"
     ]
 }
 ```

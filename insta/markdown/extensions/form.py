@@ -11,6 +11,11 @@ from insta.markdown.build import (
     MarkdownNode
 )
 
+from insta.markdown.extensions.base import (
+    InSTABaseSchema,
+    ALL_INSTA_SCHEMA_NAMES
+)
+
 from insta.configs.browser_config import (
     NodeMetadata
 )
@@ -28,15 +33,7 @@ from typing import List
 class InSTAFormSchema(MarkdownSchema):
 
     transitions = [
-        "insta_button",
-        "insta_checkbox",
-        "insta_form",
-        "insta_image",
-        "insta_input",
-        "insta_link",
-        "insta_range",
-        "insta_select",
-        "insta_textarea",
+        *ALL_INSTA_SCHEMA_NAMES,
         *ALL_SCHEMA_NAMES
     ]
 

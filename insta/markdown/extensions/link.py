@@ -2,7 +2,6 @@ from insta.markdown.schemas import (
     register_schema,
     remove_newlines,
     DEFAULT_INDENT_VALUE,
-    ALL_SCHEMA_NAMES,
     EMPTY_TEXT,
     MARKDOWN_SCHEMAS,
     TYPE_TO_SCHEMA,
@@ -32,19 +31,6 @@ from typing import List
     ]
 )
 class InSTALinkSchema(InSTABaseSchema):
-
-    transitions = [
-        "insta_button",
-        "insta_checkbox",
-        "insta_form",
-        "insta_image",
-        "insta_input",
-        "insta_link",
-        "insta_range",
-        "insta_select",
-        "insta_textarea",
-        *ALL_SCHEMA_NAMES
-    ]
 
     tags = [
         'a'

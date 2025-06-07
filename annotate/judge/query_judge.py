@@ -152,6 +152,10 @@ def query_judge(
         for key in VALUE_KEYS
     }
 
+    if any([val is None for val in judgment_values.values()]):
+
+        return None
+
     judgment = {
         **judgment_values,
         "response": judgment.response,

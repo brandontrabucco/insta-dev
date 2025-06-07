@@ -70,7 +70,7 @@ DEFAULT_ADD_STEPS_TO_JUDGE = False
 DEFAULT_ADD_CRITERIA_TO_JUDGE = False
 
 AGENT_STEPS_TEMPLATE = (
-    "{instruction}\n\nThe optimal path follows these steps:\n{steps}"
+    "{instruction}\n\nTo complete the task, we should consider these steps:\n{steps}"
 )
 
 JUDGE_STEPS_TEMPLATE = (
@@ -78,7 +78,7 @@ JUDGE_STEPS_TEMPLATE = (
 )
 
 AGENT_CRITERIA_TEMPLATE = (
-    "{instruction}\n\nThe optimal path satisfies these criteria:\n{criteria}"
+    "{instruction}\n\nTo complete the task, we should consider these criteria:\n{criteria}"
 )
 
 JUDGE_CRITERIA_TEMPLATE = (

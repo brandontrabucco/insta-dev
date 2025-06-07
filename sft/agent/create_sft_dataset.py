@@ -40,91 +40,99 @@ def select_valid_samples(
     success_threshold: float = 0.5,
     efficiency_threshold: float = 0.0,
     self_correction_threshold: float = 0.0,
-    judge_name: str = "judgments-qwen-235b"
+    judge_names: List[str] = ["qwen3-235b-judge"]
 ) -> bool:
 
-    observations_dir = os.path.join(
-        input_data_dir,
-        "observations"
-    )
+    for judge_name in judge_names:
 
-    actions_dir = os.path.join(
-        input_data_dir,
-        "actions"
-    )
+        observations_dir = os.path.join(
+            input_data_dir,
+            "observations"
+        )
 
-    judgments_dir = os.path.join(
-        input_data_dir,
-        judge_name
-    )
+        actions_dir = os.path.join(
+            input_data_dir,
+            "actions"
+        )
 
-    domain = example_dict.get(
-        "website", example_dict.get("domain")
-    )
+        judgment_dir = os.path.join(
+            input_data_dir,
+            judge_name
+        )
 
-    identifier = example_dict.get(
-        "identifier", domain
-    )
-            
-    valid_domain = (
-        os.path.exists(
-            os.path.join(
-                observations_dir,
-                "{}.json".format(identifier)
-            )
-        ) and os.path.exists(
-            os.path.join(
-                actions_dir,
-                "{}.json".format(identifier)
-            )
-        ) and os.path.exists(
-            os.path.join(
-                judgments_dir,
-                "{}.json".format(identifier)
+        domain = example_dict.get(
+            "website", example_dict.get("domain")
+        )
+
+        identifier = example_dict.get(
+            "identifier", domain
+        )
+                
+        valid_domain = (
+            os.path.exists(
+                os.path.join(
+                    observations_dir,
+                    "{}.json".format(identifier)
+                )
+            ) and os.path.exists(
+                os.path.join(
+                    actions_dir,
+                    "{}.json".format(identifier)
+                )
+            ) and os.path.exists(
+                os.path.join(
+                    judgment_dir,
+                    "{}.json".format(identifier)
+                )
             )
         )
-    )
 
-    if not valid_domain:
+        if not valid_domain:
 
-        return False
-    
-    judgments_path = os.path.join(
-        judgments_dir,
-        "{}.json".format(identifier)
-    )     
+            return False
 
-    with open(judgments_path, "r") as file:
+        judgments_path = os.path.join(
+            judgment_dir,
+            "{}.json".format(identifier)
+        )
 
-        try: judgments = json.load(file)
+        with open(judgments_path, "r") as file:
 
-        except json.JSONDecodeError: return False
+            try: judgments = json.load(file)
 
-    success = judgments["success"]
-    efficiency = judgments["efficiency"]
-    self_correction = judgments["self_correction"]
+            except json.JSONDecodeError:
+                
+                return False
 
-    is_success = (
-        success is not None and 
-        comparator(success, success_threshold)
-    )
+        success = judgments["success"]
+        efficiency = judgments["efficiency"]
+        self_correction = judgments["self_correction"]
 
-    is_efficient = (
-        efficiency is not None and 
-        comparator(efficiency, efficiency_threshold)
-    )
+        is_success = (
+            success is not None and 
+            comparator(success, success_threshold)
+        )
 
-    is_self_correcting = (
-        self_correction is not None and 
-        comparator(self_correction, self_correction_threshold)
-    )
+        is_efficient = (
+            efficiency is not None and 
+            comparator(efficiency, efficiency_threshold)
+        )
 
-    valid_domain = (
-        (is_success and is_efficient) or
-        (is_success and is_self_correcting)
-    )
+        is_self_correcting = (
+            self_correction is not None and 
+            comparator(self_correction, self_correction_threshold)
+        )
 
-    return valid_domain
+        valid_domain = (
+            (is_success and is_efficient) or
+            (is_success and is_self_correcting)
+        )
+
+        if not valid_domain:
+
+            return False
+
+    return True
 
 
 def get_prompts(
@@ -348,9 +356,10 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--judge_name",
+        "--judge_names",
         type = str,
-        default = "qwen3-235b-judge"
+        default = ["qwen3-235b-judge"],
+        nargs = "+"
     )
 
     args = parser.parse_args()
@@ -385,11 +394,13 @@ if __name__ == "__main__":
         success_threshold = args.success_threshold,
         efficiency_threshold = args.efficiency_threshold,
         self_correction_threshold = args.self_correction_threshold,
-        judge_name = args.judge_name
+        judge_names = args.judge_names
     )
     
     dataset = dataset.filter(
-        select_valid_samples
+        select_valid_samples,
+        num_proc = 32,
+        load_from_cache_file = False
     )
 
     if args.max_num_samples is not None:
@@ -413,6 +424,7 @@ if __name__ == "__main__":
         remove_columns = dataset.column_names,
         batch_size = 32,
         num_proc = 32,
+        load_from_cache_file = False
     )
     
     dataset.save_to_disk(
