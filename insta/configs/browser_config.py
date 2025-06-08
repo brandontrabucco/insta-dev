@@ -13,7 +13,7 @@ class BrowserConfig:
 
     restrict_viewport: Tuple[float, float, float, float] = None
     require_visible: bool = True
-    require_frontmost: bool = False
+    require_frontmost: bool = True
     
     remove_pii: bool = False
     proxy: dict = None
@@ -71,7 +71,7 @@ class FunctionCall:
 DEFAULT_BROWSER_CONFIG = BrowserConfig(
     restrict_viewport = (0, 0, 1920, 1080),
     require_visible = True,
-    require_frontmost = False,
+    require_frontmost = True,
     remove_pii = False,
     proxy = None,
     screen_width = 1920,

@@ -54,20 +54,20 @@ conda activate insta
 DATASET=${DATASET:-"data-for-agents/insta-150k-v3"}
 DATASET_SPLIT=${DATASET_SPLIT:-"test"}
 
-OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_sft_agent/qwen3-1.7b-sft-gemini-2.5-flash-40000x-1.0s-0.7c-all-judges"}
+OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_sft_agent/qwen3-1.7b-sft-gemini-2.5-flash-40000x-1.0s-0.5c-all-judges"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"${NFS_DIR}/btrabucc/neurips_sft_agent/qwen3-1.7b-sft-gemini-2.5-flash-40000x-1.0s-0.7c-all-judges"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"${NFS_DIR}/btrabucc/neurips_sft_agent/qwen3-1.7b-sft-gemini-2.5-flash-40000x-1.0s-0.5c-all-judges"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:${AGENT_LLM_ENDPOINT_PORT}/v1"}
 AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
 
-JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gpt-4.1-nano"}
-JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://api.openai.com/v1"}
-JUDGE_API_KEY=${JUDGE_API_KEY:-${OPENAI_API_KEY}}
+JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gemini-2.5-flash-preview-05-20"}
+JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://generativelanguage.googleapis.com/v1beta/openai/"}
+JUDGE_API_KEY=${JUDGE_API_KEY:-${GOOGLE_API_KEY}}
 
-JUDGE_NAME=${JUDGE_NAME:-"gpt-4.1-nano-judge"}
+JUDGE_NAME=${JUDGE_NAME:-"gemini-2.5-flash-judge"}
 
 ADD_STEPS_TO_AGENT=${ADD_STEPS_TO_AGENT:-""}
 ADD_CRITERIA_TO_AGENT=${ADD_CRITERIA_TO_AGENT:-""}
@@ -79,7 +79,7 @@ AGENT_DISABLE_THINKING_CHAT_TEMPLATE=${AGENT_DISABLE_THINKING_CHAT_TEMPLATE:-"--
 JUDGE_DISABLE_THINKING_CHAT_TEMPLATE=${JUDGE_DISABLE_THINKING_CHAT_TEMPLATE:-""}
 
 AGENT_REASONING_EFFORT=${AGENT_REASONING_EFFORT:-""}
-JUDGE_REASONING_EFFORT=${JUDGE_REASONING_EFFORT:-""}
+JUDGE_REASONING_EFFORT=${JUDGE_REASONING_EFFORT:-"--judge_reasoning_effort none"}
 
 ACTION_PARSER=${ACTION_PARSER:-"json"}
 
@@ -88,8 +88,8 @@ ACTION_PARSER=${ACTION_PARSER:-"json"}
 # Arguments for sampling
 
 AGENT_TEMPERATURE=${AGENT_TEMPERATURE:-0.5}
-AGENT_TOP_P=${AGENT_TOP_P:-0.95}
-AGENT_TOP_K=${AGENT_TOP_K:-32}
+AGENT_TOP_P=${AGENT_TOP_P:-1}
+AGENT_TOP_K=${AGENT_TOP_K:-20}
 
 
 
