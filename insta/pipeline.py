@@ -69,6 +69,14 @@ DEFAULT_ADD_CRITERIA_TO_AGENT = False
 DEFAULT_ADD_STEPS_TO_JUDGE = False
 DEFAULT_ADD_CRITERIA_TO_JUDGE = False
 
+AGENT_EXPLORATION_TEMPLATE = (
+    "Thoroughly explore {website} by navigating pages, highlight interesting content we find, and list what real users can accomplish on this website."
+)
+
+JUDGE_EXPLORATION_TEMPLATE = (
+    "The agent must thoroughly explore {website} by navigating pages, highlight interesting content it finds, and list what real users can accomplish on this website."
+)
+
 AGENT_STEPS_TEMPLATE = (
     "{instruction}\n\nTo complete the task, we should consider these steps:\n{steps}"
 )
@@ -93,6 +101,11 @@ DEFAULT_NUM_AGENTS = 8
 DEFAULT_PLAYWRIGHT_WORKERS = 8
 DEFAULT_RETURN_TRAJECTORIES = False
 
+DEFAULT_REWARD = 0.0
+DEFAULT_DONE = False
+DEFAULT_TRUNCATED = False
+DEFAULT_INFO = {}
+
 
 InstaPipelineOutput = namedtuple(
     "InstaPipelineOutput",
@@ -104,7 +117,7 @@ def generate_trajectory(
     agent: BrowserAgent | AgentConfig,
     judge: BrowserJudge | JudgeConfig,
     env: InstaEnv | BrowserConfig,
-    url: str, instruction: str,
+    url: str, instruction: str = None,
     agent_instruction: str = None,
     judge_instruction: str = None,
     max_actions: int = DEFAULT_MAX_ACTIONS,
@@ -161,12 +174,18 @@ def generate_trajectory(
 
     agent_instruction = (
         agent_instruction or 
-        instruction
+        instruction or 
+        AGENT_EXPLORATION_TEMPLATE.format(
+            website = url
+        )
     )
 
     judge_instruction = (
         judge_instruction or
-        instruction
+        instruction or 
+        JUDGE_EXPLORATION_TEMPLATE.format(
+            website = url
+        )
     )
 
     observations = []
@@ -198,10 +217,10 @@ def generate_trajectory(
 
         else: outputs = InstaEnvStepOutput(
             observation = env.get_obs(),
-            reward = 0.0,
-            done = False,
-            truncated = False,
-            info = {}
+            reward = DEFAULT_REWARD,
+            done = DEFAULT_DONE,
+            truncated = DEFAULT_TRUNCATED,
+            info = DEFAULT_INFO
         )
 
         is_finished = outputs is None or (
@@ -285,6 +304,11 @@ def generate_trajectory(
     }
 
     return observations, actions, judgment
+
+
+DEFAULT_WEBSITE = "duckduckgo.com"
+DEFAULT_STEPS = []
+DEFAULT_CRITERIA = []
 
 
 def iter_trajectories(
@@ -429,25 +453,37 @@ def iter_trajectories(
         example_dict = dataset[example_id]
 
         domain = example_dict.get(
-            "website", example_dict.get("domain")
+            "website", example_dict.get(
+                "domain", DEFAULT_WEBSITE
+            )
         )
 
         instruction = example_dict.get(
             "instruction", example_dict.get("task")
         )
 
-        agent_instruction = judge_instruction = instruction
+        agent_instruction = example_dict.get(
+            "agent_instruction", example_dict.get(
+                "agent_task", instruction
+            )
+        )
+
+        judge_instruction = example_dict.get(
+            "judge_instruction", example_dict.get(
+                "judge_task", instruction
+            )
+        )
 
         identifier = example_dict.get(
             "identifier", domain
         )
 
         steps = example_dict.get(
-            "steps", []
+            "steps", DEFAULT_STEPS
         )
 
         criteria = example_dict.get(
-            "criteria", []
+            "criteria", DEFAULT_CRITERIA
         )
 
         if add_steps_to_agent and len(steps) > 0:

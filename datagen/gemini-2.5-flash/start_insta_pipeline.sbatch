@@ -2,11 +2,11 @@
 #SBATCH --job-name=insta
 #SBATCH --exclude=shire-1-1,shire-1-6,shire-1-10,shire-2-5,shire-2-9,babel-2-29
 #SBATCH --output=logs/gemini-%A-%a-%N.out
-#SBATCH --time=4:00:00
+#SBATCH --time=5:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --nodes=1
-#SBATCH --partition=preempt
+#SBATCH --partition=general
 #SBATCH --array=0-7
 
 
@@ -53,7 +53,9 @@ conda activate insta
 DATASET=${DATASET:-"data-for-agents/insta-150k-v3"}
 DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
-OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/gemini-2.5-flash-train"}
+SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-"--set_exploration_mode"}
+
+OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/gemini-2.5-flash-exploration"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
@@ -124,6 +126,7 @@ DATA_ARGS=(
     --judgments_dir ${OUTPUT_DIR}/${JUDGE_NAME}
     --dataset ${DATASET}
     --dataset_split ${DATASET_SPLIT}
+    ${SET_EXPLORATION_MODE}
 )
 
 INSTA_ARGS=(

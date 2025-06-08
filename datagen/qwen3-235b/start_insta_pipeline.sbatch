@@ -53,6 +53,8 @@ conda activate insta
 DATASET=${DATASET:-"data-for-agents/insta-150k-v3"}
 DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
+SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
+
 OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/qwen3-235b-test"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
@@ -124,6 +126,7 @@ DATA_ARGS=(
     --judgments_dir ${OUTPUT_DIR}/${JUDGE_NAME}
     --dataset ${DATASET}
     --dataset_split ${DATASET_SPLIT}
+    ${SET_EXPLORATION_MODE}
 )
 
 INSTA_ARGS=(

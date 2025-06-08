@@ -236,6 +236,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--set_exploration_mode",
+        action = "store_true",
+        help = "Set the agent to exploration mode",
+        default = False
+    )
+
+    parser.add_argument(
         "--add_steps_to_agent",
         action = "store_true",
         help = "Add the steps to the instruction",
@@ -410,6 +417,12 @@ if __name__ == "__main__":
         args.dataset,
         split = args.dataset_split
     )
+
+    if args.set_exploration_mode:
+
+        dataset = dataset.remove_columns(list({
+            "instruction", "task", "steps", "criteria"
+        } & set(dataset.column_names)))
 
     pipeline.launch(
         dataset = dataset,
