@@ -387,13 +387,13 @@ Suppose the task is complete, and you want to stop and report your progress:
 Write a 300 word analysis that highlights key information we have discovered, synthesizes our progress on the task, and develops a plan. After your response, provide the next action as JSON in a fenced code block."""
 
 
-USER_PROMPT_TEMPLATE = """You are at {current_url} observing the viewport:
-
-{observation}
-
-## Complete The Following Task
+USER_PROMPT_TEMPLATE = """## Complete The Following Task
 
 {instruction}
+
+You are at {current_url} observing the viewport:
+
+{observation}
 
 ## Your Instructions
 

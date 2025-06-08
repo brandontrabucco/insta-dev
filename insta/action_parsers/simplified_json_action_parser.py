@@ -6,13 +6,13 @@ from insta.action_parsers.json_action_parser import (
 SYSTEM_PROMPT = """You are an agent that interacts with and navigates live webpages. Our goal is to complete an internet-based task by operating a virtual web browser."""
 
 
-USER_PROMPT_TEMPLATE = """You are at {current_url} observing the viewport:
+USER_PROMPT_TEMPLATE = """## Complete The Following Task
 
-{observation}
+{instruction}
 
-## Complete The Following Task
+You are at {current_url} observing the viewport:
 
-{instruction}"""
+{observation}"""
 
 
 class SimplifiedJsonActionParser(JsonActionParser):
