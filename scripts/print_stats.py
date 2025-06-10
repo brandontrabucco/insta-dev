@@ -153,8 +153,28 @@ if __name__ == "__main__":
         total_num_actions
     ))
 
-    print("Number of trajectories: {}".format(
+    print("Number of trajectories: {}\n".format(
         len(all_actions)
+    ))
+
+    trajectories_with_stop = [
+        actions[-1]['function_calls'][0]['dotpath'] == 'stop'
+        for actions in all_actions
+    ]
+
+    print("Fraction trajectories that stop: {:0.2f}".format(
+        sum(trajectories_with_stop)
+        / len(trajectories_with_stop)
+    ))
+
+    length_trajectories_with_stop = [
+        len(actions) for actions in all_actions
+        if actions[-1]['function_calls'][0]['dotpath'] == 'stop'
+    ]
+
+    print("Average length of trajectories that stop: {:0.2f}".format(
+        sum(length_trajectories_with_stop)
+        / len(length_trajectories_with_stop)
     ))
 
     average_num_actions = (
@@ -162,7 +182,7 @@ if __name__ == "__main__":
         len(all_actions)
     )
 
-    print("Average number of actions: {:0.2f}\n".format(
+    print("Average length of trajectories: {:0.2f}\n".format(
         average_num_actions
     ))
 

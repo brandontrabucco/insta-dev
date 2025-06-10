@@ -50,12 +50,12 @@ conda activate insta
 
 # Arguments for data collection
 
-DATASET=${DATASET:-"data-for-agents/insta-150k-v3"}
+DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-exploration-tasks"}
 DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
-SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-"--set_exploration_mode"}
+SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
 
-OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/gemini-2.5-flash-exploration"}
+OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/gemini-2.5-flash-feedback-mode"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}

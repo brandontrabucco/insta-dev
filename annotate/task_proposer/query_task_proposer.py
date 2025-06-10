@@ -3,7 +3,8 @@ from insta import (
     TaskProposerConfig,
     BrowserTaskProposer,
     DEFAULT_TASK_PROPOSER_CONFIG,
-    NULL_TASK_PROPOSAL
+    NULL_TASK_PROPOSAL,
+    AGENT_EXPLORATION_TEMPLATE
 )
 
 from multiprocessing import Pool
@@ -45,12 +46,16 @@ def query_task_proposer(
         "website", example_dict.get("domain")
     )
 
-    instruction = example_dict.get(
-        "instruction", example_dict.get("task")
-    )
-
     identifier = example_dict.get(
         "identifier", website
+    )
+
+    instruction = example_dict.get(
+        "instruction", example_dict.get(
+            "task", AGENT_EXPLORATION_TEMPLATE.format(
+                website = website
+            )
+        )
     )
 
     input_observations_path = os.path.join(
@@ -260,6 +265,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--set_exploration_mode",
+        action = "store_true",
+        help = "Set the agent to exploration mode",
+        default = False
+    )
+
+    parser.add_argument(
         "--seed",
         type = int,
         help = "Seed for the dataset",
@@ -354,6 +366,12 @@ if __name__ == "__main__":
         args.dataset,
         split = args.dataset_split
     )
+
+    if args.set_exploration_mode:
+
+        dataset = dataset.remove_columns(list({
+            "instruction", "task", "steps", "criteria"
+        } & set(dataset.column_names)))
 
     dataset_ids = list(range(len(dataset)))
 

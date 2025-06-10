@@ -20,13 +20,13 @@ TASK_PATTERN = re.compile(
 )
 
 
-SYSTEM_PROMPT = """You are helping me design tasks for a language model agent that interacts with and navigates live webpages. I instructed the agent to complete an initial task on a website, and I will share a sequence of webpages, actions, and a final success score produced by the agent.
+SYSTEM_PROMPT = """You are helping me design tasks for a language model agent that interacts with and navigates live webpages. I instructed the agent to complete an initial task, and I will share a sequence of webpages produced by the agent as it explores the website.
 
 ## Your Instructions
 
-Based on the agent's trajectory, you are helping me design challenging tasks as if you were a real user on the website.
+Based on the agent's trajectory, help me design a challenging task as if you were a real user on the website.
 
-You will provide tasks as JSON in a fenced code block:
+You will provide a task as JSON in a fenced code block:
 
 ```json
 {
@@ -38,106 +38,153 @@ You will provide tasks as JSON in a fenced code block:
 
 Tasks have the following components:
 
-- `proposed_task`: A challenging task that a real user wants to accomplish on the website.
+- `proposed_task`: A challenging 50 word task that a real user may want to accomplish on the website.
 - `steps`: Steps in the most efficient trajectory that completes the task.
 - `criteria`: Rigorous success criteria to determine if the agent completes the task.
+
+Tasks must adhere to the following guidelines:
+
+- Must not require logging in, or making an account.
+- Must not require making a purchase, booking, or placing an order.
+- Must not require creating, deleting, or modifying any posts, articles, or webpages.
 
 ## Example Tasks
 
 I've prepared some examples to inspire your task design.
 
-### awg-fittings.com
+### roofingcalc.com
 
-In this example, we explored the website 'awg-fittings.com' and saw a product listing for the 'C-to-C Hose-Shut-Off Valve', which was listed as having a length of '237 mm' in its product specifications.
+In this example, we explored `roofingcalc.com` and saw a roofing calculator tool that accepts several parameters, including Roof length, Roof width, Roof slope, Roof difficulty, Tear-off/disposal, Number of levels, Skylights, Chimneys, Ridge-vent, and Roofing materials.
 
 ```json
 {
-    "proposed_task": "What is the C-to-C Hose-Shut-Off Valve length in mm on AWG Fittings?",
+    "proposed_task": "Using the roofing calculator, estimate the cost of a new roof for a 50ft length and 30ft width, with a steep 12/12 slope and 'Difficult and cutup' complexity, using 'Copper Panels' as the material. Assume no tear-off, a single-story house, 2 skylights, 0 chimneys, and 20ft of ridge-vent. State the estimated cost.",
     "steps": [
-        "Navigate to 'awg-fittings.com'",
-        "Open the product catalog for fittings",
-        "Locate the product listing for the C-to-C Hose-Shut-Off Valve",
-        "Find the product length in mm, and respond with that length in the answer"
+        "Navigate to 'roofingcalc.com'",
+        "Locate the 'Roofing Estimate Calculator'",
+        "Input '50' for Roof length",
+        "Input '30' for Roof width",
+        "Select '12/12 (steep)' for Roof slope",
+        "Select 'Difficult and cutup' for Roof difficulty",
+        "Select 'No tear-off' for Tear-off/disposal",
+        "Select 'Single-story' for Number of levels",
+        "Input '2' for Skylights",
+        "Input '0' for Chimneys",
+        "Input '20' for Ridge-vent",
+        "Select 'Copper Panels' for Roofing materials",
+        "Click the 'Calculate' button",
+        "Identify and extract the estimated cost displayed after the calculation"
     ],
     "criteria": [
-        "Cite the specific length of '237 mm' for this product"
+        "Successfully input all specified parameters into the calculator.",
+        "Select 'Copper Panels' as the roofing material.",
+        "Successfully trigger the calculation and identify the resulting estimated cost.",
+        "State the estimated cost for the specified parameters."
     ]
 }
 ```
 
-### biodiversitylibrary.org
+### mortgage.com
 
-In this example, we explored 'biodiversitylibrary.org', saw a document titled 'The Angora cat; how to breed train and keep it', and the website had an embedded PDF reader agents can use to open the document.
+In this example, we explored `mortgage.com` and saw a mortgage calculator that can be used to determine what annual interest rate would result in a specific total monthly payment.
 
 ```json
 {
-    "proposed_task": "Open a scanned copy of 'The Angora cat; how to breed train and keep it'.",
+    "proposed_task": "Adjust the mortgage calculator to determine what annual interest rate would result in a total monthly payment of approximately $2,800 for a $400,000 home with a 20% down payment, assuming annual property taxes of $600, annual homeowners insurance of $2,000, and monthly HOA fees of $146. Provide the interest rate and the exact calculated monthly payment.",
     "steps": [
-        "Navigate to 'biodiversitylibrary.org'",
-        "Search for 'The Angora cat; how to breed train and keep it' in the search bar",
-        "Click on the title of the document in the search results",
-        "Confirm the correct document is displayed in an embedded PDF reader"
+        "Navigate to mortgage.com's monthly payment calculator.",
+        "Set the Home Price to $400,000.",
+        "Set the Down Payment to 20%.",
+        "Set the Annual Property Taxes to $600.",
+        "Set the Annual Homeowners Insurance to $2,000.",
+        "Set the Monthly HOA Fees to $146.",
+        "Iteratively adjust the Interest Rate to achieve a total estimated monthly payment of approximately $2,800.",
+        "Once the target payment is reached, extract the final Interest Rate and the exact calculated monthly payment."
     ],
     "criteria": [
-        "Display the correct document in an embedded PDF reader"
+        "The Home Price is set to $400,000.",
+        "The Down Payment is set to 20%.",
+        "The Annual Property Taxes are set to $600.",
+        "The Annual Homeowners Insurance is set to $2,000.",
+        "The Monthly HOA Fees are set to $146.",
+        "The final estimated monthly payment is within a reasonable range (+/- $10) of $2,800.",
+        "State the final interest rate used to achieve the target payment.",
+        "State the exact calculated monthly payment at that interest rate."
     ]
 }
 ```
 
-### scholar.google.com
+### giving.umw.edu
 
-In this example, we explored 'scholar.google.com' and saw a paper titled 'Generative Adversarial Networks' with a citation count of '80613' in the search results (as of today's date).
+In this example, we explored `giving.umw.edu` and saw a form for submitting a one-time gift to the University of Mary Washington, which requires certain personal information.
 
 ```json
 {
-    "proposed_task": "How many citations does the paper 'Generative Adversarial Networks' have?",
+    "proposed_task": "Make a one-time gift of $25 to the Fund for Mary Washington, providing the following personal information: Title: Mr., First Name: John, Last Name: Doe, Street Address 1: 123 Main St, City: Fredericksburg, State: Virginia, Zip: 22401, Country: United States, Phone Area Code: 540, Phone Number: 5551234. Do not actually submit the payment.",
     "steps": [
-        "Navigate to 'scholar.google.com'",
-        "Search for 'Generative Adversarial Networks' in the search bar",
-        "Locate the correct paper in the search results",
-        "Find an up-to-date citation count, and respond with that count in the answer"
+        "Navigate to giving.umw.edu",
+        "Set the donation amount to $25 in the 'Amount' field (id: 145)",
+        "Confirm 'Fund for Mary Washington' is selected as the designation",
+        "Select 'Mr.' for the 'Title' field (id: 955)",
+        "Fill 'John' in the 'First Name' field (id: 972)",
+        "Fill 'Doe' in the 'Last Name' field (id: 989)",
+        "Fill '123 Main St' in the 'Street Address 1' field (id: 1095)",
+        "Fill 'Fredericksburg' in the 'City' field (id: 1112)",
+        "Select 'Virginia' from the 'State' dropdown (id: 1120)",
+        "Fill '22401' in the 'Zip' field (id: 1208)",
+        "Select 'United States' from the 'Country' dropdown (id: 1217)",
+        "Fill '540' in the 'Phone Area Code' field (id: 1486)",
+        "Fill '5551234' in the 'Phone Number' field",
+        "State that all required fields for the donation form have been filled, but do not click 'Finish My Gift' or proceed to payment."
     ],
     "criteria": [
-        "Have an up-to-date citation count, which is '80613' as of April 2025",
-        "The answer matches the citation count for the correct paper in the search results"
+        "The donation amount is set to $25.",
+        "The 'Fund for Mary Washington' is selected.",
+        "All 'Your Information' required fields (Title, First Name, Last Name, Street Address 1, City, State, Zip, Country, Phone Area Code, Phone Number) are filled with the specified information.",
+        "Do not click 'Finish My Gift' or proceed to any payment processing page."
     ]
 }
 ```
 
-### wiktionary.org
+### odetterestaurant.com
 
-In this example, we explored 'wiktionary.org' and saw a webpage discussing the definition and etymology of the word 'serendipity', which is derived from 'Serendip' or 'Serendib', and was coined by English writer and politician Horace Walpole in 1754.
+In this example, we explored `odetterestaurant.com` and saw a 'Reservations' page, which lists policies for dietary accommodations, birthdays, a deposit requirement, cancellations, and rescheduling.
 
 ```json
 {
-    "proposed_task": "What is the definition and etymology of the word 'serendipity'?",
+    "proposed_task": "I want to make a dinner reservation for 4 people at Odette, and one of my guests has a severe dairy allergy. I also want to request a birthday cake for the table. What are the key policies I need to be aware of regarding my guest's allergy, the cake request, and any deposit or cancellation rules for this reservation?",
     "steps": [
-        "Navigate to 'wiktionary.org'",
-        "Search for 'serendipity' in the search bar",
-        "Find the definition and etymology sections of the 'serendipity' page",
-        "Summarize the contents of these sections in the answer"
+        "Navigate to 'odetterestaurant.com'",
+        "Go to the 'Reservations' page",
+        "Identify the policy regarding dairy allergies and other dietary accommodations",
+        "Find the policy for requesting a birthday cake, including notice period and cost",
+        "Locate the deposit requirement per person for dinner reservations",
+        "Determine the cancellation or rescheduling policy and associated timeframe",
+        "Synthesize all relevant policies into a concise answer"
     ],
     "criteria": [
-        "Mention the word is derived from Serendip (or Serendib)",
-        "State it was coined by English writer and politician Horace Walpole in 1754"
+        "State that Odette is unable to accommodate guests with dairy allergies or intolerance.",
+        "State that cakes require a 72-hour notice and cost SGD78++.",
+        "Confirm a deposit of SGD200 per person is required for dinner reservations.",
+        "State that all reservations are final and non-refundable, but changes can be made at least 72 hours prior to the reservation date."
     ]
 }
 ```
 
 ## Formatting Your Response
 
-Write a 300 word analysis that establishes what real users want to accomplish on the website, and highlights key information we saw on the website. After your response, provide your task as JSON in a fenced code block."""
+Write a 300 word analysis that establishes what a real user may want to accomplish on the website, and synthesizes what we saw on the website. After your response, provide a task as JSON in a fenced code block."""
 
 
 USER_PROMPT_TEMPLATE = """## Design A Task For This Website
 
-You are viewing the agent's trajectory.
+You are viewing the agent's trajectory:
 
 {summary}
 
 ## Your Instructions
 
-Based on the agent's trajectory, you are helping me design challenging tasks as if you were a real user on {website}.
+Based on the agent's trajectory, help me design a challenging task as if you were a real user on {website}.
 
 You will provide tasks as JSON in a fenced code block:
 
@@ -151,13 +198,13 @@ You will provide tasks as JSON in a fenced code block:
 
 Tasks have the following components:
 
-- `proposed_task`: A challenging task that a real user wants to accomplish on {website}.
+- `proposed_task`: A challenging 50 word task that a real user may want to accomplish on {website}.
 - `steps`: Steps in the most efficient trajectory that completes the task.
 - `criteria`: Rigorous success criteria to determine if the agent completes the task.
 
 ## Formatting Your Response
 
-Write a 300 word analysis that establishes what real users want to accomplish on {website}, and highlights key information we saw on {website}. After your response, provide your task as JSON in a fenced code block."""
+Write a 300 word analysis that establishes what a real user may want to accomplish on {website}, and synthesizes what we saw on {website}. After your response, provide a task as JSON in a fenced code block."""
 
 
 class JsonTaskParser(BaseTaskParser):

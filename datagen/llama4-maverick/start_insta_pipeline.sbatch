@@ -2,11 +2,11 @@
 #SBATCH --job-name=insta
 #SBATCH --exclude=shire-1-1,shire-1-6,shire-1-10,shire-2-5,shire-2-9,babel-2-29
 #SBATCH --output=logs/llama-%A-%a-%N.out
-#SBATCH --time=6:00:00
+#SBATCH --time=4:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --nodes=1
-#SBATCH --partition=array
+#SBATCH --partition=general
 #SBATCH --array=0-7
 
 
@@ -50,12 +50,12 @@ conda activate insta
 
 # Arguments for data collection
 
-DATASET=${DATASET:-"data-for-agents/insta-150k-v3"}
+DATASET=${DATASET:-"btrabucco/llama4-maverick-tasks"}
 DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
 SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
 
-OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/llama4-maverick-test"}
+OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/llama4-maverick-feedback-mode"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}

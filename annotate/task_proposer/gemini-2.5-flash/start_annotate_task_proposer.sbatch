@@ -7,7 +7,7 @@
 #SBATCH --mem=64G
 #SBATCH --nodes=1
 #SBATCH --partition=general
-#SBATCH --array=0-7
+#SBATCH --array=0-3
 
 
 
@@ -28,10 +28,12 @@ conda activate insta
 
 # Arguments for data collection
 
-DATASET=${DATASET:-"data-for-agents/insta-150k-v3"}
+DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-exploration-tasks"}
 DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
-INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/gemini-2.5-flash-train"}
+SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
+
+INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/gemini-2.5-flash-feedback-mode"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 
@@ -72,6 +74,7 @@ DATA_ARGS=(
     --task_proposer_name ${TASK_PROPOSER_NAME}
     --dataset ${DATASET}
     --dataset_split ${DATASET_SPLIT}
+    ${SET_EXPLORATION_MODE}
 )
 
 ANNOTATE_ARGS=(

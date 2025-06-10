@@ -108,6 +108,7 @@ if __name__ == "__main__":
         worker_fn,
         batched = True,
         remove_columns = dataset.column_names,
+        load_from_cache_file = False,
         batch_size = 32,
         num_proc = 32,
     )

@@ -23,7 +23,7 @@ from typing import List
 
 @register_schema(
     "insta_dropdown",
-    priority = 0,
+    priority = 9,
     behaves_like = [
         "link"
     ]

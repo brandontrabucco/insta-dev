@@ -94,6 +94,12 @@ from insta.tools import (
 from insta.pipeline import (
     InstaPipeline,
     InstaPipelineOutput,
+    AGENT_EXPLORATION_TEMPLATE,
+    JUDGE_EXPLORATION_TEMPLATE,
+    AGENT_STEPS_TEMPLATE,
+    JUDGE_STEPS_TEMPLATE,
+    AGENT_CRITERIA_TEMPLATE,
+    JUDGE_CRITERIA_TEMPLATE
 )
 
 from insta.visualize import (

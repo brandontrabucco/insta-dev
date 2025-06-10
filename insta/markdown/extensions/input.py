@@ -33,7 +33,7 @@ DEFAULT_TITLE = "#"
 
 @register_schema(
     "insta_input",
-    priority = 1,
+    priority = 4,
     behaves_like = [
         "link"
     ]

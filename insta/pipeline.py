@@ -70,11 +70,11 @@ DEFAULT_ADD_STEPS_TO_JUDGE = False
 DEFAULT_ADD_CRITERIA_TO_JUDGE = False
 
 AGENT_EXPLORATION_TEMPLATE = (
-    "Thoroughly explore {website} by navigating pages, highlight interesting content we find, and list what real users can accomplish on this website."
+    "Thoroughly explore this website by navigating pages, highlight interesting content we find, and list what real users can accomplish on this website."
 )
 
 JUDGE_EXPLORATION_TEMPLATE = (
-    "The agent must thoroughly explore {website} by navigating pages, highlight interesting content it finds, and list what real users can accomplish on this website."
+    "The agent must thoroughly explore this website by navigating pages, highlight interesting content it finds, and list what real users can accomplish on this website."
 )
 
 AGENT_STEPS_TEMPLATE = (
