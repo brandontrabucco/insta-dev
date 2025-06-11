@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=insta
-#SBATCH --exclude=babel-6-13,babel-4-9,babel-4-29,babel-13-13,babel-4-17,babel-4-1,babel-13-1,babel-8-13,babel-13-29
+#SBATCH --exclude=shire-1-1,shire-1-6,shire-1-10,shire-2-5,shire-2-9,babel-2-29,babel-0-19
 #SBATCH --output=logs/judge-%A-%a-%N.out
 #SBATCH --time=48:00:00
 #SBATCH --cpus-per-task=8

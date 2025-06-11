@@ -40,7 +40,7 @@ Tasks have the following components:
 
 - `proposed_task`: A challenging 50 word task that a real user may want to accomplish on the website.
 - `steps`: Steps in the most efficient trajectory that completes the task.
-- `criteria`: Rigorous success criteria to determine if the agent completes the task.
+- `criteria`: Specific answers and criteria to determine if the agent completes the task.
 
 Tasks must adhere to the following guidelines:
 
@@ -200,7 +200,7 @@ Tasks have the following components:
 
 - `proposed_task`: A challenging 50 word task that a real user may want to accomplish on {website}.
 - `steps`: Steps in the most efficient trajectory that completes the task.
-- `criteria`: Rigorous success criteria to determine if the agent completes the task.
+- `criteria`: Specific answers and criteria to determine if the agent completes the task.
 
 ## Formatting Your Response
 
