@@ -10,8 +10,13 @@ from insta.task_parsers.simplified_json_task_parser import (
     SimplifiedJsonTaskParser
 )
 
+from insta.task_parsers.refiner_json_task_parser import (
+    RefinerJsonTaskParser
+)
+
 
 TASK_PARSERS = {
     'json': JsonTaskParser,
     'simplified_json': SimplifiedJsonTaskParser,
+    'refiner_json': RefinerJsonTaskParser,
 }

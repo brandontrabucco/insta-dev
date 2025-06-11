@@ -8,7 +8,7 @@ from insta import (
 
 from insta.pipeline import (
     JUDGE_STEPS_TEMPLATE,
-    JUDGE_CRITERIA_TEMPLATE
+    JUDGE_CRITERIA_TEMPLATE,
 )
 
 from multiprocessing import Pool
@@ -29,6 +29,10 @@ import os
 from insta.utils import (
     VALUE_KEYS
 )
+
+
+DEFAULT_STEPS = []
+DEFAULT_CRITERIA = []
 
 
 def query_judge(
@@ -53,18 +57,22 @@ def query_judge(
         "instruction", example_dict.get("task")
     )
 
-    judge_instruction = instruction
+    judge_instruction = example_dict.get(
+        "judge_instruction", example_dict.get(
+            "judge_task", instruction
+        )
+    )
 
     identifier = example_dict.get(
         "identifier", domain
     )
 
     steps = example_dict.get(
-        "steps", []
+        "steps", DEFAULT_STEPS
     )
 
     criteria = example_dict.get(
-        "criteria", []
+        "criteria", DEFAULT_CRITERIA
     )
 
     if add_steps_to_judge and len(steps) > 0:
@@ -275,6 +283,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--judgment_parser",
+        type = str,
+        help = "System prompt and parser for the judge",
+        default = "json"
+    )
+
+    parser.add_argument(
         "--skip_finished",
         action = "store_true",
         help = "Whether to skip existing judgments",
@@ -355,6 +370,7 @@ if __name__ == "__main__":
         client_type = judge_client_type,
         client_kwargs = judge_client_kwargs,
         generation_kwargs = judge_generation_kwargs,
+        judgment_parser = args.judgment_parser,
         log_errors = True,
     )
 

@@ -44,8 +44,13 @@ TASK_PROPOSER_API_KEY=${TASK_PROPOSER_API_KEY:-${TOGETHER_API_KEY}}
 JUDGE_NAME=${JUDGE_NAME:-"llama4-maverick-judge"}
 TASK_PROPOSER_NAME=${TASK_PROPOSER_NAME:-"llama4-maverick-task-proposer"}
 
+ADD_STEPS_TO_TASK_PROPOSER=${ADD_STEPS_TO_TASK_PROPOSER:-"--add_steps_to_task_proposer"}
+ADD_CRITERIA_TO_TASK_PROPOSER=${ADD_CRITERIA_TO_TASK_PROPOSER:-"--add_criteria_to_task_proposer"}
+
 TASK_PROPOSER_DISABLE_THINKING_CHAT_TEMPLATE=${TASK_PROPOSER_DISABLE_THINKING_CHAT_TEMPLATE:-""}
 TASK_PROPOSER_REASONING_EFFORT=${TASK_PROPOSER_REASONING_EFFORT:-""}
+
+TASK_PARSER=${TASK_PARSER:-"json"}
 
 
 
@@ -55,6 +60,8 @@ LLM_ARGS=(
     --task_proposer_model_name ${TASK_PROPOSER_MODEL_NAME}
     --task_proposer_llm_endpoint ${TASK_PROPOSER_LLM_ENDPOINT}
     --task_proposer_api_key ${TASK_PROPOSER_API_KEY}
+    ${ADD_STEPS_TO_TASK_PROPOSER}
+    ${ADD_CRITERIA_TO_TASK_PROPOSER}
 )
 
 SAMPLING_ARGS=(
@@ -72,6 +79,7 @@ DATA_ARGS=(
     --input_data_dir ${INPUT_DATA_DIR}
     --judge_name ${JUDGE_NAME}
     --task_proposer_name ${TASK_PROPOSER_NAME}
+    --task_parser ${TASK_PARSER}
     --dataset ${DATASET}
     --dataset_split ${DATASET_SPLIT}
     ${SET_EXPLORATION_MODE}

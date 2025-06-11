@@ -7,6 +7,11 @@ from insta import (
     AGENT_EXPLORATION_TEMPLATE
 )
 
+from insta.pipeline import (
+    JUDGE_STEPS_TEMPLATE,
+    JUDGE_CRITERIA_TEMPLATE
+)
+
 from multiprocessing import Pool
 from functools import partial
 
@@ -26,6 +31,9 @@ import os
 DEFAULT_AGENT_RESPONSE_KEY = "response"
 DEFAULT_JUDGE_RESPONSE_KEY = "response"
 
+DEFAULT_STEPS = []
+DEFAULT_CRITERIA = []
+
 
 def query_task_proposer(
     example_id: int, dataset: Dataset,
@@ -37,6 +45,8 @@ def query_task_proposer(
     output_tasks_dir: str = None,
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     judge_response_key: str = DEFAULT_JUDGE_RESPONSE_KEY,
+    add_steps_to_task_proposer: bool = True,
+    add_criteria_to_task_proposer: bool = True,
     skip_finished: bool = False,
 ) -> str | None:
 
@@ -57,6 +67,38 @@ def query_task_proposer(
             )
         )
     )
+
+    task_proposer_instruction = example_dict.get(
+        "task_proposer_instruction", example_dict.get(
+            "task_proposer_task", instruction
+        )
+    )
+
+    steps = example_dict.get(
+        "steps", DEFAULT_STEPS
+    )
+
+    criteria = example_dict.get(
+        "criteria", DEFAULT_CRITERIA
+    )
+
+    if add_steps_to_task_proposer and len(steps) > 0:
+
+        task_proposer_instruction = JUDGE_STEPS_TEMPLATE.format(
+            instruction = task_proposer_instruction, steps = "\n".join(
+                "{n}. {x}".format(n = idx + 1, x = part)
+                for idx, part in enumerate(steps)
+            )
+        )
+
+    if add_criteria_to_task_proposer and len(criteria) > 0:
+
+        task_proposer_instruction = JUDGE_CRITERIA_TEMPLATE.format(
+            instruction = task_proposer_instruction, criteria = "\n".join(
+                "{n}. {x}".format(n = idx + 1, x = part)
+                for idx, part in enumerate(criteria)
+            )
+        )
 
     input_observations_path = os.path.join(
         input_observations_dir,
@@ -112,7 +154,7 @@ def query_task_proposer(
     )
 
     task_proposal = task_proposer(
-        instruction = instruction,
+        instruction = task_proposer_instruction,
         website = website,
         observations = [
             x["processed_text"]
@@ -220,6 +262,20 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--add_steps_to_task_proposer",
+        action = "store_true",
+        help = "Add the steps to the instruction",
+        default = False
+    )
+
+    parser.add_argument(
+        "--add_criteria_to_task_proposer",
+        action = "store_true",
+        help = "Add the success criteria to the instruction",
+        default = False
+    )
+
+    parser.add_argument(
         "--task_proposer_name",
         type = str,
         default = "gemini-2.5-flash-task-proposer"
@@ -255,6 +311,13 @@ if __name__ == "__main__":
         type = str,
         help = "key for response from the agent",
         default = "response",
+    )
+
+    parser.add_argument(
+        "--task_parser",
+        type = str,
+        help = "System prompt and parser for task proposal",
+        default = "json"
     )
 
     parser.add_argument(
@@ -339,6 +402,7 @@ if __name__ == "__main__":
         client_type = task_proposer_client_type,
         client_kwargs = task_proposer_client_kwargs,
         generation_kwargs = task_proposer_generation_kwargs,
+        task_parser = args.task_parser,
         log_errors = True,
     )
 
@@ -408,6 +472,8 @@ if __name__ == "__main__":
         output_tasks_dir = output_tasks_dir,
         agent_response_key = args.agent_response_key,
         judge_response_key = args.judge_response_key,
+        add_steps_to_task_proposer = args.add_steps_to_task_proposer,
+        add_criteria_to_task_proposer = args.add_criteria_to_task_proposer,
         skip_finished = args.skip_finished,
     )
     
