@@ -2,16 +2,18 @@
 #SBATCH --job-name=insta
 #SBATCH --exclude=shire-1-1,shire-1-6,shire-1-10,shire-2-5,shire-2-9,babel-2-29,babel-0-19
 #SBATCH --output=logs/gemini-%A-%a-%N.out
-#SBATCH --time=5:00:00
+#SBATCH --time=8:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --nodes=1
 #SBATCH --partition=general
-#SBATCH --array=0-7
+#SBATCH --array=0-0
 
 
 
 # Slurm arguments for parallelism
+
+export NFS_DIR=${NFS_DIR:-/data/matrix/projects/rsalakhugroup}
 
 SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-0}
 SLURM_ARRAY_TASK_COUNT=${SLURM_ARRAY_TASK_COUNT:-1}
@@ -37,7 +39,6 @@ SINGULARITY_ARGS=(
     --env SERVER_LOG=${PLAYWRIGHT_LOG},SERVER_WORKERS=${PLAYWRIGHT_WORKERS},SERVER_BASE_PORT=${PLAYWRIGHT_PORT}
 )
 
-export NFS_DIR=${NFS_DIR:-/data/matrix/projects/rsalakhugroup}
 singularity run ${SINGULARITY_ARGS[@]} -w \
     ${NFS_DIR}/btrabucc/insta-browser-environment.img & 
 
@@ -50,21 +51,21 @@ conda activate insta
 
 # Arguments for data collection
 
-DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-feedback-tasks-n3"}
+DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-step6"}
 DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
 SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
 
-OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/gemini-2.5-flash-feedback-mode-n4"}
+INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment/gemini-2.5-flash-step6"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"gemini-2.5-flash-preview-05-20"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"gemini-2.5-flash"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"https://generativelanguage.googleapis.com/v1beta/openai/"}
 AGENT_API_KEY=${AGENT_API_KEY:-${GOOGLE_API_KEY}}
 
-JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gemini-2.5-flash-preview-05-20"}
+JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gemini-2.5-flash"}
 JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://generativelanguage.googleapis.com/v1beta/openai/"}
 JUDGE_API_KEY=${JUDGE_API_KEY:-${GOOGLE_API_KEY}}
 
@@ -120,10 +121,10 @@ PIPELINE_ARGS=(
 )
 
 DATA_ARGS=(
-    --observations_dir ${OUTPUT_DIR}/observations
-    --screenshot_dir ${OUTPUT_DIR}/screenshots
-    --actions_dir ${OUTPUT_DIR}/actions
-    --judgments_dir ${OUTPUT_DIR}/${JUDGE_NAME}
+    --observations_dir ${INPUT_DATA_DIR}/observations
+    --screenshot_dir ${INPUT_DATA_DIR}/screenshots
+    --actions_dir ${INPUT_DATA_DIR}/actions
+    --judgments_dir ${INPUT_DATA_DIR}/${JUDGE_NAME}
     --dataset ${DATASET}
     --dataset_split ${DATASET_SPLIT}
     ${SET_EXPLORATION_MODE}

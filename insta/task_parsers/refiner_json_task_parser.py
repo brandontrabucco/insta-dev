@@ -35,101 +35,90 @@ Tasks must adhere to the following guidelines:
 
 I've prepared some examples to inspire your task design.
 
-### roofingcalc.com
+### `liveevents.iadb.org`
 
-In this example, we explored `roofingcalc.com` and saw a roofing calculator tool that accepts several parameters, including Roof length, Roof width, Roof slope, Roof difficulty, Tear-off/disposal, Number of levels, Skylights, Chimneys, Ridge-vent, and Roofing materials.
+In this example, we explored `liveevents.iadb.org` and saw an event page for the IDB Annual Meetings, which includes a list of the official hotels and instructions for official delegations.
 
 ```json
 {
-    "proposed_task": "Using the roofing calculator, estimate the cost of a new roof for a 50ft length and 30ft width, with a steep 12/12 slope and 'Difficult and cutup' complexity, using 'Copper Panels' as the material. Assume no tear-off, a single-story house, 2 skylights, 0 chimneys, and 20ft of ridge-vent. State the estimated cost.",
+    "proposed_task": "I'm attending the IDB Annual Meetings and need to find accommodation. Please provide the address and phone number for the 'Pullman Santiago Vitacura' and 'Double Tree by Hilton' hotels. Additionally, what specific details do official delegations need to provide to access their special hotel block?",
     "steps": [
-        "Navigate to 'roofingcalc.com'",
-        "Locate the 'Roofing Estimate Calculator'",
-        "Input '50' for Roof length",
-        "Input '30' for Roof width",
-        "Select '12/12 (steep)' for Roof slope",
-        "Select 'Difficult and cutup' for Roof difficulty",
-        "Select 'No tear-off' for Tear-off/disposal",
-        "Select 'Single-story' for Number of levels",
-        "Input '2' for Skylights",
-        "Input '0' for Chimneys",
-        "Input '20' for Ridge-vent",
-        "Select 'Copper Panels' for Roofing materials",
-        "Click the 'Calculate' button",
-        "Identify and extract the estimated cost displayed after the calculation"
+        "Navigate to 'https://liveevents.iadb.org'.",
+        "Click on the 'Hotels' link in the navigation menu (ID 79).",
+        "Locate 'Pullman Santiago Vitacura' in the 'OFFICIAL HOTELS FOR THE ANNUAL MEETINGS' list and extract its address and telephone number.",
+        "Locate 'Double Tree by Hilton' in the same list and extract its address and telephone number.",
+        "Read the instructions under 'HOTELS FOR OFFICIAL DELEGATIONS' to identify the required information for accessing the special hotel block.",
+        "State the addresses and telephone numbers for both hotels and the required information for official delegations."
     ],
     "criteria": [
-        "Successfully input all specified parameters into the calculator.",
-        "Select 'Copper Panels' as the roofing material.",
-        "Successfully trigger the calculation and identify the resulting estimated cost.",
-        "State the estimated cost for the specified parameters."
+        "The agent successfully navigates to the 'Hotels' page on 'liveevents.iadb.org'.",
+        "The address for Pullman Santiago Vitacura is stated as 'Avenida Vitacura 3201 Vitacura, 7630578 Santiago, Chile'.",
+        "The telephone number for Pullman Santiago Vitacura is stated as '+56 2 2944 7800'.",
+        "The address for Double Tree by Hilton is stated as 'Avenida Vitacura 2727, Las Condes Santiago, Chile'.",
+        "The telephone number for Double Tree by Hilton is stated as '+56 2 2587 7000'.",
+        "The agent states that official delegations need to include 'the name of your country' and 'the code (included in the invitation letters to the Governors)' to access the special hotel block."
     ]
 }
 ```
 
-### mortgage.com
+### `boldtcastle.com`
 
-In this example, we explored `mortgage.com` and saw a mortgage calculator that can be used to determine what annual interest rate would result in a specific total monthly payment.
+In this example, we explored `boldtcastle.com` and saw a page with information about visiting Boldt Castle, including operating dates, admission prices, and how to get to Heart Island.
 
 ```json
 {
-    "proposed_task": "Adjust the mortgage calculator to determine what annual interest rate would result in a total monthly payment of approximately $2,800 for a $400,000 home with a 20% down payment, assuming annual property taxes of $600, annual homeowners insurance of $2,000, and monthly HOA fees of $146. Provide the interest rate and the exact calculated monthly payment.",
+    "proposed_task": "I'm planning a visit to Boldt Castle in 2025 with one adult and one 6-year-old. Please provide the operating dates and hours for the 2025 season, the admission cost for just the castle for both of us, how to get to Heart Island, and the best phone number for general inquiries.",
     "steps": [
-        "Navigate to mortgage.com's monthly payment calculator.",
-        "Set the Home Price to $400,000.",
-        "Set the Down Payment to 20%.",
-        "Set the Annual Property Taxes to $600.",
-        "Set the Annual Homeowners Insurance to $2,000.",
-        "Set the Monthly HOA Fees to $146.",
-        "Iteratively adjust the Interest Rate to achieve a total estimated monthly payment of approximately $2,800.",
-        "Once the target payment is reached, extract the final Interest Rate and the exact calculated monthly payment."
+        "Navigate to 'boldtcastle.com'.",
+        "Click on the 'Visiting' link.",
+        "Click on the 'Plan Your Visit' link.",
+        "Identify the 2025 season operating dates and hours for Boldt Castle.",
+        "Find the Boldt Castle-only admission price for an adult (13+ years).",
+        "Find the Boldt Castle-only admission price for a child aged 6 (5-12 years).",
+        "Locate information on how to get to Boldt Castle on Heart Island.",
+        "Find the general inquiry phone number for Boldt Castle.",
+        "Synthesize all collected information into a concise answer."
     ],
     "criteria": [
-        "The Home Price is set to $400,000.",
-        "The Down Payment is set to 20%.",
-        "The Annual Property Taxes are set to $600.",
-        "The Annual Homeowners Insurance is set to $2,000.",
-        "The Monthly HOA Fees are set to $146.",
-        "The final estimated monthly payment is within a reasonable range (+/- $10) of $2,800.",
-        "State the final interest rate used to achieve the target payment.",
-        "State the exact calculated monthly payment at that interest rate."
+        "State the 2025 season operating dates and hours for Boldt Castle as May 10 - October 13, 10:30 AM - 6:30 PM.",
+        "State the adult admission price for Boldt Castle only as $13.50.",
+        "State the admission price for a child aged 6 for Boldt Castle only as $9.50.",
+        "Provide the physical location of Boldt Castle (Heart Island, Alexandria Bay, New York) and mention it's only accessible by water.",
+        "Provide the general inquiry phone number for Boldt Castle as 315-482-9724."
     ]
 }
 ```
 
-### giving.umw.edu
+### `visitwestchesterny.com`
 
-In this example, we explored `giving.umw.edu` and saw a form for submitting a one-time gift to the University of Mary Washington, which requires certain personal information.
+In this example, we explored `visitwestchesterny.com` and saw a page that lists various coffee houses in Westchester County, including their names, addresses, and links to their descriptions.
 
 ```json
 {
-    "proposed_task": "Make a one-time gift of $25 to the Fund for Mary Washington, providing the following personal information: Title: Mr., First Name: John, Last Name: Doe, Street Address 1: 123 Main St, City: Fredericksburg, State: Virginia, Zip: 22401, Country: United States, Phone Area Code: 540, Phone Number: 5551234. Do not actually submit the payment.",
+    "proposed_task": "I'm looking for a cozy coffee shop in Westchester County. Navigate to the 'Coffee Houses' section on the Visit Westchester NY website. Find a coffee shop described as 'cozy' and provide its name, full address, and the exact sentence from its description that indicates it is cozy.",
     "steps": [
-        "Navigate to giving.umw.edu",
-        "Set the donation amount to $25 in the 'Amount' field (id: 145)",
-        "Confirm 'Fund for Mary Washington' is selected as the designation",
-        "Select 'Mr.' for the 'Title' field (id: 955)",
-        "Fill 'John' in the 'First Name' field (id: 972)",
-        "Fill 'Doe' in the 'Last Name' field (id: 989)",
-        "Fill '123 Main St' in the 'Street Address 1' field (id: 1095)",
-        "Fill 'Fredericksburg' in the 'City' field (id: 1112)",
-        "Select 'Virginia' from the 'State' dropdown (id: 1120)",
-        "Fill '22401' in the 'Zip' field (id: 1208)",
-        "Select 'United States' from the 'Country' dropdown (id: 1217)",
-        "Fill '540' in the 'Phone Area Code' field (id: 1486)",
-        "Fill '5551234' in the 'Phone Number' field",
-        "State that all required fields for the donation form have been filled, but do not click 'Finish My Gift' or proceed to payment."
+        "Navigate to 'visitwestchesterny.com'",
+        "Click on 'Things to Do'",
+        "Click on 'Food and Drink'",
+        "Click on 'Coffee Houses'",
+        "Scroll down to view the coffee shop listings.",
+        "Identify 'Altamira Cafe Bar' (or any other coffee shop) described as 'cozy'.",
+        "Extract the name and address of the identified coffee shop.",
+        "Click the 'Details' link for the identified coffee shop.",
+        "Identify and extract the exact sentence from the description on its dedicated page that indicates it is cozy."
     ],
     "criteria": [
-        "The donation amount is set to $25.",
-        "The 'Fund for Mary Washington' is selected.",
-        "All 'Your Information' required fields (Title, First Name, Last Name, Street Address 1, City, State, Zip, Country, Phone Area Code, Phone Number) are filled with the specified information.",
-        "Do not click 'Finish My Gift' or proceed to any payment processing page."
+        "Successfully navigate to the 'Coffee Houses' page.",
+        "Identify a coffee shop described as 'cozy' (e.g., 'Altamira Cafe Bar').",
+        "State the name of the identified coffee shop (e.g., 'Altamira Cafe Bar').",
+        "State the full address of the identified coffee shop (e.g., '245 Main St., New Rochelle, NY 10801').",
+        "Successfully navigate to the 'Details' page for the identified coffee shop.",
+        "Correctly state the exact sentence from the description that indicates it is cozy (e.g., 'Relax in the cozy shop or take a treat to go with piping hot espresso, a cold coffee, delicious desserts and delightful sandwiches.')."
     ]
 }
 ```
 
-### odetterestaurant.com
+### `odetterestaurant.com`
 
 In this example, we explored `odetterestaurant.com` and saw a 'Reservations' page, which lists policies for dietary accommodations, birthdays, a deposit requirement, cancellations, and rescheduling.
 
@@ -150,6 +139,121 @@ In this example, we explored `odetterestaurant.com` and saw a 'Reservations' pag
         "State that cakes require a 72-hour notice and cost SGD78++.",
         "Confirm a deposit of SGD200 per person is required for dinner reservations.",
         "State that all reservations are final and non-refundable, but changes can be made at least 72 hours prior to the reservation date."
+    ]
+}
+```
+
+### `dottyabouticecream.co.uk`
+
+In this example, we explored `dottyabouticecream.co.uk` and saw a form for hiring Dotty's ice cream van for corporate events, which includes fields for event details, guest count, and flavor inquiries.
+
+```json
+{
+    "proposed_task": "Inquire about hiring Dotty's ice cream van for a corporate event in Manchester, M1 1AE, on August 15th, 2024, from 2 PM to 4 PM, for 100 guests. Ask if vanilla, honeycomb crunch, and mango sorbet are available. Fill out the 'Get in Touch' form with your details (Jane Doe, jane.doe@example.com, 07123456789) and note you found them via a web search. Do not submit the form.",
+    "steps": [
+        "Navigate to the 'Get in Touch' page on dottyabouticecream.co.uk.",
+        "Fill 'Jane Doe' into the 'Name' field.",
+        "Fill 'jane.doe@example.com' into the 'Email' field.",
+        "Fill '07123456789' into the 'Telephone Number' field.",
+        "Fill 'August 15th, 2024' into the 'Event Date' field.",
+        "Fill '2 PM - 4 PM' into the 'Time of Ice Cream Service' field.",
+        "Fill 'Manchester, M1 1AE' into the 'Venue Address (incl. Postcode)' field.",
+        "Fill '100' into the 'Number of Expected Guests' field.",
+        "Fill 'Web Search' into the 'Where Did You Hear About Dotty?' field.",
+        "Fill the 'Message' field with an inquiry about the availability of 'Vanilla, Honeycomb Crunch, and Mango Sorbet' flavors for a corporate event.",
+        "Confirm all specified fields are accurately filled, but do not click the 'Gimmie Ice Cream' submit button."
+    ],
+    "criteria": [
+        "The agent successfully navigates to the 'Get in Touch' page.",
+        "The 'Name' field is filled with 'Jane Doe'.",
+        "The 'Email' field is filled with 'jane.doe@example.com'.",
+        "The 'Telephone Number' field is filled with '07123456789'.",
+        "The 'Event Date' field is filled with 'August 15th, 2024'.",
+        "The 'Time of Ice Cream Service' field is filled with '2 PM - 4 PM'.",
+        "The 'Venue Address (incl. Postcode)' field is filled with 'Manchester, M1 1AE'.",
+        "The 'Number of Expected Guests' field is filled with '100'.",
+        "The 'Where Did You Hear About Dotty?' field is filled with 'Web Search'.",
+        "The 'Message' field clearly inquires about the availability of 'Vanilla, Honeycomb Crunch, and Mango Sorbet' flavors for a corporate event.",
+        "The agent does not submit the form by clicking the 'Gimmie Ice Cream' button."
+    ]
+}
+```
+
+### `engineered.polestar.com`
+
+In this example, we explored `engineered.polestar.com` and saw a page with information about Polestar Engineered Optimization for various Volvo models, including the 2023 Volvo XC60 with a B5 Drive-E engine.
+
+```json
+{
+    "proposed_task": "Is a Polestar Engineered Optimization available for a 2023 Volvo XC60 with a B5 Drive-E engine? If so, what are the primary performance benefits, how long does the installation take, and how would I find a dealer for this service?",
+    "steps": [
+        "Navigate to engineered.polestar.com.",
+        "Under 'Can My Volvo Be Optimised?', select 'XC' then 'New XC60' for the model.",
+        "Locate and select 'XC60 B5 Drive-E AWD Automatic 2023' or 'XC60 B5 Drive-E FWD Automatic 2023' to view its optimization details.",
+        "Confirm if the vehicle is 'Approved for Polestar Engineered Optimization'.",
+        "Identify the primary performance benefits listed for the optimization.",
+        "Determine the approximate installation time.",
+        "Click on any 'Find a retailer' or 'Contact a dealer' links to see where they lead.",
+        "Based on the website's information, describe how a user would find a dealer for installation.",
+        "Synthesize all gathered information to answer the task."
+    ],
+    "criteria": [
+        "Confirm that a 2023 Volvo XC60 with a B5 Drive-E engine is 'Approved for Polestar Engineered Optimization'.",
+        "State the primary performance benefit as 'Power Mid-Range up to (hp) +3%' (from the specific product page) or 'Up to +15% increased mid-range power' (from the general 'Get optimisation' page).",
+        "State that the installation takes 'less than 60 minutes'.",
+        "Clearly state that clicking the 'Find a retailer' or 'Contact a dealer' links does not lead to a functional dealer search tool, and that users are advised to contact their local Volvo retailer directly for further questions."
+    ]
+}
+```
+
+### `ajga.org`
+
+In this example, we explored `ajga.org` and saw a page with information about Performance Based Entry (PBE) Stars for junior golfers, including how they carry over to the next season and tips for maximizing tournament opportunities.
+
+```json
+{
+    "proposed_task": "As a junior golfer, I need to understand how my Performance Based Entry (PBE) Stars carry over to the next season on the AJGA circuit. Additionally, I'm looking for two tips from the website on how to best maximize my opportunities to play in tournaments. Can you provide this information?",
+    "steps": [
+        "Navigate to the 'Juniors' section of the AJGA website.",
+        "Click on 'How to Play in the AJGA'.",
+        "Click on the 'PBE' link within the 'How to Play in the AJGA' section.",
+        "Scroll down to locate and click on the 'Important Notes and Tips' link.",
+        "Identify and extract information regarding the carry-over of Performance Stars to the next season.",
+        "Identify and extract two distinct tips that help players maximize their tournament playing opportunities.",
+        "Synthesize the gathered information to provide a comprehensive answer."
+    ],
+    "criteria": [
+        "Explain that Performance Stars earned in one year (e.g., 2024) are carried over to the beginning of the next season (e.g., 2025) and are combined with new membership Performance Stars based on grad year.",
+        "Identify and state that 'Plan your tournament schedule early to maximize playing opportunities and prevent missed deadlines.' is a key recommendation.",
+        "Identify and state that 'Qualifiers are great opportunities for all players to earn Performance Stars and build their status.' is a second key recommendation."
+    ]
+}
+```
+
+### `passports.gov.au`
+
+In this example, we explored `passports.gov.au` and saw a page with a section about the documents needed to prove Australian citizenship for individuals born in Australia on or after August 20, 1986.
+
+```json
+{
+    "proposed_task": "I was born in Australia on or after August 20, 1986, and am applying for my first Australian passport. What documents do I need to prove my Australian citizenship? Please list the primary document, acceptable alternatives, and any specific requirements for proving citizenship by birth based on my parents' or grandparents' status.",
+    "steps": [
+        "Navigate to 'passports.gov.au'.",
+        "Navigate to the 'How it works' section.",
+        "From 'How it works', navigate to 'Documents you need'.",
+        "On the 'Documents you need' page, navigate to the 'Citizenship' section.",
+        "Within the 'Citizenship' section, locate the information for individuals 'Born in Australia on or after 20 August 1986'.",
+        "Identify the primary document required for proof of citizenship.",
+        "Identify and list all acceptable alternative documents.",
+        "Detail the specific scenarios for proving citizenship by birth, including those involving parents' or grandparents' documentation and the special case for permanent resident parents."
+    ],
+    "criteria": [
+        "State that the primary document is the applicant's full Australian birth certificate.",
+        "List an Australian citizenship certificate in the applicant's name as an acceptable alternative.",
+        "List an Australian passport issued in the applicant's name on or after 1 January 2000 that was valid for at least two years as an acceptable alternative.",
+        "Detail the scenario where one parent was an Australian permanent resident or citizen, specifying the required parental documents (birth certificate, passport, or citizenship certificate).",
+        "Explicitly mention that if both parents were Australian permanent residents when the applicant was born, evidence of citizenship must be obtained from the Department of Home Affairs.",
+        "Include the scenario involving grandparents' documents (birth certificate, passport, or citizenship certificate) if the parent was born in Australia on or after 20 August 1986."
     ]
 }
 ```

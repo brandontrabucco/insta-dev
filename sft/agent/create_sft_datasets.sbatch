@@ -12,18 +12,18 @@ conda activate insta
 
 NFS_DIR=${NFS_DIR:-"/data/matrix/projects/rsalakhugroup"}
 
-INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/gemini-2.5-flash-train"}
-SFT_DATASET_PREFIX=${SFT_DATASET_PREFIX:-"${NFS_DIR}/btrabucc/neurips_sft_agent/gemini-2.5-flash-train"}
+INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment/gemini-2.5-flash-step6-sft"}
+SFT_DATASET_PREFIX=${SFT_DATASET_PREFIX:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment_sft/gemini-2.5-flash-step6-sft"}
 
 export HF_HOME=${NFS_DIR}/btrabucc/hfcache
 huggingface-cli login --token $HUGGINGFACE_ACCESS_TOKEN
 
-ALL_JUDGE_NAMES=${ALL_JUDGE_NAMES:-"gemini-2.5-flash-judge qwen3-235b-judge llama4-maverick-judge"}
-ALL_MAX_NUM_SAMPLES=${ALL_MAX_NUM_SAMPLES:-"40000"}
+ALL_JUDGE_NAMES=${ALL_JUDGE_NAMES:-"gemini-2.5-flash-judge"}
+ALL_MAX_NUM_SAMPLES=${ALL_MAX_NUM_SAMPLES:-"5000"}
 ALL_SUCCESS_THRESHOLDS=${ALL_SUCCESS_THRESHOLDS:-"1.0"}
-ALL_SECONDARY_THRESHOLDS=${ALL_SECONDARY_THRESHOLDS:-"0.5 0.7 1.0"}
+ALL_SECONDARY_THRESHOLDS=${ALL_SECONDARY_THRESHOLDS:-"0.0"}
 
-JUDGE_NAME="all-judges"
+JUDGE_NAME="gemini-2.5-flash-judge"
 
 for MAX_NUM_SAMPLES in ${ALL_MAX_NUM_SAMPLES}; do
 for SUCCESS_THRESHOLD in ${ALL_SUCCESS_THRESHOLDS}; do

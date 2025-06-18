@@ -13,6 +13,8 @@
 
 # Slurm arguments for parallelism
 
+export NFS_DIR=${NFS_DIR:-/data/matrix/projects/rsalakhugroup}
+
 SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-0}
 SLURM_ARRAY_TASK_COUNT=${SLURM_ARRAY_TASK_COUNT:-1}
 
@@ -37,7 +39,6 @@ SINGULARITY_ARGS=(
     --env SERVER_LOG=${PLAYWRIGHT_LOG},SERVER_WORKERS=${PLAYWRIGHT_WORKERS},SERVER_BASE_PORT=${PLAYWRIGHT_PORT}
 )
 
-export NFS_DIR=${NFS_DIR:-/data/matrix/projects/rsalakhugroup}
 singularity run ${SINGULARITY_ARGS[@]} -w \
     ${NFS_DIR}/btrabucc/insta-browser-environment.img & 
 
@@ -55,7 +56,7 @@ DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
 SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
 
-OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/qwen3-235b-test"}
+INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/qwen3-235b-test"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
@@ -120,10 +121,10 @@ PIPELINE_ARGS=(
 )
 
 DATA_ARGS=(
-    --observations_dir ${OUTPUT_DIR}/observations
-    --screenshot_dir ${OUTPUT_DIR}/screenshots
-    --actions_dir ${OUTPUT_DIR}/actions
-    --judgments_dir ${OUTPUT_DIR}/${JUDGE_NAME}
+    --observations_dir ${INPUT_DATA_DIR}/observations
+    --screenshot_dir ${INPUT_DATA_DIR}/screenshots
+    --actions_dir ${INPUT_DATA_DIR}/actions
+    --judgments_dir ${INPUT_DATA_DIR}/${JUDGE_NAME}
     --dataset ${DATASET}
     --dataset_split ${DATASET_SPLIT}
     ${SET_EXPLORATION_MODE}

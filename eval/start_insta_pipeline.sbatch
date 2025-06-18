@@ -51,17 +51,17 @@ conda activate insta
 
 # Arguments for data collection
 
-DATASET=${DATASET:-"data-for-agents/insta-150k-v3"}
-DATASET_SPLIT=${DATASET_SPLIT:-"test"}
+DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-step6"}
+DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
 SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
 
-OUTPUT_DIR=${OUTPUT_DIR:-"${NFS_DIR}/btrabucc/neurips_sft_agent/qwen3-1.7b-sft-gemini-2.5-flash-40000x-1.0s-0.5c-all-judges"}
+INPUT_DATA_DIR=${INPUT_DATA_DIR:-"/data/matrix/projects/rsalakhugroup/btrabucc/neurips_feedback_experiment_sft/qwen3-1.7b-step5-5000x-1.0s-0.0c-gemini-2.5-flash-judge-sc"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"${NFS_DIR}/btrabucc/neurips_sft_agent/qwen3-1.7b-sft-gemini-2.5-flash-40000x-1.0s-0.5c-all-judges"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"/data/matrix/projects/rsalakhugroup/btrabucc/neurips_feedback_experiment_sft/qwen3-1.7b-step5-5000x-1.0s-0.0c-gemini-2.5-flash-judge"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:${AGENT_LLM_ENDPOINT_PORT}/v1"}
 AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
 
@@ -71,8 +71,8 @@ JUDGE_API_KEY=${JUDGE_API_KEY:-${GOOGLE_API_KEY}}
 
 JUDGE_NAME=${JUDGE_NAME:-"gemini-2.5-flash-judge"}
 
-ADD_STEPS_TO_AGENT=${ADD_STEPS_TO_AGENT:-""}
-ADD_CRITERIA_TO_AGENT=${ADD_CRITERIA_TO_AGENT:-""}
+ADD_STEPS_TO_AGENT=${ADD_STEPS_TO_AGENT:-"--add_steps_to_agent"}
+ADD_CRITERIA_TO_AGENT=${ADD_CRITERIA_TO_AGENT:-"--add_criteria_to_agent"}
 
 ADD_STEPS_TO_JUDGE=${ADD_STEPS_TO_JUDGE:-"--add_steps_to_judge"}
 ADD_CRITERIA_TO_JUDGE=${ADD_CRITERIA_TO_JUDGE:-"--add_criteria_to_judge"}
@@ -132,10 +132,10 @@ PIPELINE_ARGS=(
 )
 
 DATA_ARGS=(
-    --observations_dir ${OUTPUT_DIR}/observations
-    --screenshot_dir ${OUTPUT_DIR}/screenshots
-    --actions_dir ${OUTPUT_DIR}/actions
-    --judgments_dir ${OUTPUT_DIR}/${JUDGE_NAME}
+    --observations_dir ${INPUT_DATA_DIR}/observations
+    --screenshot_dir ${INPUT_DATA_DIR}/screenshots
+    --actions_dir ${INPUT_DATA_DIR}/actions
+    --judgments_dir ${INPUT_DATA_DIR}/${JUDGE_NAME}
     --dataset ${DATASET}
     --dataset_split ${DATASET_SPLIT}
     ${SET_EXPLORATION_MODE}

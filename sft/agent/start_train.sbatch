@@ -13,8 +13,8 @@ conda activate insta
 
 NFS_DIR=${NFS_DIR:-"/data/matrix/projects/rsalakhugroup"}
 
-SFT_DATASET_PREFIX=${SFT_DATASET_PREFIX:-"${NFS_DIR}/btrabucc/neurips_sft_agent/gemini-2.5-flash-train"}
-SFT_MODEL_PREFIX=${SFT_MODEL_PREFIX:-"${NFS_DIR}/btrabucc/neurips_sft_agent/qwen3-1.7b-sft-gemini-2.5-flash"}
+SFT_DATASET_PREFIX=${SFT_DATASET_PREFIX:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment_sft/gemini-2.5-flash-step6-sft"}
+SFT_MODEL_PREFIX=${SFT_MODEL_PREFIX:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment_sft/qwen3-1.7b-step6-e5"}
 
 export HF_HOME=${NFS_DIR}/btrabucc/hfcache
 huggingface-cli login --token $HUGGINGFACE_ACCESS_TOKEN
@@ -22,10 +22,10 @@ huggingface-cli login --token $HUGGINGFACE_ACCESS_TOKEN
 ACCELERATE_CONFIG=${ACCELERATE_CONFIG:-"sft/accelerate.yaml"}
 MODEL_NAME=${MODEL_NAME:-"Qwen/Qwen3-1.7B"}
 
-ALL_JUDGE_NAMES=${ALL_JUDGE_NAMES:-"all-judges"}
-ALL_MAX_NUM_SAMPLES=${ALL_MAX_NUM_SAMPLES:-"40000"}
+ALL_JUDGE_NAMES=${ALL_JUDGE_NAMES:-"gemini-2.5-flash-judge"}
+ALL_MAX_NUM_SAMPLES=${ALL_MAX_NUM_SAMPLES:-"5000"}
 ALL_SUCCESS_THRESHOLDS=${ALL_SUCCESS_THRESHOLDS:-"1.0"}
-ALL_SECONDARY_THRESHOLDS=${ALL_SECONDARY_THRESHOLDS:-"0.5 0.7 1.0"}
+ALL_SECONDARY_THRESHOLDS=${ALL_SECONDARY_THRESHOLDS:-"0.0"}
 
 for JUDGE_NAME in ${ALL_JUDGE_NAMES}; do
 for MAX_NUM_SAMPLES in ${ALL_MAX_NUM_SAMPLES}; do
@@ -42,7 +42,7 @@ TRAINING_ARGS=(
     --sft_model_path ${SFT_MODEL_PATH}
     --sft_dataset_path ${SFT_DATASET_PATH}
     --max_seq_length 16384
-    --num_epochs 1
+    --num_epochs 5
     --use_bf16
 )
 

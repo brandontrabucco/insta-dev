@@ -7,7 +7,7 @@
 #SBATCH --mem=64G
 #SBATCH --nodes=1
 #SBATCH --partition=general
-#SBATCH --array=0-3
+#SBATCH --array=0-1
 
 
 
@@ -28,21 +28,21 @@ conda activate insta
 
 # Arguments for data collection
 
-DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-feedback-tasks-n2"}
+DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-step6"}
 DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
 SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
 
-INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/gemini-2.5-flash-feedback-mode-n3"}
+INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment/gemini-2.5-flash-step6"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 
-TASK_PROPOSER_MODEL_NAME=${TASK_PROPOSER_MODEL_NAME:-"gemini-2.5-flash-preview-05-20"}
+TASK_PROPOSER_MODEL_NAME=${TASK_PROPOSER_MODEL_NAME:-"gemini-2.5-flash"}
 TASK_PROPOSER_LLM_ENDPOINT=${TASK_PROPOSER_LLM_ENDPOINT:-"https://generativelanguage.googleapis.com/v1beta/openai/"}
 TASK_PROPOSER_API_KEY=${TASK_PROPOSER_API_KEY:-${GOOGLE_API_KEY}}
 
 JUDGE_NAME=${JUDGE_NAME:-"gemini-2.5-flash-judge"}
-TASK_PROPOSER_NAME=${TASK_PROPOSER_NAME:-"gemini-2.5-flash-task-proposer"}
+TASK_PROPOSER_NAME=${TASK_PROPOSER_NAME:-"gemini-2.5-flash-task-proposer-v2"}
 
 ADD_STEPS_TO_TASK_PROPOSER=${ADD_STEPS_TO_TASK_PROPOSER:-"--add_steps_to_task_proposer"}
 ADD_CRITERIA_TO_TASK_PROPOSER=${ADD_CRITERIA_TO_TASK_PROPOSER:-"--add_criteria_to_task_proposer"}
