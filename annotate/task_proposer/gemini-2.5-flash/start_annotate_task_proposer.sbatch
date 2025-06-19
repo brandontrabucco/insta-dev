@@ -28,12 +28,12 @@ conda activate insta
 
 # Arguments for data collection
 
-DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-step6"}
+DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-step1"}
 DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
-SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
+SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-"--set_exploration_mode"}
 
-INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment/gemini-2.5-flash-step6"}
+INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment/gemini-2.5-flash-step0"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 
@@ -42,7 +42,7 @@ TASK_PROPOSER_LLM_ENDPOINT=${TASK_PROPOSER_LLM_ENDPOINT:-"https://generativelang
 TASK_PROPOSER_API_KEY=${TASK_PROPOSER_API_KEY:-${GOOGLE_API_KEY}}
 
 JUDGE_NAME=${JUDGE_NAME:-"gemini-2.5-flash-judge"}
-TASK_PROPOSER_NAME=${TASK_PROPOSER_NAME:-"gemini-2.5-flash-task-proposer-v2"}
+TASK_PROPOSER_NAME=${TASK_PROPOSER_NAME:-"gemini-2.5-flash-task-explorer"}
 
 ADD_STEPS_TO_TASK_PROPOSER=${ADD_STEPS_TO_TASK_PROPOSER:-"--add_steps_to_task_proposer"}
 ADD_CRITERIA_TO_TASK_PROPOSER=${ADD_CRITERIA_TO_TASK_PROPOSER:-"--add_criteria_to_task_proposer"}
@@ -50,7 +50,7 @@ ADD_CRITERIA_TO_TASK_PROPOSER=${ADD_CRITERIA_TO_TASK_PROPOSER:-"--add_criteria_t
 TASK_PROPOSER_DISABLE_THINKING_CHAT_TEMPLATE=${TASK_PROPOSER_DISABLE_THINKING_CHAT_TEMPLATE:-""}
 TASK_PROPOSER_REASONING_EFFORT=${TASK_PROPOSER_REASONING_EFFORT:-"--task_proposer_reasoning_effort none"}
 
-TASK_PROPOSER_PROMPT=${TASK_PROPOSER_PROMPT:-"refiner"}
+TASK_PROPOSER_PROMPT=${TASK_PROPOSER_PROMPT:-"explorer"}
 
 
 
