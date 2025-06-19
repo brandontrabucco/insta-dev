@@ -260,7 +260,7 @@ In this example, we instructed the agent to explore a page on `passports.gov.au`
 
 ## Formatting Your Response
 
-Write a 300 word analysis that establishes what a real user may want to accomplish on the website, and considers which content and features to explore further. After your response, provide a task as JSON in a fenced code block."""
+Write a 300 word analysis that establishes what a real user may want to accomplish on the website, and which content and features we should explore further. After your response, provide a task as JSON in a fenced code block."""
 
 USER_PROMPT_TEMPLATE = """## Help Me Explore This Website
 
@@ -290,7 +290,7 @@ Tasks have the following components:
 
 ## Formatting Your Response
 
-Write a 300 word analysis that establishes what a real user may want to accomplish on {website}, and considers which content and features to explore further. After your response, provide a task as JSON in a fenced code block."""
+Write a 300 word analysis that establishes what a real user may want to accomplish on {website}, and which content and features we should explore further. After your response, provide a task as JSON in a fenced code block."""
 
 
 class TaskExplorerPrompt(BaseTaskProposerPrompt):
