@@ -65,8 +65,8 @@ DEFAULT_OBSERVATIONS_DIR = "data/observations"
 DEFAULT_SCREENSHOT_DIR = "data/screenshots"
 DEFAULT_ACTIONS_DIR = "data/actions"
 
-DEFAULT_JUDGMENTS_DIR = "data/judgments"
-DEFAULT_TASK_PROPOSALS_DIR = "data/task_proposals"
+DEFAULT_JUDGMENTS_DIR = None
+DEFAULT_TASK_PROPOSALS_DIR = None
 
 DEFAULT_AGENT_RESPONSE_KEY = "response"
 DEFAULT_JUDGE_RESPONSE_KEY = "response"
@@ -591,64 +591,56 @@ def iter_trajectories(
             "criteria", DEFAULT_CRITERIA
         )
 
+        format_steps = "\n".join(
+            "{n}. {part}".format(n = idx + 1, part = part)
+            for idx, part in enumerate(steps)
+        )
+
+        format_criteria = "\n".join(
+            "{n}. {part}".format(n = idx + 1, part = part)
+            for idx, part in enumerate(criteria)
+        )
+
         if add_steps_to_agent and len(steps) > 0:
 
             agent_instruction = AGENT_STEPS_TEMPLATE.format(
                 instruction = agent_instruction,
-                steps = "\n".join(
-                    "{n}. {part}".format(n = idx + 1, part = part)
-                    for idx, part in enumerate(steps)
-                )
+                steps = format_steps
             )
 
         if add_criteria_to_agent and len(criteria) > 0:
 
             agent_instruction = AGENT_CRITERIA_TEMPLATE.format(
                 instruction = agent_instruction,
-                criteria = "\n".join(
-                    "{n}. {part}".format(n = idx + 1, part = part)
-                    for idx, part in enumerate(criteria)
-                )
+                criteria = format_criteria
             )
 
         if add_steps_to_judge and len(steps) > 0:
 
             judge_instruction = JUDGE_STEPS_TEMPLATE.format(
                 instruction = judge_instruction,
-                steps = "\n".join(
-                    "{n}. {part}".format(n = idx + 1, part = part)
-                    for idx, part in enumerate(steps)
-                )
+                steps = format_steps
             )
 
         if add_criteria_to_judge and len(criteria) > 0:
 
             judge_instruction = JUDGE_CRITERIA_TEMPLATE.format(
                 instruction = judge_instruction,
-                criteria = "\n".join(
-                    "{n}. {part}".format(n = idx + 1, part = part)
-                    for idx, part in enumerate(criteria)
-                )
+                criteria = format_criteria
             )
 
         if add_steps_to_task_proposer and len(steps) > 0:
 
             task_proposer_instruction = TASK_PROPOSER_STEPS_TEMPLATE.format(
                 instruction = task_proposer_instruction,
-                steps = "\n".join(
-                    "{n}. {part}".format(n = idx + 1, part = part)
-                    for idx, part in enumerate(steps)
-                )
+                steps = format_steps
             )
 
         if add_criteria_to_task_proposer and len(criteria) > 0:
 
             task_proposer_instruction = TASK_PROPOSER_CRITERIA_TEMPLATE.format(
                 instruction = task_proposer_instruction,
-                criteria = "\n".join(
-                    "{n}. {part}".format(n = idx + 1, part = part)
-                    for idx, part in enumerate(criteria)
-                )
+                criteria = format_criteria
             )
 
         progress_bar.set_description(

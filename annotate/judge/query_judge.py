@@ -7,6 +7,7 @@ from insta import (
 )
 
 from insta.pipeline import (
+    JUDGE_EXPLORATION_TEMPLATE,
     JUDGE_STEPS_TEMPLATE,
     JUDGE_CRITERIA_TEMPLATE,
 )
@@ -54,7 +55,11 @@ def query_judge(
     )
 
     instruction = example_dict.get(
-        "instruction", example_dict.get("task")
+        "instruction", example_dict.get(
+            "task", JUDGE_EXPLORATION_TEMPLATE.format(
+                website = website
+            )
+        )
     )
 
     judge_instruction = example_dict.get(
@@ -75,22 +80,28 @@ def query_judge(
         "criteria", DEFAULT_CRITERIA
     )
 
+    format_steps = "\n".join(
+        "{n}. {part}".format(n = idx + 1, part = part)
+        for idx, part in enumerate(steps)
+    )
+
+    format_criteria = "\n".join(
+        "{n}. {part}".format(n = idx + 1, part = part)
+        for idx, part in enumerate(criteria)
+    )
+
     if add_steps_to_judge and len(steps) > 0:
 
         judge_instruction = JUDGE_STEPS_TEMPLATE.format(
-            instruction = judge_instruction, steps = "\n".join(
-                "{n}. {x}".format(n = idx + 1, x = part)
-                for idx, part in enumerate(steps)
-            )
+            instruction = judge_instruction,
+            steps = format_steps
         )
 
     if add_criteria_to_judge and len(criteria) > 0:
 
         judge_instruction = JUDGE_CRITERIA_TEMPLATE.format(
-            instruction = judge_instruction, criteria = "\n".join(
-                "{n}. {x}".format(n = idx + 1, x = part)
-                for idx, part in enumerate(criteria)
-            )
+            instruction = judge_instruction,
+            criteria = format_criteria
         )
 
     input_observations_path = os.path.join(

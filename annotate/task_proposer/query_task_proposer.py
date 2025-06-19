@@ -3,13 +3,13 @@ from insta import (
     TaskProposerConfig,
     BrowserTaskProposer,
     DEFAULT_TASK_PROPOSER_CONFIG,
-    NULL_TASK_PROPOSAL,
-    AGENT_EXPLORATION_TEMPLATE
+    NULL_TASK_PROPOSAL
 )
 
 from insta.pipeline import (
-    JUDGE_STEPS_TEMPLATE,
-    JUDGE_CRITERIA_TEMPLATE
+    TASK_PROPOSER_EXPLORATION_TEMPLATE,
+    TASK_PROPOSER_STEPS_TEMPLATE,
+    TASK_PROPOSER_CRITERIA_TEMPLATE,
 )
 
 from multiprocessing import Pool
@@ -62,7 +62,7 @@ def query_task_proposer(
 
     instruction = example_dict.get(
         "instruction", example_dict.get(
-            "task", AGENT_EXPLORATION_TEMPLATE.format(
+            "task", TASK_PROPOSER_EXPLORATION_TEMPLATE.format(
                 website = website
             )
         )
@@ -82,22 +82,28 @@ def query_task_proposer(
         "criteria", DEFAULT_CRITERIA
     )
 
+    format_steps = "\n".join(
+        "{n}. {part}".format(n = idx + 1, part = part)
+        for idx, part in enumerate(steps)
+    )
+
+    format_criteria = "\n".join(
+        "{n}. {part}".format(n = idx + 1, part = part)
+        for idx, part in enumerate(criteria)
+    )
+
     if add_steps_to_task_proposer and len(steps) > 0:
 
-        task_proposer_instruction = JUDGE_STEPS_TEMPLATE.format(
-            instruction = task_proposer_instruction, steps = "\n".join(
-                "{n}. {x}".format(n = idx + 1, x = part)
-                for idx, part in enumerate(steps)
-            )
+        task_proposer_instruction = TASK_PROPOSER_STEPS_TEMPLATE.format(
+            instruction = task_proposer_instruction,
+            steps = format_steps
         )
 
     if add_criteria_to_task_proposer and len(criteria) > 0:
 
-        task_proposer_instruction = JUDGE_CRITERIA_TEMPLATE.format(
-            instruction = task_proposer_instruction, criteria = "\n".join(
-                "{n}. {x}".format(n = idx + 1, x = part)
-                for idx, part in enumerate(criteria)
-            )
+        task_proposer_instruction = TASK_PROPOSER_CRITERIA_TEMPLATE.format(
+            instruction = task_proposer_instruction,
+            criteria = format_criteria
         )
 
     input_observations_path = os.path.join(
