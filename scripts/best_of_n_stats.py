@@ -1,7 +1,3 @@
-from insta.utils import (
-    VALUE_KEYS
-)
-
 from collections import defaultdict
 from tqdm import tqdm
 
@@ -9,6 +5,13 @@ import glob
 import json
 import argparse
 import os
+
+
+VALUE_KEYS = [
+    "success",
+    "efficiency",
+    "self_correction"
+]
 
 
 if __name__ == "__main__":

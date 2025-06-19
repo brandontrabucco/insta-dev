@@ -66,7 +66,7 @@ class InstaTool(Callable):
     observation_processor: BaseProcessor
         A processor that converts HTML into text for the agent to read.
 
-    action_parser: BaseActionParser
+    agent_prompt: BaseActionParser
         A parser that converts text into function calls for the agent to execute.
 
     name: str
@@ -94,7 +94,7 @@ class InstaTool(Callable):
                  playwright_port: int = 3000,
                  playwright_workers: int = 8,
                  observation_processor: str = "markdown",
-                 action_parser: str = "json",
+                 agent_prompt: str = "verbose",
                  browser_kwargs: dict = None,
                  context_kwargs: dict = None):
         """Initialize a web browsing tool for training LLM agents, this  tool
@@ -111,7 +111,7 @@ class InstaTool(Callable):
             The observation processor to use for converting HTML to text,
             currently you can select from: ["markdown"].
 
-        action_parser: str
+        agent_prompt: str
             The action parser to use for converting text to function calls,
             currently you can select from: ["javascript", "json"].
 
@@ -136,7 +136,7 @@ class InstaTool(Callable):
         self.playwright_workers = playwright_workers
 
         self.observation_processor = observation_processor
-        self.action_parser = action_parser
+        self.agent_prompt = agent_prompt
 
         self.browser_kwargs = browser_kwargs
         self.context_kwargs = context_kwargs
@@ -178,7 +178,7 @@ class InstaTool(Callable):
             playwright_port = self.playwright_port,
             playwright_workers = self.playwright_workers,
             observation_processor = self.observation_processor,
-            action_parser = self.action_parser,
+            agent_prompt = self.agent_prompt,
             browser_kwargs = self.browser_kwargs,
             context_kwargs = self.context_kwargs
         )

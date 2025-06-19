@@ -352,7 +352,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--action_parser",
+        "--agent_prompt",
         type = str,
         default = "simplified_json"
     )
@@ -465,7 +465,7 @@ if __name__ == "__main__":
         client_type = agent_client_type,
         client_kwargs = agent_client_kwargs,
         generation_kwargs = agent_generation_kwargs,
-        action_parser = args.action_parser,
+        agent_prompt = args.agent_prompt,
         max_obs_tokens = args.max_obs_tokens,
         last_obs = args.last_obs,
     )

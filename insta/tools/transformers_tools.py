@@ -55,7 +55,7 @@ class InstaTransformersTool(transformers.Tool):
     observation_processor: BaseProcessor
         A processor that converts HTML into text for the agent to read.
 
-    action_parser: BaseActionParser
+    agent_prompt: BaseActionParser
         A parser that converts text into function calls for the agent to execute.
 
     name: str
@@ -92,7 +92,7 @@ class InstaTransformersTool(transformers.Tool):
             The observation processor to use for converting HTML to text,
             currently you can select from: ["markdown"].
 
-        action_parser: str
+        agent_prompt: str
             The action parser to use for converting text to function calls,
             currently you can select from: ["javascript", "json"].
 
@@ -168,7 +168,7 @@ class InstaTransformersGradioTool(transformers.Tool):
     observation_processor: BaseProcessor
         A processor that converts HTML into text for the agent to read.
 
-    action_parser: BaseActionParser
+    agent_prompt: BaseActionParser
         A parser that converts text into function calls for the agent to execute.
 
     name: str
@@ -205,7 +205,7 @@ class InstaTransformersGradioTool(transformers.Tool):
             The observation processor to use for converting HTML to text,
             currently you can select from: ["markdown"].
 
-        action_parser: str
+        agent_prompt: str
             The action parser to use for converting text to function calls,
             currently you can select from: ["javascript", "json"].
 

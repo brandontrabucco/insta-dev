@@ -1,4 +1,4 @@
-from insta.utils import (
+from insta.configs.judge_config import (
     VALUE_KEYS
 )
 

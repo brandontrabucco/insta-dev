@@ -55,6 +55,7 @@ DATASET=${DATASET:-"data-for-agents/insta-150k-v3"}
 DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
 SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
+SET_ANNOTATE_JUDGE=${SET_ANNOTATE_JUDGE:-"--set_annotate_judge"}
 
 INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_data_collection/qwen3-235b-test"}
 
@@ -83,7 +84,8 @@ JUDGE_DISABLE_THINKING_CHAT_TEMPLATE=${JUDGE_DISABLE_THINKING_CHAT_TEMPLATE:-"--
 AGENT_REASONING_EFFORT=${AGENT_REASONING_EFFORT:-""}
 JUDGE_REASONING_EFFORT=${JUDGE_REASONING_EFFORT:-""}
 
-ACTION_PARSER=${ACTION_PARSER:-"json"}
+AGENT_PROMPT=${AGENT_PROMPT:-"verbose"}
+JUDGE_PROMPT=${JUDGE_PROMPT:-"verbose"}
 
 
 
@@ -100,6 +102,7 @@ LLM_ARGS=(
     --judge_api_key ${JUDGE_API_KEY}
     ${ADD_STEPS_TO_JUDGE}
     ${ADD_CRITERIA_TO_JUDGE}
+    ${SET_ANNOTATE_JUDGE}
 )
 
 SAMPLING_ARGS=(
@@ -112,7 +115,8 @@ SAMPLING_ARGS=(
 PIPELINE_ARGS=(
     --playwright_port ${PLAYWRIGHT_PORT}
     --playwright_workers ${PLAYWRIGHT_WORKERS}
-    --action_parser ${ACTION_PARSER}
+    --agent_prompt ${AGENT_PROMPT}
+    --judge_prompt ${JUDGE_PROMPT}
     --num_agents ${NUM_AGENTS}
     --rank ${RANK}
     --world_size ${WORLD_SIZE}

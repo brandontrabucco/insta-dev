@@ -55,24 +55,25 @@ DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-step6"}
 DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
 SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
+SET_ANNOTATE_JUDGE=${SET_ANNOTATE_JUDGE:-"--set_annotate_judge"}
 
-INPUT_DATA_DIR=${INPUT_DATA_DIR:-"/data/matrix/projects/rsalakhugroup/btrabucc/neurips_feedback_experiment_sft/qwen3-1.7b-step5-5000x-1.0s-0.0c-gemini-2.5-flash-judge-sc"}
+INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment_sft/qwen3-1.7b-step6-e5-5000x-1.0s-0.0c-gemini-2.5-flash-judge"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"/data/matrix/projects/rsalakhugroup/btrabucc/neurips_feedback_experiment_sft/qwen3-1.7b-step5-5000x-1.0s-0.0c-gemini-2.5-flash-judge"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment_sft/qwen3-1.7b-step6-e5-5000x-1.0s-0.0c-gemini-2.5-flash-judge"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"http://localhost:${AGENT_LLM_ENDPOINT_PORT}/v1"}
 AGENT_API_KEY=${AGENT_API_KEY:-"token-abc123"}
 
-JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gemini-2.5-flash-preview-05-20"}
+JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gemini-2.5-flash"}
 JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://generativelanguage.googleapis.com/v1beta/openai/"}
 JUDGE_API_KEY=${JUDGE_API_KEY:-${GOOGLE_API_KEY}}
 
 JUDGE_NAME=${JUDGE_NAME:-"gemini-2.5-flash-judge"}
 
-ADD_STEPS_TO_AGENT=${ADD_STEPS_TO_AGENT:-"--add_steps_to_agent"}
-ADD_CRITERIA_TO_AGENT=${ADD_CRITERIA_TO_AGENT:-"--add_criteria_to_agent"}
+ADD_STEPS_TO_AGENT=${ADD_STEPS_TO_AGENT:-""}
+ADD_CRITERIA_TO_AGENT=${ADD_CRITERIA_TO_AGENT:-""}
 
 ADD_STEPS_TO_JUDGE=${ADD_STEPS_TO_JUDGE:-"--add_steps_to_judge"}
 ADD_CRITERIA_TO_JUDGE=${ADD_CRITERIA_TO_JUDGE:-"--add_criteria_to_judge"}
@@ -83,7 +84,8 @@ JUDGE_DISABLE_THINKING_CHAT_TEMPLATE=${JUDGE_DISABLE_THINKING_CHAT_TEMPLATE:-""}
 AGENT_REASONING_EFFORT=${AGENT_REASONING_EFFORT:-""}
 JUDGE_REASONING_EFFORT=${JUDGE_REASONING_EFFORT:-"--judge_reasoning_effort none"}
 
-ACTION_PARSER=${ACTION_PARSER:-"json"}
+AGENT_PROMPT=${AGENT_PROMPT:-"verbose"}
+JUDGE_PROMPT=${JUDGE_PROMPT:-"verbose"}
 
 
 
@@ -108,6 +110,7 @@ LLM_ARGS=(
     --judge_api_key ${JUDGE_API_KEY}
     ${ADD_STEPS_TO_JUDGE}
     ${ADD_CRITERIA_TO_JUDGE}
+    ${SET_ANNOTATE_JUDGE}
 )
 
 SAMPLING_ARGS=(
@@ -123,7 +126,8 @@ SAMPLING_ARGS=(
 PIPELINE_ARGS=(
     --playwright_port ${PLAYWRIGHT_PORT}
     --playwright_workers ${PLAYWRIGHT_WORKERS}
-    --action_parser ${ACTION_PARSER}
+    --agent_prompt ${AGENT_PROMPT}
+    --judge_prompt ${JUDGE_PROMPT}
     --num_agents ${NUM_AGENTS}
     --rank ${RANK}
     --world_size ${WORLD_SIZE}

@@ -1,5 +1,5 @@
-from insta.task_parsers import (
-    TASK_PARSERS
+from insta.task_proposer_prompts import (
+    TASK_PROPOSER_PROMPTS
 )
 
 from insta.utils import (
@@ -48,7 +48,7 @@ class BrowserTaskProposer(Callable):
         The tokenizer to use for encoding and decoding text, which is
         used for truncating observation text to a max length.
 
-    task_parser: TaskParser
+    task_proposer_prompt: TaskParser
         The task proposal parser for parsing responses from the LLM into a
         dictionary containing a proposer task, and estimates of
         feasibility, difficulty, and steps to completion.
@@ -84,8 +84,8 @@ class BrowserTaskProposer(Callable):
 
         self.config = config
 
-        self.task_parser = TASK_PARSERS[
-            self.config.task_parser
+        self.task_proposer_prompt = TASK_PROPOSER_PROMPTS[
+            self.config.task_proposer_prompt
         ]()
 
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -213,7 +213,7 @@ class BrowserTaskProposer(Callable):
                 **self.config.generation_kwargs
             ).choices[0].message.content
 
-        return self.task_parser.parse_task(
+        return self.task_proposer_prompt.parse_task(
             response = response
         )
 
@@ -445,12 +445,12 @@ class BrowserTaskProposer(Callable):
     @property
     def system_prompt(self) -> str:
 
-        return self.task_parser.system_prompt
+        return self.task_proposer_prompt.system_prompt
     
     @property
     def user_prompt_template(self) -> str:
 
-        return self.task_parser.user_prompt_template
+        return self.task_proposer_prompt.user_prompt_template
 
     def get_single_user_prompt(
         self, observations: List[str], 

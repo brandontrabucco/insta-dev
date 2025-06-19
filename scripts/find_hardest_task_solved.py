@@ -1,8 +1,10 @@
 from insta import VALUE_KEYS
 import numpy as np
 
-import argparse
+from datasets import load_dataset
+
 import json
+import argparse
 import os
 
 
@@ -49,14 +51,29 @@ if __name__ == "__main__":
         "observations"
     )
 
+    dataset = load_dataset(
+        "data-for-agents/insta-150k-v3",
+        split = "train"
+    )
+
+    website_to_task = {
+        task_dict['website']: task_dict
+        for task_dict in dataset
+    }
+
     all_judgments = []
     all_actions = []
+    all_tasks = []
 
     for judgment_file in os.listdir(judgments_dir):
 
         identifier = judgment_file.replace(
             ".json", ""
         )
+
+        task = website_to_task[
+            identifier
+        ]
 
         judgment_file = os.path.join(
             judgments_dir,
@@ -140,6 +157,7 @@ if __name__ == "__main__":
 
         all_judgments.append(judgment)
         all_actions.append(actions)
+        all_tasks.append(task)
 
     total_num_actions = sum(
         len(actions) 
@@ -150,28 +168,8 @@ if __name__ == "__main__":
         total_num_actions
     ))
 
-    print("Number of trajectories: {}\n".format(
+    print("Number of trajectories: {}".format(
         len(all_actions)
-    ))
-
-    trajectories_with_stop = [
-        actions[-1]['function_calls'][0]['dotpath'] == 'stop'
-        for actions in all_actions
-    ]
-
-    print("Fraction trajectories that stop: {:0.2f}".format(
-        sum(trajectories_with_stop)
-        / len(trajectories_with_stop)
-    ))
-
-    length_trajectories_with_stop = [
-        len(actions) for actions in all_actions
-        if actions[-1]['function_calls'][0]['dotpath'] == 'stop'
-    ]
-
-    print("Average length of trajectories that stop: {:0.2f}".format(
-        sum(length_trajectories_with_stop)
-        / len(length_trajectories_with_stop)
     ))
 
     average_num_actions = (
@@ -179,7 +177,7 @@ if __name__ == "__main__":
         len(all_actions)
     )
 
-    print("Average length of trajectories: {:0.2f}\n".format(
+    print("Average number of actions: {:0.2f}\n".format(
         average_num_actions
     ))
 
@@ -190,24 +188,26 @@ if __name__ == "__main__":
             if threshold == 1 else 
             x > threshold
         )
-
-    def get_cdf_score(value_key, threshold):
-
-        cdf_score = sum(
-            comparator(judgment.get(value_key) or 0, threshold)
-            for judgment in all_judgments
-        ) / len(all_judgments)
-
-        return cdf_score
-
-    for threshold in [0.5, 0.7, 1.0]:
-
-        cdf_scores = {
-            value_key: get_cdf_score(value_key, threshold)
-            for value_key in VALUE_KEYS
-        }
     
-        print('Judge(Success) {} {}: {}\n'.format(
-            "=" if threshold == 1 else ">",
-            threshold, json.dumps(cdf_scores, indent = 4)
-        ))
+    indices = filter(
+        lambda idx: comparator(all_judgments[idx]['success'], 1.0) and comparator(all_judgments[idx]['efficiency'], 1.0),
+        range(len(all_judgments))
+    )
+
+    indices = sorted(
+        indices,
+        key = lambda idx: len(all_tasks[idx]['steps']),
+        reverse = True
+    )
+
+    for idx in indices[:10]:
+
+        print("\n\n---\n\n")
+
+        print(
+            json.dumps(all_judgments[idx], indent = 4)
+        )
+
+        print(
+            json.dumps(all_tasks[idx], indent = 4)
+        )

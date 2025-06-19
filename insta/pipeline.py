@@ -10,15 +10,18 @@ from torch.multiprocessing import (
 )
 
 from insta.configs import (
+    DEFAULT_BROWSER_CONFIG,
     DEFAULT_AGENT_CONFIG,
     DEFAULT_JUDGE_CONFIG,
-    DEFAULT_BROWSER_CONFIG,
+    DEFAULT_TASK_PROPOSER_CONFIG,
+    BrowserConfig,
     AgentConfig,
     JudgeConfig,
-    BrowserConfig,
+    TaskProposerConfig,
     get_browser_config,
     get_agent_config,
-    get_judge_config
+    get_judge_config,
+    get_task_proposer_config,
 )
 
 from insta.gym_env import (
@@ -32,13 +35,18 @@ from insta.agent import (
 )
 
 from insta.judge import (
-    BrowserJudge
+    BrowserJudge,
+    NULL_JUDGMENT
+)
+
+from insta.task_proposer import (
+    BrowserTaskProposer,
+    NULL_TASK_PROPOSAL
 )
 
 from insta.utils import (
     prune_observation,
     METADATA_KEYS,
-    VALUE_KEYS,
     BrowserStatus,
     safe_call
 )
@@ -56,9 +64,12 @@ import os
 DEFAULT_OBSERVATIONS_DIR = "data/observations"
 DEFAULT_SCREENSHOT_DIR = "data/screenshots"
 DEFAULT_ACTIONS_DIR = "data/actions"
+
 DEFAULT_JUDGMENTS_DIR = "data/judgments"
+DEFAULT_TASK_PROPOSALS_DIR = "data/task_proposals"
 
 DEFAULT_AGENT_RESPONSE_KEY = "response"
+DEFAULT_JUDGE_RESPONSE_KEY = "response"
 
 DEFAULT_MAX_ACTIONS = 30
 DEFAULT_SKIP_FINISHED = False
@@ -66,14 +77,22 @@ DEFAULT_PRUNE_OBSERVATIONS = False
 
 DEFAULT_ADD_STEPS_TO_AGENT = False
 DEFAULT_ADD_CRITERIA_TO_AGENT = False
+
 DEFAULT_ADD_STEPS_TO_JUDGE = False
 DEFAULT_ADD_CRITERIA_TO_JUDGE = False
+
+DEFAULT_ADD_STEPS_TO_TASK_PROPOSER = False
+DEFAULT_ADD_CRITERIA_TO_TASK_PROPOSER = False
 
 AGENT_EXPLORATION_TEMPLATE = (
     "Thoroughly explore this website by navigating pages, highlight interesting content we find, and list what real users can accomplish on this website."
 )
 
 JUDGE_EXPLORATION_TEMPLATE = (
+    "The agent must thoroughly explore this website by navigating pages, highlight interesting content it finds, and list what real users can accomplish on this website."
+)
+
+TASK_PROPOSER_EXPLORATION_TEMPLATE = (
     "The agent must thoroughly explore this website by navigating pages, highlight interesting content it finds, and list what real users can accomplish on this website."
 )
 
@@ -85,11 +104,19 @@ JUDGE_STEPS_TEMPLATE = (
     "{instruction}\n\nThe agent must follow these steps:\n{steps}"
 )
 
+TASK_PROPOSER_STEPS_TEMPLATE = (
+    "{instruction}\n\nThe agent must follow these steps:\n{steps}"
+)
+
 AGENT_CRITERIA_TEMPLATE = (
     "{instruction}\n\nTo complete the task, we should consider these criteria:\n{criteria}"
 )
 
 JUDGE_CRITERIA_TEMPLATE = (
+    "{instruction}\n\nThe agent must satisfy these criteria:\n{criteria}"
+)
+
+TASK_PROPOSER_CRITERIA_TEMPLATE = (
     "{instruction}\n\nThe agent must satisfy these criteria:\n{criteria}"
 )
 
@@ -109,24 +136,30 @@ DEFAULT_INFO = {}
 
 InstaPipelineOutput = namedtuple(
     "InstaPipelineOutput",
-    ["observations", "actions", "judgment"]
+    ["observations", "actions", "judgment", "task_proposal"]
 )
 
 
 def generate_trajectory(
+    browser: InstaEnv | BrowserConfig,
     agent: BrowserAgent | AgentConfig,
-    judge: BrowserJudge | JudgeConfig,
-    env: InstaEnv | BrowserConfig,
-    url: str, instruction: str = None,
+    judge: BrowserJudge | JudgeConfig = None,
+    task_proposer: BrowserTaskProposer | TaskProposerConfig = None,
+    url: str = None, instruction: str = None,
     agent_instruction: str = None,
     judge_instruction: str = None,
+    task_proposer_instruction: str = None,
     max_actions: int = DEFAULT_MAX_ACTIONS,
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
+    judge_response_key: str = DEFAULT_JUDGE_RESPONSE_KEY,
 ) -> Tuple[List[Dict], List[Dict], Dict]:
     """Attempt a web navigation task using the LLM agent, and return the
     observations and actions along the trajectory for later processing.
 
     Arguments:
+
+    env: InstaEnv | BrowserConfig
+        The web navigation environment running Playwright.
 
     agent: BrowserAgent | AgentConfig
         The LLM agent to use for the task.
@@ -134,8 +167,8 @@ def generate_trajectory(
     judge: BrowserJudge | JudgeConfig
         The LLM judge to evaluate the trajectory.
 
-    env: InstaEnv | BrowserConfig
-        The web navigation environment running Playwright.
+    task_proposer: BrowserTaskProposer | TaskProposerConfig
+        The LLM task proposer to generate tasks for the agent to complete.
 
     url: str
         Starting URL for the agent.
@@ -154,22 +187,30 @@ def generate_trajectory(
     
     """
 
+    if isinstance(browser, BrowserConfig):
+
+        browser = InstaEnv(
+            config = browser
+        )
+
     if isinstance(agent, AgentConfig):
 
         agent = BrowserAgent(
             config = agent
         )
 
-    if isinstance(judge, JudgeConfig):
+    if judge is not None and \
+            isinstance(judge, JudgeConfig):
 
         judge = BrowserJudge(
             config = judge
         )
 
-    if isinstance(env, BrowserConfig):
+    if task_proposer is not None and \
+            isinstance(task_proposer, TaskProposerConfig):
 
-        env = InstaEnv(
-            config = env
+        task_proposer = BrowserTaskProposer(
+            config = task_proposer
         )
 
     agent_instruction = (
@@ -188,35 +229,42 @@ def generate_trajectory(
         )
     )
 
+    task_proposer_instruction = (
+        task_proposer_instruction or
+        instruction or 
+        TASK_PROPOSER_EXPLORATION_TEMPLATE.format(
+            website = url
+        )
+    )
+
     observations = []
     actions = []
-
-    action = NULL_ACTION
+    last_action = NULL_ACTION
 
     for timestep in range(max_actions):
 
         outputs = None
 
-        if action is not NULL_ACTION:
+        if last_action is not NULL_ACTION:
 
             agent.push_action(
-                response = action.response
+                response = last_action.response
             )
 
-            outputs = env.step(
-                action = action
+            outputs = browser.step(
+                action = last_action
             )
 
         elif timestep == 0:
 
             agent.reset()
 
-            outputs = env.reset(
+            outputs = browser.reset(
                 url = url
             )
 
         else: outputs = InstaEnvStepOutput(
-            observation = env.get_obs(),
+            observation = browser.get_obs(),
             reward = DEFAULT_REWARD,
             done = DEFAULT_DONE,
             truncated = DEFAULT_TRUNCATED,
@@ -251,7 +299,7 @@ def generate_trajectory(
 
         agent.pop_observation()
         
-        action = agent(
+        last_action = agent(
             observation = obs.processed_text,
             instruction = agent_instruction,
             current_url = obs.current_url
@@ -259,13 +307,13 @@ def generate_trajectory(
 
         function_calls = [
             {"dotpath": x.dotpath, "args": x.args}
-            for x in action.function_calls
+            for x in last_action.function_calls
         ]
 
         actions.append({
             "function_calls": function_calls,
-            "response": action.response,
-            "matched_response": action.matched_response
+            "response": last_action.response,
+            "matched_response": last_action.matched_response
         })
 
     is_truncated = outputs is None or (
@@ -280,30 +328,61 @@ def generate_trajectory(
             .format(outputs)
         )
 
-    judgment = judge(
-        observations = [
-            x["processed_text"]
-            for x in observations
-        ],
-        actions = [
-            x[agent_response_key]
-            for x in actions
-        ],
-        instruction = judge_instruction
-    )
+    judgment = {}
 
-    judgment_values = {
-        key: judgment.values.get(key)
-        for key in VALUE_KEYS
-    }
+    if judge is not None:
 
-    judgment = {
-        **judgment_values,
-        "response": judgment.response,
-        "matched_response": judgment.matched_response,
-    }
+        judgment = judge(
+            observations = [
+                x["processed_text"]
+                for x in observations
+            ],
+            actions = [
+                x[agent_response_key]
+                for x in actions
+            ],
+            instruction = judge_instruction
+        )
 
-    return observations, actions, judgment
+        judgment = {
+            "success": judgment.success,
+            "efficiency": judgment.efficiency,
+            "self_correction": judgment.self_correction,
+            "response": judgment.response,
+            "matched_response": judgment.matched_response,
+        }
+
+    task_proposal = {}
+
+    if task_proposer is not None:
+
+        task_proposal = task_proposer(
+            instruction = task_proposer_instruction,
+            website = url,
+            observations = [
+                x["processed_text"]
+                for x in observations
+            ],
+            actions = [
+                x[agent_response_key]
+                for x in actions
+            ],
+            judgment = (
+                judgment[
+                    judge_response_key
+                ]
+            ),
+        )
+
+        task_proposal = {
+            "proposed_task": task_proposal.proposed_task,
+            "steps": task_proposal.steps,
+            "criteria": task_proposal.criteria,
+            "response": task_proposal.response,
+            "matched_response": task_proposal.matched_response,
+        }
+
+    return observations, actions, judgment, task_proposal
 
 
 DEFAULT_WEBSITE = "duckduckgo.com"
@@ -313,24 +392,29 @@ DEFAULT_CRITERIA = []
 
 def iter_trajectories(
     dataset: List[Dict[str, str]],
+    browser: InstaEnv | BrowserConfig,
     agent: BrowserAgent | AgentConfig,
-    judge: BrowserJudge | JudgeConfig,
-    env: InstaEnv | BrowserConfig,
+    judge: BrowserJudge | JudgeConfig = None,
+    task_proposer: BrowserTaskProposer | TaskProposerConfig = None,
+    seed: int = DEFAULT_SEED,
     rank: int = DEFAULT_RANK,
     world_size: int = DEFAULT_WORLD_SIZE,
-    seed: int = DEFAULT_SEED,
     observations_dir: str = DEFAULT_OBSERVATIONS_DIR,
     screenshot_dir: str = DEFAULT_SCREENSHOT_DIR,
     actions_dir: str = DEFAULT_ACTIONS_DIR,
     judgments_dir: str = DEFAULT_JUDGMENTS_DIR,
+    task_proposals_dir: str = DEFAULT_TASK_PROPOSALS_DIR,
     max_actions: int = DEFAULT_MAX_ACTIONS,
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
+    judge_response_key: str = DEFAULT_JUDGE_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
     add_steps_to_agent: bool = DEFAULT_ADD_STEPS_TO_AGENT,
     add_criteria_to_agent: bool = DEFAULT_ADD_CRITERIA_TO_AGENT,
     add_steps_to_judge: bool = DEFAULT_ADD_STEPS_TO_JUDGE,
     add_criteria_to_judge: bool = DEFAULT_ADD_CRITERIA_TO_JUDGE,
+    add_steps_to_task_proposer: bool = DEFAULT_ADD_STEPS_TO_TASK_PROPOSER,
+    add_criteria_to_task_proposer: bool = DEFAULT_ADD_CRITERIA_TO_TASK_PROPOSER,
 ) -> Generator[InstaPipelineOutput, None, None]:
     """Run the InSTA pipeline for internet-scale data collection, and yield
     the observations, actions, and judgments for each task.
@@ -347,7 +431,7 @@ def iter_trajectories(
     judge: BrowserJudge | JudgeConfig
         The LLM judge to evaluate the trajectory.
 
-    env: InstaEnv | BrowserConfig
+    browser: InstaEnv | BrowserConfig
         The web navigation environment running Playwright.
 
     rank: int
@@ -388,22 +472,30 @@ def iter_trajectories(
     
     """
 
+    if isinstance(browser, BrowserConfig):
+
+        browser = InstaEnv(
+            config = browser
+        )
+
     if isinstance(agent, AgentConfig):
 
         agent = BrowserAgent(
             config = agent
         )
 
-    if isinstance(judge, JudgeConfig):
+    if judge is not None and \
+            isinstance(judge, JudgeConfig):
 
         judge = BrowserJudge(
             config = judge
         )
 
-    if isinstance(env, BrowserConfig):
+    if task_proposer is not None and \
+            isinstance(task_proposer, TaskProposerConfig):
 
-        env = InstaEnv(
-            config = env
+        task_proposer = BrowserTaskProposer(
+            config = task_proposer
         )
 
     if observations_dir is not None:
@@ -431,6 +523,13 @@ def iter_trajectories(
 
         os.makedirs(
             judgments_dir, 
+            exist_ok = True
+        )
+
+    if task_proposals_dir is not None:
+
+        os.makedirs(
+            task_proposals_dir, 
             exist_ok = True
         )
 
@@ -474,6 +573,12 @@ def iter_trajectories(
             )
         )
 
+        task_proposer_instruction = example_dict.get(
+            "task_proposer_instruction", example_dict.get(
+                "task_proposer_task", instruction
+            )
+        )
+
         identifier = example_dict.get(
             "identifier", domain
         )
@@ -489,8 +594,9 @@ def iter_trajectories(
         if add_steps_to_agent and len(steps) > 0:
 
             agent_instruction = AGENT_STEPS_TEMPLATE.format(
-                instruction = agent_instruction, steps = "\n".join(
-                    "{n}. {x}".format(n = idx + 1, x = part)
+                instruction = agent_instruction,
+                steps = "\n".join(
+                    "{n}. {part}".format(n = idx + 1, part = part)
                     for idx, part in enumerate(steps)
                 )
             )
@@ -498,8 +604,9 @@ def iter_trajectories(
         if add_criteria_to_agent and len(criteria) > 0:
 
             agent_instruction = AGENT_CRITERIA_TEMPLATE.format(
-                instruction = agent_instruction, criteria = "\n".join(
-                    "{n}. {x}".format(n = idx + 1, x = part)
+                instruction = agent_instruction,
+                criteria = "\n".join(
+                    "{n}. {part}".format(n = idx + 1, part = part)
                     for idx, part in enumerate(criteria)
                 )
             )
@@ -507,8 +614,9 @@ def iter_trajectories(
         if add_steps_to_judge and len(steps) > 0:
 
             judge_instruction = JUDGE_STEPS_TEMPLATE.format(
-                instruction = judge_instruction, steps = "\n".join(
-                    "{n}. {x}".format(n = idx + 1, x = part)
+                instruction = judge_instruction,
+                steps = "\n".join(
+                    "{n}. {part}".format(n = idx + 1, part = part)
                     for idx, part in enumerate(steps)
                 )
             )
@@ -516,8 +624,29 @@ def iter_trajectories(
         if add_criteria_to_judge and len(criteria) > 0:
 
             judge_instruction = JUDGE_CRITERIA_TEMPLATE.format(
-                instruction = judge_instruction, criteria = "\n".join(
-                    "{n}. {x}".format(n = idx + 1, x = part)
+                instruction = judge_instruction,
+                criteria = "\n".join(
+                    "{n}. {part}".format(n = idx + 1, part = part)
+                    for idx, part in enumerate(criteria)
+                )
+            )
+
+        if add_steps_to_task_proposer and len(steps) > 0:
+
+            task_proposer_instruction = TASK_PROPOSER_STEPS_TEMPLATE.format(
+                instruction = task_proposer_instruction,
+                steps = "\n".join(
+                    "{n}. {part}".format(n = idx + 1, part = part)
+                    for idx, part in enumerate(steps)
+                )
+            )
+
+        if add_criteria_to_task_proposer and len(criteria) > 0:
+
+            task_proposer_instruction = TASK_PROPOSER_CRITERIA_TEMPLATE.format(
+                instruction = task_proposer_instruction,
+                criteria = "\n".join(
+                    "{n}. {part}".format(n = idx + 1, part = part)
                     for idx, part in enumerate(criteria)
                 )
             )
@@ -544,8 +673,15 @@ def iter_trajectories(
 
         if judgments_dir is not None:
 
-            judgments_path = os.path.join(
+            judgment_path = os.path.join(
                 judgments_dir,
+                "{}.json".format(identifier)
+            )
+
+        if task_proposals_dir is not None:
+
+            task_proposal_path = os.path.join(
+                task_proposals_dir,
                 "{}.json".format(identifier)
             )
 
@@ -561,10 +697,20 @@ def iter_trajectories(
                 exist_ok = True
             )
 
+        judgment_exists = (
+            judgments_dir is not None
+            and os.path.exists(judgment_path)
+        )
+
+        task_proposal_exists = (
+            task_proposals_dir is not None
+            and os.path.exists(task_proposal_path)
+        )
+
         skip_this_task = (
-            judgments_dir is not None and
-            skip_finished and
-            os.path.exists(judgments_path)
+            skip_finished
+            and judgment_exists
+            and task_proposal_exists
         )
 
         if skip_this_task:
@@ -586,22 +732,25 @@ def iter_trajectories(
         
         trajectory = safe_call(
             generate_trajectory,
-            env = env, agent = agent, judge = judge,
+            browser = browser, agent = agent, judge = judge,
+            task_proposer = task_proposer,
             url = url, instruction = instruction,
             agent_instruction = agent_instruction,
             judge_instruction = judge_instruction,
+            task_proposer_instruction = task_proposer_instruction,
             max_actions = max_actions,
             agent_response_key = agent_response_key,
+            judge_response_key = judge_response_key,
             catch_errors = True,
             log_errors = True,
             max_errors = 1,
         )
 
-        observations, actions, judgment = [], [], {}
+        observations, actions, judgment, task_proposal = [], [], {}, {}
 
         if trajectory is not BrowserStatus.ERROR:
 
-            observations, actions, judgment = trajectory
+            observations, actions, judgment, task_proposal = trajectory
 
         for step_idx, observation in enumerate(observations):
 
@@ -634,16 +783,33 @@ def iter_trajectories(
                     )
                 )
 
-        trajectory_valid = (
+        observations_valid = (
             observations is not None and 
-            len(observations) > 0 and 
+            len(observations) > 0
+        )
+
+        actions_valid = (
             actions is not None and 
-            len(actions) > 0 and 
+            len(actions) > 0
+        )
+
+        judgment_valid = (
             judgment is not None and 
             len(judgment) > 0
         )
 
-        if trajectory_valid and \
+        task_proposal_valid = (
+            task_proposal is not None and 
+            len(task_proposal) > 0
+        )
+
+        trajectory_valid = (
+            observations_valid and actions_valid and 
+            (judgment_valid or judge is None) and
+            (task_proposal_valid or task_proposer is None)
+        )
+
+        if observations_valid and \
                 observations_dir is not None:
                 
             with open(observations_path, "w") as file:
@@ -654,7 +820,7 @@ def iter_trajectories(
                     indent = 4
                 )
 
-        if trajectory_valid and \
+        if actions_valid and \
                 actions_dir is not None:
 
             with open(actions_path, "w") as file:
@@ -665,10 +831,10 @@ def iter_trajectories(
                     indent = 4
                 )
 
-        if trajectory_valid and \
+        if judgment_valid and \
                 judgments_dir is not None:
 
-            with open(judgments_path, "w") as file:
+            with open(judgment_path, "w") as file:
                 
                 json.dump(
                     judgment, 
@@ -676,33 +842,50 @@ def iter_trajectories(
                     indent = 4
                 )
 
+        if task_proposal_valid and \
+                task_proposals_dir is not None:
+
+            with open(task_proposal_path, "w") as file:
+                
+                json.dump(
+                    task_proposal, 
+                    file,
+                    indent = 4
+                )
+
         yield InstaPipelineOutput(
             observations = observations,
             actions = actions,
-            judgment = judgment
+            judgment = judgment,
+            task_proposal = task_proposal
         )
 
 
 def list_trajectories(
     dataset: List[Dict[str, str]],
-    agent: BrowserAgent | AgentConfig, 
-    judge: BrowserJudge | JudgeConfig,
-    env: InstaEnv | BrowserConfig,
+    browser: InstaEnv | BrowserConfig,
+    agent: BrowserAgent | AgentConfig,
+    judge: BrowserJudge | JudgeConfig = None,
+    task_proposer: BrowserTaskProposer | TaskProposerConfig = None,
+    seed: int = DEFAULT_SEED,
     rank: int = DEFAULT_RANK,
     world_size: int = DEFAULT_WORLD_SIZE,
-    seed: int = DEFAULT_SEED,
     observations_dir: str = DEFAULT_OBSERVATIONS_DIR,
     screenshot_dir: str = DEFAULT_SCREENSHOT_DIR,
     actions_dir: str = DEFAULT_ACTIONS_DIR,
     judgments_dir: str = DEFAULT_JUDGMENTS_DIR,
+    task_proposals_dir: str = DEFAULT_TASK_PROPOSALS_DIR,
     max_actions: int = DEFAULT_MAX_ACTIONS,
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
+    judge_response_key: str = DEFAULT_JUDGE_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
     add_steps_to_agent: bool = DEFAULT_ADD_STEPS_TO_AGENT,
     add_criteria_to_agent: bool = DEFAULT_ADD_CRITERIA_TO_AGENT,
     add_steps_to_judge: bool = DEFAULT_ADD_STEPS_TO_JUDGE,
     add_criteria_to_judge: bool = DEFAULT_ADD_CRITERIA_TO_JUDGE,
+    add_steps_to_task_proposer: bool = DEFAULT_ADD_STEPS_TO_TASK_PROPOSER,
+    add_criteria_to_task_proposer: bool = DEFAULT_ADD_CRITERIA_TO_TASK_PROPOSER,
 ) -> List[InstaPipelineOutput]:
     """Run the InSTA pipeline for internet-scale data collection, and list
     the observations, actions, and judgments for each task.
@@ -719,7 +902,7 @@ def list_trajectories(
     judge: BrowserJudge | JudgeConfig
         The LLM judge to evaluate the trajectory.
 
-    env: InstaEnv | BrowserConfig
+    browser: InstaEnv | BrowserConfig
         The web navigation environment running Playwright.
 
     rank: int
@@ -761,44 +944,54 @@ def list_trajectories(
     """
 
     return list(iter_trajectories(
-        dataset = dataset,
-        env = env, agent = agent, judge = judge,
+        dataset = dataset, browser = browser,
+        agent = agent, judge = judge,
+        task_proposer = task_proposer,
         seed = seed, rank = rank, world_size = world_size,
         observations_dir = observations_dir,
         screenshot_dir = screenshot_dir,
         actions_dir = actions_dir,
         judgments_dir = judgments_dir,
+        task_proposals_dir = task_proposals_dir,
         max_actions = max_actions,
         agent_response_key = agent_response_key,
+        judge_response_key = judge_response_key,
         skip_finished = skip_finished,
         prune_observations = prune_observations,
         add_steps_to_agent = add_steps_to_agent,
         add_criteria_to_agent = add_criteria_to_agent,
         add_steps_to_judge = add_steps_to_judge,
         add_criteria_to_judge = add_criteria_to_judge,
+        add_steps_to_task_proposer = add_steps_to_task_proposer,
+        add_criteria_to_task_proposer = add_criteria_to_task_proposer,
     ))
 
 
 def save_trajectories(
     dataset: List[Dict[str, str]],
+    browser: InstaEnv | BrowserConfig,
     agent: BrowserAgent | AgentConfig,
-    judge: BrowserJudge | JudgeConfig,
-    env: InstaEnv | BrowserConfig,
+    judge: BrowserJudge | JudgeConfig = None,
+    task_proposer: BrowserTaskProposer | TaskProposerConfig = None,
+    seed: int = DEFAULT_SEED,
     rank: int = DEFAULT_RANK,
     world_size: int = DEFAULT_WORLD_SIZE,
-    seed: int = DEFAULT_SEED,
     observations_dir: str = DEFAULT_OBSERVATIONS_DIR,
     screenshot_dir: str = DEFAULT_SCREENSHOT_DIR,
     actions_dir: str = DEFAULT_ACTIONS_DIR,
     judgments_dir: str = DEFAULT_JUDGMENTS_DIR,
+    task_proposals_dir: str = DEFAULT_TASK_PROPOSALS_DIR,
     max_actions: int = DEFAULT_MAX_ACTIONS,
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
+    judge_response_key: str = DEFAULT_JUDGE_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
     add_steps_to_agent: bool = DEFAULT_ADD_STEPS_TO_AGENT,
     add_criteria_to_agent: bool = DEFAULT_ADD_CRITERIA_TO_AGENT,
     add_steps_to_judge: bool = DEFAULT_ADD_STEPS_TO_JUDGE,
     add_criteria_to_judge: bool = DEFAULT_ADD_CRITERIA_TO_JUDGE,
+    add_steps_to_task_proposer: bool = DEFAULT_ADD_STEPS_TO_TASK_PROPOSER,
+    add_criteria_to_task_proposer: bool = DEFAULT_ADD_CRITERIA_TO_TASK_PROPOSER,
 ) -> None:
     """Run the InSTA pipeline for internet-scale data collection, and save
     the observations, actions, and judgments for each task.
@@ -815,7 +1008,7 @@ def save_trajectories(
     judge: BrowserJudge | JudgeConfig
         The LLM judge to evaluate the trajectory.
 
-    env: InstaEnv | BrowserConfig
+    browser: InstaEnv | BrowserConfig
         The web navigation environment running Playwright.
 
     rank: int
@@ -851,21 +1044,26 @@ def save_trajectories(
     """
 
     for x in iter_trajectories(
-        dataset = dataset,
-        env = env, agent = agent, judge = judge,
+        dataset = dataset, browser = browser,
+        agent = agent, judge = judge,
+        task_proposer = task_proposer,
         seed = seed, rank = rank, world_size = world_size,
         observations_dir = observations_dir,
         screenshot_dir = screenshot_dir,
         actions_dir = actions_dir,
         judgments_dir = judgments_dir,
+        task_proposals_dir = task_proposals_dir,
         max_actions = max_actions,
         agent_response_key = agent_response_key,
+        judge_response_key = judge_response_key,
         skip_finished = skip_finished,
         prune_observations = prune_observations,
         add_steps_to_agent = add_steps_to_agent,
         add_criteria_to_agent = add_criteria_to_agent,
         add_steps_to_judge = add_steps_to_judge,
         add_criteria_to_judge = add_criteria_to_judge,
+        add_steps_to_task_proposer = add_steps_to_task_proposer,
+        add_criteria_to_task_proposer = add_criteria_to_task_proposer,
     ):
         
         pass
@@ -879,55 +1077,63 @@ def multiprocessing_wrapper(
     dataset: List[Dict[str, str]],
     agent_config: AgentConfig = DEFAULT_AGENT_CONFIG,
     judge_config: JudgeConfig = DEFAULT_JUDGE_CONFIG,
+    task_proposer_config: TaskProposerConfig = DEFAULT_TASK_PROPOSER_CONFIG,
     seed: int = DEFAULT_SEED,
     observations_dir: str = DEFAULT_OBSERVATIONS_DIR,
     screenshot_dir: str = DEFAULT_SCREENSHOT_DIR,
     actions_dir: str = DEFAULT_ACTIONS_DIR,
     judgments_dir: str = DEFAULT_JUDGMENTS_DIR,
+    task_proposals_dir: str = DEFAULT_TASK_PROPOSALS_DIR,
     max_actions: int = DEFAULT_MAX_ACTIONS,
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
+    judge_response_key: str = DEFAULT_JUDGE_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
     add_steps_to_agent: bool = DEFAULT_ADD_STEPS_TO_AGENT,
     add_criteria_to_agent: bool = DEFAULT_ADD_CRITERIA_TO_AGENT,
     add_steps_to_judge: bool = DEFAULT_ADD_STEPS_TO_JUDGE,
     add_criteria_to_judge: bool = DEFAULT_ADD_CRITERIA_TO_JUDGE,
+    add_steps_to_task_proposer: bool = DEFAULT_ADD_STEPS_TO_TASK_PROPOSER,
+    add_criteria_to_task_proposer: bool = DEFAULT_ADD_CRITERIA_TO_TASK_PROPOSER,
 ):
 
     def worker_fn(
         output_queue: Queue,
         browser_config: BrowserConfig,
-        agent_rank: int,
-        total_agent_size: int,
+        rank: int,
+        world_size: int,
     ):
         
         os.environ['VLLM_WORKER_MULTIPROC_METHOD'] = 'spawn'
 
         if torch.cuda.device_count() > 0:
 
-            os.environ["CUDA_VISIBLE_DEVICES"] = \
-                str(agent_rank % torch.cuda.device_count())
+            os.environ["CUDA_VISIBLE_DEVICES"] = "{}".format(
+                rank % torch.cuda.device_count()
+            )
 
         outputs = data_collection_fn(
-            dataset = dataset,
+            dataset = dataset, browser = browser_config,
             agent = agent_config,
             judge = judge_config,
-            env = browser_config,
-            rank = agent_rank,
-            world_size = total_agent_size,
-            seed = seed,
+            task_proposer = task_proposer_config,
+            seed = seed, rank = rank, world_size = world_size,
             observations_dir = observations_dir,
             screenshot_dir = screenshot_dir,
             actions_dir = actions_dir,
             judgments_dir = judgments_dir,
+            task_proposals_dir = task_proposals_dir,
             max_actions = max_actions,
             agent_response_key = agent_response_key,
+            judge_response_key = judge_response_key,
             skip_finished = skip_finished,
             prune_observations = prune_observations,
             add_steps_to_agent = add_steps_to_agent,
             add_criteria_to_agent = add_criteria_to_agent,
             add_steps_to_judge = add_steps_to_judge,
             add_criteria_to_judge = add_criteria_to_judge,
+            add_steps_to_task_proposer = add_steps_to_task_proposer,
+            add_criteria_to_task_proposer = add_criteria_to_task_proposer,
         )
         
         if outputs is not None:
@@ -946,24 +1152,29 @@ NULL_QUEUE = None
 
 def launch_data_collection(
     dataset: List[Dict[str, str]],
+    browser_config: BrowserConfig = DEFAULT_BROWSER_CONFIG,
     agent_config: AgentConfig = DEFAULT_AGENT_CONFIG,
     judge_config: JudgeConfig = DEFAULT_JUDGE_CONFIG,
-    browser_config: BrowserConfig = DEFAULT_BROWSER_CONFIG,
+    task_proposer_config: TaskProposerConfig = DEFAULT_TASK_PROPOSER_CONFIG,
+    seed: int = DEFAULT_SEED,
     rank: int = DEFAULT_RANK,
     world_size: int = DEFAULT_WORLD_SIZE,
     observations_dir: str = DEFAULT_OBSERVATIONS_DIR,
     screenshot_dir: str = DEFAULT_SCREENSHOT_DIR,
     actions_dir: str = DEFAULT_ACTIONS_DIR,
     judgments_dir: str = DEFAULT_JUDGMENTS_DIR,
+    task_proposals_dir: str = DEFAULT_TASK_PROPOSALS_DIR,
     max_actions: int = DEFAULT_MAX_ACTIONS,
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
+    judge_response_key: str = DEFAULT_JUDGE_RESPONSE_KEY,
     skip_finished: bool = DEFAULT_SKIP_FINISHED,
     prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
     add_steps_to_agent: bool = DEFAULT_ADD_STEPS_TO_AGENT,
     add_criteria_to_agent: bool = DEFAULT_ADD_CRITERIA_TO_AGENT,
     add_steps_to_judge: bool = DEFAULT_ADD_STEPS_TO_JUDGE,
     add_criteria_to_judge: bool = DEFAULT_ADD_CRITERIA_TO_JUDGE,
-    seed: int = DEFAULT_SEED,
+    add_steps_to_task_proposer: bool = DEFAULT_ADD_STEPS_TO_TASK_PROPOSER,
+    add_criteria_to_task_proposer: bool = DEFAULT_ADD_CRITERIA_TO_TASK_PROPOSER,
     return_trajectories: bool = DEFAULT_RETURN_TRAJECTORIES,
     num_agents: int = DEFAULT_NUM_AGENTS,
     playwright_workers: int = DEFAULT_PLAYWRIGHT_WORKERS,
@@ -977,7 +1188,7 @@ def launch_data_collection(
         Override the default dataset, and run the pipeline on custom tasks,
         each entry must be a dictionary with keys "domain" and "task".
 
-    env: InstaEnv
+    browser: InstaEnv
         The web navigation environment running Playwright.
 
     agent: BrowserAgent
@@ -1040,22 +1251,28 @@ def launch_data_collection(
     )
 
     worker_fn = multiprocessing_wrapper(
-        worker_fn, seed = seed,
+        worker_fn,
         dataset = dataset,
         agent_config = agent_config,
         judge_config = judge_config,
+        task_proposer_config = task_proposer_config,
+        seed = seed,
         observations_dir = observations_dir,
         screenshot_dir = screenshot_dir,
         actions_dir = actions_dir,
         judgments_dir = judgments_dir,
+        task_proposals_dir = task_proposals_dir,
         max_actions = max_actions,
         agent_response_key = agent_response_key,
+        judge_response_key = judge_response_key,
         skip_finished = skip_finished,
         prune_observations = prune_observations,
         add_steps_to_agent = add_steps_to_agent,
         add_criteria_to_agent = add_criteria_to_agent,
         add_steps_to_judge = add_steps_to_judge,
         add_criteria_to_judge = add_criteria_to_judge,
+        add_steps_to_task_proposer = add_steps_to_task_proposer,
+        add_criteria_to_task_proposer = add_criteria_to_task_proposer,
     )
 
     browser_config_dict = asdict(browser_config)
@@ -1172,33 +1389,39 @@ class InstaPipeline(Callable):
     judge: BrowserJudge
         The LLM judge to evaluate the trajectory.
 
-    env: InstaEnv
+    browser: InstaEnv
         The web navigation environment running Playwright.
 
     """
 
+    browser: InstaEnv = None
     agent: BrowserAgent = None
     judge: BrowserJudge = None
-    env: InstaEnv = None
+    task_proposer: BrowserTaskProposer = None
 
-    def __init__(self, agent_config: AgentConfig = DEFAULT_AGENT_CONFIG,
+    def __init__(self, browser_config: BrowserConfig = DEFAULT_BROWSER_CONFIG,
+                 agent_config: AgentConfig = DEFAULT_AGENT_CONFIG,
                  judge_config: JudgeConfig = DEFAULT_JUDGE_CONFIG,
-                 browser_config: BrowserConfig = DEFAULT_BROWSER_CONFIG,
+                 task_proposer_config: TaskProposerConfig = DEFAULT_TASK_PROPOSER_CONFIG,
+                 seed: int = DEFAULT_SEED,
                  rank: int = DEFAULT_RANK,
                  world_size: int = DEFAULT_WORLD_SIZE,
-                 seed: int = DEFAULT_SEED,
                  observations_dir: str = DEFAULT_OBSERVATIONS_DIR,
                  screenshot_dir: str = DEFAULT_SCREENSHOT_DIR,
                  actions_dir: str = DEFAULT_ACTIONS_DIR,
                  judgments_dir: str = DEFAULT_JUDGMENTS_DIR,
+                 task_proposals_dir: str = DEFAULT_TASK_PROPOSALS_DIR,
                  max_actions: int = DEFAULT_MAX_ACTIONS,
                  agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
+                 judge_response_key: str = DEFAULT_JUDGE_RESPONSE_KEY,
                  skip_finished: bool = DEFAULT_SKIP_FINISHED,
                  prune_observations: bool = DEFAULT_PRUNE_OBSERVATIONS,
                  add_steps_to_agent: bool = DEFAULT_ADD_STEPS_TO_AGENT,
                  add_criteria_to_agent: bool = DEFAULT_ADD_CRITERIA_TO_AGENT,
                  add_steps_to_judge: bool = DEFAULT_ADD_STEPS_TO_JUDGE,
-                 add_criteria_to_judge: bool = DEFAULT_ADD_CRITERIA_TO_JUDGE):
+                 add_criteria_to_judge: bool = DEFAULT_ADD_CRITERIA_TO_JUDGE,
+                 add_steps_to_task_proposer: bool = DEFAULT_ADD_STEPS_TO_TASK_PROPOSER,
+                 add_criteria_to_task_proposer: bool = DEFAULT_ADD_CRITERIA_TO_TASK_PROPOSER):
         """Initialize the InSTA pipeline for internet-scale data collection,
         creates a browser, LLM agent, and LLM judge, then runs the agent
         to attempt web navigation tasks from the InSTA-150k dataset.
@@ -1246,28 +1469,36 @@ class InstaPipeline(Callable):
         
         """
 
+        self.browser_config = browser_config
         self.agent_config = agent_config
         self.judge_config = judge_config
-        self.browser_config = browser_config
+        self.task_proposer_config = task_proposer_config
 
+        self.seed = seed
         self.rank = rank
         self.world_size = world_size
-        self.seed = seed
 
         self.observations_dir = observations_dir
         self.screenshot_dir = screenshot_dir
         self.actions_dir = actions_dir
         self.judgments_dir = judgments_dir
+        self.task_proposals_dir = task_proposals_dir
 
         self.max_actions = max_actions
         self.agent_response_key = agent_response_key
+        self.judge_response_key = judge_response_key
+
         self.skip_finished = skip_finished
         self.prune_observations = prune_observations
 
         self.add_steps_to_agent = add_steps_to_agent
         self.add_criteria_to_agent = add_criteria_to_agent
+
         self.add_steps_to_judge = add_steps_to_judge
         self.add_criteria_to_judge = add_criteria_to_judge
+
+        self.add_steps_to_task_proposer = add_steps_to_task_proposer
+        self.add_criteria_to_task_proposer = add_criteria_to_task_proposer
 
     def generate_trajectory(
         self, url: str, instruction: str
@@ -1291,6 +1522,12 @@ class InstaPipeline(Callable):
         
         """
 
+        if self.browser is None:
+
+            self.browser = InstaEnv(
+                config = self.browser_config
+            )
+
         if self.agent is None:
 
             self.agent = BrowserAgent(
@@ -1303,32 +1540,34 @@ class InstaPipeline(Callable):
                 config = self.judge_config
             )
 
-        if self.env is None:
+        if self.task_proposer is None:
 
-            self.env = InstaEnv(
-                config = self.browser_config
+            self.task_proposer = BrowserTaskProposer(
+                config = self.task_proposer_config
             )
         
         trajectory = safe_call(
-            generate_trajectory,
-            env = self.env, agent = self.agent, judge = self.judge,
+            generate_trajectory, browser = self.browser,
+            agent = self.agent, judge = self.judge,
+            task_proposer = self.task_proposer,
             url = url, instruction = instruction,
             max_actions = self.max_actions,
             agent_response_key = self.agent_response_key,
+            judge_response_key = self.judge_response_key,
             catch_errors = True,
             log_errors = True,
             max_errors = 1,
         )
 
-        observations, actions, judgment = [], [], {}
+        observations, actions, judgment, task_proposal = [], [], {}, {}
 
         if trajectory is not BrowserStatus.ERROR:
 
-            observations, actions, judgment = trajectory
+            observations, actions, judgment, task_proposal = trajectory
         
-        return observations, actions, judgment
+        return observations, actions, judgment, task_proposal
         
-    def __call__(self, url: str, instruction: str) -> Tuple[List[Dict], List[Dict]]:
+    def __call__(self, url: str, instruction: str) -> Tuple[List[Dict], List[Dict], Dict, Dict]:
         """Attempt a web navigation task using the LLM agent, and return the
         observations and actions along the trajectory for later processing.
 
@@ -1372,6 +1611,12 @@ class InstaPipeline(Callable):
         
         """
 
+        if self.browser is None:
+
+            self.browser = InstaEnv(
+                config = self.browser_config
+            )
+
         if self.agent is None:
 
             self.agent = BrowserAgent(
@@ -1384,27 +1629,33 @@ class InstaPipeline(Callable):
                 config = self.judge_config
             )
 
-        if self.env is None:
+        if self.task_proposer is None:
 
-            self.env = InstaEnv(
-                config = self.browser_config
+            self.task_proposer = BrowserTaskProposer(
+                config = self.task_proposer_config
             )
 
         yield from iter_trajectories(
-            dataset, self.agent, self.judge, self.env,
-            rank = self.rank, world_size = self.world_size, seed = self.seed,
+            dataset = dataset, browser = self.browser,
+            agent = self.agent, judge = self.judge, 
+            task_proposer = self.task_proposer,
+            seed = self.seed, rank = self.rank, world_size = self.world_size,
             observations_dir = self.observations_dir,
             screenshot_dir = self.screenshot_dir,
             actions_dir = self.actions_dir,
             judgments_dir = self.judgments_dir,
+            task_proposals_dir = self.task_proposals_dir,
             max_actions = self.max_actions,
             agent_response_key = self.agent_response_key,
+            judge_response_key = self.judge_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
             add_steps_to_agent = self.add_steps_to_agent,
             add_criteria_to_agent = self.add_criteria_to_agent,
             add_steps_to_judge = self.add_steps_to_judge,
             add_criteria_to_judge = self.add_criteria_to_judge,
+            add_steps_to_task_proposer = self.add_steps_to_task_proposer,
+            add_criteria_to_task_proposer = self.add_criteria_to_task_proposer,
         )
 
     def list_trajectories(
@@ -1427,6 +1678,12 @@ class InstaPipeline(Callable):
         
         """
 
+        if self.browser is None:
+
+            self.browser = InstaEnv(
+                config = self.browser_config
+            )
+
         if self.agent is None:
 
             self.agent = BrowserAgent(
@@ -1439,27 +1696,33 @@ class InstaPipeline(Callable):
                 config = self.judge_config
             )
 
-        if self.env is None:
+        if self.task_proposer is None:
 
-            self.env = InstaEnv(
-                config = self.browser_config
+            self.task_proposer = BrowserTaskProposer(
+                config = self.task_proposer_config
             )
 
         return list_trajectories(
-            dataset, self.agent, self.judge, self.env,
-            rank = self.rank, world_size = self.world_size, seed = self.seed,
+            dataset = dataset, browser = self.browser,
+            agent = self.agent, judge = self.judge, 
+            task_proposer = self.task_proposer,
+            seed = self.seed, rank = self.rank, world_size = self.world_size,
             observations_dir = self.observations_dir,
             screenshot_dir = self.screenshot_dir,
             actions_dir = self.actions_dir,
             judgments_dir = self.judgments_dir,
+            task_proposals_dir = self.task_proposals_dir,
             max_actions = self.max_actions,
             agent_response_key = self.agent_response_key,
+            judge_response_key = self.judge_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
             add_steps_to_agent = self.add_steps_to_agent,
             add_criteria_to_agent = self.add_criteria_to_agent,
             add_steps_to_judge = self.add_steps_to_judge,
             add_criteria_to_judge = self.add_criteria_to_judge,
+            add_steps_to_task_proposer = self.add_steps_to_task_proposer,
+            add_criteria_to_task_proposer = self.add_criteria_to_task_proposer,
         )
 
     def save_trajectories(self, dataset: List[Dict[str, str]]) -> None:
@@ -1474,6 +1737,12 @@ class InstaPipeline(Callable):
         
         """
 
+        if self.browser is None:
+
+            self.browser = InstaEnv(
+                config = self.browser_config
+            )
+
         if self.agent is None:
 
             self.agent = BrowserAgent(
@@ -1486,27 +1755,33 @@ class InstaPipeline(Callable):
                 config = self.judge_config
             )
 
-        if self.env is None:
+        if self.task_proposer is None:
 
-            self.env = InstaEnv(
-                config = self.browser_config
+            self.task_proposer = BrowserTaskProposer(
+                config = self.task_proposer_config
             )
 
         save_trajectories(
-            dataset, self.agent, self.judge, self.env,
-            rank = self.rank, world_size = self.world_size, seed = self.seed,
+            dataset = dataset, browser = self.browser,
+            agent = self.agent, judge = self.judge, 
+            task_proposer = self.task_proposer,
+            seed = self.seed, rank = self.rank, world_size = self.world_size,
             observations_dir = self.observations_dir,
             screenshot_dir = self.screenshot_dir,
             actions_dir = self.actions_dir,
             judgments_dir = self.judgments_dir,
+            task_proposals_dir = self.task_proposals_dir,
             max_actions = self.max_actions,
             agent_response_key = self.agent_response_key,
+            judge_response_key = self.judge_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
             add_steps_to_agent = self.add_steps_to_agent,
             add_criteria_to_agent = self.add_criteria_to_agent,
             add_steps_to_judge = self.add_steps_to_judge,
             add_criteria_to_judge = self.add_criteria_to_judge,
+            add_steps_to_task_proposer = self.add_steps_to_task_proposer,
+            add_criteria_to_task_proposer = self.add_criteria_to_task_proposer,
         )
 
     def launch(
@@ -1542,21 +1817,30 @@ class InstaPipeline(Callable):
         """
 
         return launch_data_collection(
-            dataset, agent_config = self.agent_config,
-            judge_config = self.judge_config, browser_config = self.browser_config,
-            rank = self.rank, world_size = self.world_size, seed = self.seed,
+            dataset = dataset,
+            browser_config = self.browser_config,
+            agent_config = self.agent_config,
+            judge_config = self.judge_config,
+            task_proposer_config = self.task_proposer_config,
+            seed = self.seed,
+            rank = self.rank,
+            world_size = self.world_size,
             observations_dir = self.observations_dir,
             screenshot_dir = self.screenshot_dir,
             actions_dir = self.actions_dir,
             judgments_dir = self.judgments_dir,
+            task_proposals_dir = self.task_proposals_dir,
             max_actions = self.max_actions,
             agent_response_key = self.agent_response_key,
+            judge_response_key = self.judge_response_key,
             skip_finished = self.skip_finished,
             prune_observations = self.prune_observations,
             add_steps_to_agent = self.add_steps_to_agent,
             add_criteria_to_agent = self.add_criteria_to_agent,
             add_steps_to_judge = self.add_steps_to_judge,
             add_criteria_to_judge = self.add_criteria_to_judge,
+            add_steps_to_task_proposer = self.add_steps_to_task_proposer,
+            add_criteria_to_task_proposer = self.add_criteria_to_task_proposer,
             return_trajectories = return_trajectories,
             num_agents = num_agents,
             playwright_workers = playwright_workers,

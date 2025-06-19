@@ -47,7 +47,7 @@ ADD_CRITERIA_TO_JUDGE=${ADD_CRITERIA_TO_JUDGE:-"--add_criteria_to_judge"}
 JUDGE_DISABLE_THINKING_CHAT_TEMPLATE=${JUDGE_DISABLE_THINKING_CHAT_TEMPLATE:-""}
 JUDGE_REASONING_EFFORT=${JUDGE_REASONING_EFFORT:-""}
 
-JUDGMENT_PARSER=${JUDGMENT_PARSER:-"json"}
+JUDGE_PROMPT=${JUDGE_PROMPT:-"verbose"}
 
 
 
@@ -75,7 +75,7 @@ PIPELINE_ARGS=(
 DATA_ARGS=(
     --input_data_dir ${INPUT_DATA_DIR}
     --judge_name ${JUDGE_NAME}
-    --judgment_parser ${JUDGMENT_PARSER}
+    --judge_prompt ${JUDGE_PROMPT}
     --dataset ${DATASET}
     --dataset_split ${DATASET_SPLIT}
 )

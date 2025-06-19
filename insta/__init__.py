@@ -19,7 +19,8 @@ from insta.configs.judge_config import (
     JudgeConfig,
     get_judge_config,
     DEFAULT_JUDGE_CONFIG,
-    BrowserJudgment
+    BrowserJudgment,
+    VALUE_KEYS
 )
 
 from insta.configs.task_proposer_config import (
@@ -36,7 +37,7 @@ from insta.client import (
 from insta.gym_env import (
     InstaEnv,
     InstaEnvResetOutput,
-    InstaEnvStepOutput,
+    InstaEnvStepOutput
 )
 
 from insta.agent import (
@@ -66,29 +67,21 @@ from insta.observation_processors import (
     MarkdownProcessor
 )
 
-from insta.action_parsers import (
-    ACTION_PARSERS,
-    BaseActionParser,
-    JsonActionParser
+from insta.agent_prompts import (
+    AGENT_PROMPTS
 )
 
-from insta.judgment_parsers import (
-    JUDGMENT_PARSERS,
-    BaseJudgmentParser,
-    JsonJudgmentParser
+from insta.judge_prompts import (
+    JUDGE_PROMPTS
 )
 
-from insta.task_parsers import (
-    TASK_PARSERS,
-    BaseTaskParser,
-    JsonTaskParser
+from insta.task_proposer_prompts import (
+    TASK_PROPOSER_PROMPTS
 )
 
 from insta.tools import (
-    InstaTool,
-    InstaGradioTool,
     InstaToolOutput,
-    TOOLS,
+    TOOLS
 )
 
 from insta.pipeline import (
@@ -104,5 +97,5 @@ from insta.pipeline import (
 
 from insta.visualize import (
     create_video,
-    create_demo_videos,
+    create_demo_videos
 )

@@ -1,5 +1,5 @@
-from insta.judgment_parsers import (
-    JUDGMENT_PARSERS
+from insta.judge_prompts import (
+    JUDGE_PROMPTS
 )
 
 from insta.utils import (
@@ -24,7 +24,9 @@ import openai
 
 
 NULL_JUDGMENT = BrowserJudgment(
-    values = {},
+    success = None,
+    efficiency = None,
+    self_correction = None,
     response = None,
     matched_response = None
 )
@@ -46,10 +48,10 @@ class BrowserJudge(Callable):
         The tokenizer to use for encoding and decoding text, which is
         used for truncating observation text to a max length.
 
-    judgment_parser: JudgmentParser
+    judge_prompt: JudgmentParser
         The judgment parser for parsing responses from the LLM into a
         dictionary of scores that estimate the agent's performance,
-        refer to insta/judgment_parsers/* for more information.
+        refer to insta/judge_prompts/* for more information.
 
     llm_client: openai.OpenAI
         The OpenAI client for querying the LLM, provides a standard
@@ -76,8 +78,8 @@ class BrowserJudge(Callable):
 
         self.config = config
 
-        self.judgment_parser = JUDGMENT_PARSERS[
-            self.config.judgment_parser
+        self.judge_prompt = JUDGE_PROMPTS[
+            self.config.judge_prompt
         ]()
 
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -160,7 +162,7 @@ class BrowserJudge(Callable):
                 **self.config.generation_kwargs
             ).choices[0].message.content
 
-        return self.judgment_parser.parse_judgment(
+        return self.judge_prompt.parse_judgment(
             response = response
         )
 
@@ -215,12 +217,12 @@ class BrowserJudge(Callable):
     @property
     def system_prompt(self) -> str:
 
-        return self.judgment_parser.system_prompt
+        return self.judge_prompt.system_prompt
     
     @property
     def user_prompt_template(self) -> str:
 
-        return self.judgment_parser.user_prompt_template
+        return self.judge_prompt.user_prompt_template
 
     def get_user_prompt(
         self, observations: List[str], 

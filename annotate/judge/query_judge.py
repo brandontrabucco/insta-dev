@@ -283,10 +283,10 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--judgment_parser",
+        "--judge_prompt",
         type = str,
         help = "System prompt and parser for the judge",
-        default = "json"
+        default = "verbose"
     )
 
     parser.add_argument(
@@ -370,7 +370,7 @@ if __name__ == "__main__":
         client_type = judge_client_type,
         client_kwargs = judge_client_kwargs,
         generation_kwargs = judge_generation_kwargs,
-        judgment_parser = args.judgment_parser,
+        judge_prompt = args.judge_prompt,
         log_errors = True,
     )
 

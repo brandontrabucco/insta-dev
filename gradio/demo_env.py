@@ -37,7 +37,7 @@ INSTA_TOOL = InstaTool(
     playwright_port = PLAYWRIGHT_PORT,
     playwright_workers = PLAYWRIGHT_WORKERS,
     observation_processor = "markdown",
-    action_parser = "json",
+    agent_prompt = "verbose",
     browser_kwargs = None,
     context_kwargs = None
 )

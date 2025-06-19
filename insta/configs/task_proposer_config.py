@@ -5,7 +5,7 @@ from typing import Dict, List
 @dataclass
 class TaskProposerConfig:
 
-    task_parser: str = "json"
+    task_proposer_prompt: str = "verbose"
 
     tokenizer: str = "Qwen/Qwen2.5-72B-Instruct"
 
@@ -37,7 +37,7 @@ class BrowserTaskProposal:
     matched_response: str = None
 
 
-DEFAULT_TASK_PARSER = "json"
+DEFAULT_TASK_PROPOSER_PROMPT = "refiner"
 
 
 DEFAULT_TOKENIZER = "Qwen/Qwen2.5-72B-Instruct"
@@ -76,7 +76,7 @@ DEFAULT_LOG_ERRORS = False
 
 
 DEFAULT_TASK_PROPOSER_CONFIG = TaskProposerConfig(
-    task_parser = DEFAULT_TASK_PARSER,
+    task_proposer_prompt = DEFAULT_TASK_PROPOSER_PROMPT,
     tokenizer = DEFAULT_TOKENIZER,
     client_type = DEFAULT_CLIENT_TYPE,
     client_kwargs = DEFAULT_CLIENT_KWARGS,

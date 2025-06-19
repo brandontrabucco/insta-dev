@@ -5,7 +5,7 @@ from typing import Dict
 @dataclass
 class JudgeConfig:
 
-    judgment_parser: str = "json"
+    judge_prompt: str = "verbose"
 
     tokenizer: str = "Qwen/Qwen2.5-72B-Instruct"
 
@@ -25,12 +25,22 @@ class JudgeConfig:
 @dataclass
 class BrowserJudgment:
 
-    values: Dict[str, float] = None
+    success: float = None
+    efficiency: float = None
+    self_correction: float = None
+
     response: str = None
     matched_response: str = None
 
 
-DEFAULT_JUDGMENT_PARSER = "json"
+VALUE_KEYS = [
+    "success",
+    "efficiency",
+    "self_correction"
+]
+
+
+DEFAULT_JUDGE_PROMPT = "verbose"
 
 
 DEFAULT_TOKENIZER = "Qwen/Qwen2.5-72B-Instruct"
@@ -64,7 +74,7 @@ DEFAULT_LOG_ERRORS = False
 
 
 DEFAULT_JUDGE_CONFIG = JudgeConfig(
-    judgment_parser = DEFAULT_JUDGMENT_PARSER,
+    judge_prompt = DEFAULT_JUDGE_PROMPT,
     tokenizer = DEFAULT_TOKENIZER,
     client_type = DEFAULT_CLIENT_TYPE,
     client_kwargs = DEFAULT_CLIENT_KWARGS,

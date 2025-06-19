@@ -378,7 +378,7 @@ if __name__ == "__main__":
     agent_config = get_agent_config(
         last_obs = args.last_obs,
         max_obs_tokens = args.max_obs_length,
-        action_parser = "simplified_json"
+        agent_prompt = "base"
     )
 
     agent: BrowserAgent = BrowserAgent(

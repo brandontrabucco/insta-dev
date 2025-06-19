@@ -34,13 +34,6 @@ METADATA_KEYS = [
 ]
 
 
-VALUE_KEYS = [
-    "success",
-    "efficiency",
-    "self_correction",
-]
-
-
 MINIMAL_STYLE_KEYS = [
     'display'
 ]

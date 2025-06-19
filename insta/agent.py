@@ -1,5 +1,5 @@
-from insta.action_parsers import (
-    ACTION_PARSERS
+from insta.agent_prompts import (
+    AGENT_PROMPTS
 )
 
 from insta.utils import (
@@ -46,10 +46,10 @@ class BrowserAgent(Callable):
         The tokenizer to use for encoding and decoding text, which is
         used for truncating observation text to a max length.
 
-    action_parser: ActionParser
+    agent_prompt: ActionParser
         The action parser for parsing the output of the LLM into a
         sequence of function calls to the Playwright API,
-        refer to insta/action_parsers.py for more information.
+        refer to insta/agent_prompts.py for more information.
 
     llm_client: openai.OpenAI
         The OpenAI client for querying the LLM, provides a standard
@@ -81,8 +81,8 @@ class BrowserAgent(Callable):
 
         self.config = config
 
-        self.action_parser = ACTION_PARSERS[
-            self.config.action_parser
+        self.agent_prompt = AGENT_PROMPTS[
+            self.config.agent_prompt
         ]()
 
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -180,7 +180,7 @@ class BrowserAgent(Callable):
                 **self.config.generation_kwargs
             ).choices[0].message.content
 
-        return self.action_parser.parse_action(
+        return self.agent_prompt.parse_action(
             response = response
         )
     
@@ -386,12 +386,12 @@ class BrowserAgent(Callable):
     @property
     def system_prompt(self) -> str:
 
-        return self.action_parser.system_prompt
+        return self.agent_prompt.system_prompt
     
     @property
     def user_prompt_template(self) -> str:
 
-        return self.action_parser.user_prompt_template
+        return self.agent_prompt.user_prompt_template
 
     def get_single_user_prompt(
         self, observation: str,

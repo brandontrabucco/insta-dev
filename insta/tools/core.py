@@ -19,8 +19,8 @@ from insta.observation_processors import (
     OBSERVATION_PROCESSORS
 )
 
-from insta.action_parsers import (
-    ACTION_PARSERS
+from insta.agent_prompts import (
+    AGENT_PROMPTS
 )
 
 from typing import Dict, Tuple
@@ -98,7 +98,7 @@ def create_new_session(
     playwright_port: int = 3000,
     playwright_workers: int = 8,
     observation_processor: str = "markdown",
-    action_parser: str = "json",
+    agent_prompt: str = "verbose",
     browser_kwargs: dict = None,
     context_kwargs: dict = None,
 ) -> Dict[str, any]:
@@ -133,10 +133,10 @@ def create_new_session(
     )
 
     observation_type = observation_processor
-    action_type = action_parser
+    action_type = agent_prompt
 
     observation_processor = OBSERVATION_PROCESSORS[observation_processor]()
-    action_parser = ACTION_PARSERS[action_parser]()
+    agent_prompt = AGENT_PROMPTS[agent_prompt]()
 
     start_status = client.start(
         browser_kwargs = browser_kwargs,
@@ -157,7 +157,7 @@ def create_new_session(
         "observation_type": observation_type,
         "action_type": action_type,
         "observation_processor": observation_processor,
-        "action_parser": action_parser
+        "agent_prompt": agent_prompt
     }
 
 
@@ -204,7 +204,7 @@ def interact_with_browser(
     playwright_port: int = 3000,
     playwright_workers: int = 8,
     observation_processor: str = "markdown",
-    action_parser: str = "json",
+    agent_prompt: str = "verbose",
     browser_kwargs: dict = None,
     context_kwargs: dict = None,
 ) -> Tuple[str, str, Image.Image]:
@@ -266,7 +266,7 @@ def interact_with_browser(
         action_type = session_data["action_type"]
 
         observation_processor = session_data["observation_processor"]
-        action_parser = session_data["action_parser"]
+        agent_prompt = session_data["agent_prompt"]
 
     # handle case when a new session is requested
     elif len(session_id) == 0:
@@ -277,7 +277,7 @@ def interact_with_browser(
             playwright_port = playwright_port,
             playwright_workers = playwright_workers,
             observation_processor = observation_processor,
-            action_parser = action_parser,
+            agent_prompt = agent_prompt,
             browser_kwargs = browser_kwargs,
             context_kwargs = context_kwargs
         )
@@ -298,7 +298,7 @@ def interact_with_browser(
             action_type = session_data["action_type"]
 
             observation_processor = session_data["observation_processor"]
-            action_parser = session_data["action_parser"]
+            agent_prompt = session_data["agent_prompt"]
 
         session_id = client.session_id
         if shorter_session_id:
@@ -308,7 +308,7 @@ def interact_with_browser(
         
     if len(action) > 0:  # take an action
 
-        action = action_parser.parse_action(
+        action = agent_prompt.parse_action(
             """Here is the action:\n\n```{type}\n{action}\n```"""
             .format(type = action_type, action = action)
         )

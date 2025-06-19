@@ -6,7 +6,7 @@ from insta.configs.browser_config import FunctionCall
 @dataclass
 class AgentConfig:
 
-    action_parser: str = "json"
+    agent_prompt: str = "verbose"
 
     tokenizer: str = "btrabucco/Insta-Qwen2.5-1.5B-SFT"
 
@@ -30,7 +30,7 @@ class BrowserAction:
     matched_response: str = None
 
 
-DEFAULT_ACTION_PARSER = "json"
+DEFAULT_agent_prompt = "verbose"
 
 
 DEFAULT_TOKENIZER = "btrabucco/Insta-Qwen2.5-1.5B-SFT"
@@ -63,7 +63,7 @@ DEFAULT_LOG_ERRORS = False
 
 
 DEFAULT_AGENT_CONFIG = AgentConfig(
-    action_parser = DEFAULT_ACTION_PARSER,
+    agent_prompt = DEFAULT_agent_prompt,
     tokenizer = DEFAULT_TOKENIZER,
     client_type = DEFAULT_CLIENT_TYPE,
     client_kwargs = DEFAULT_CLIENT_KWARGS,

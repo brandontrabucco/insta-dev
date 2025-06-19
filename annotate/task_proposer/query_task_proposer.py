@@ -314,10 +314,10 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--task_parser",
+        "--task_proposer_prompt",
         type = str,
         help = "System prompt and parser for task proposal",
-        default = "json"
+        default = "verbose"
     )
 
     parser.add_argument(
@@ -402,7 +402,7 @@ if __name__ == "__main__":
         client_type = task_proposer_client_type,
         client_kwargs = task_proposer_client_kwargs,
         generation_kwargs = task_proposer_generation_kwargs,
-        task_parser = args.task_parser,
+        task_proposer_prompt = args.task_proposer_prompt,
         log_errors = True,
     )
 
