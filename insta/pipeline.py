@@ -472,6 +472,9 @@ def iter_trajectories(
     
     """
 
+    skip_judge = judge is None
+    skip_task_proposer = task_proposer is None
+
     if isinstance(browser, BrowserConfig):
 
         browser = InstaEnv(
@@ -484,15 +487,13 @@ def iter_trajectories(
             config = agent
         )
 
-    if judge is not None and \
-            isinstance(judge, JudgeConfig):
+    if not skip_judge and isinstance(judge, JudgeConfig):
 
         judge = BrowserJudge(
             config = judge
         )
 
-    if task_proposer is not None and \
-            isinstance(task_proposer, TaskProposerConfig):
+    if not skip_task_proposer and isinstance(task_proposer, TaskProposerConfig):
 
         task_proposer = BrowserTaskProposer(
             config = task_proposer
@@ -689,6 +690,16 @@ def iter_trajectories(
                 exist_ok = True
             )
 
+        observations_exists = (
+            observations_dir is not None
+            and os.path.exists(observations_path)
+        )
+
+        actions_exists = (
+            actions_dir is not None
+            and os.path.exists(actions_path)
+        )
+
         judgment_exists = (
             judgments_dir is not None
             and os.path.exists(judgment_path)
@@ -699,10 +710,15 @@ def iter_trajectories(
             and os.path.exists(task_proposal_path)
         )
 
+        all_data_exists = (
+            observations_exists and actions_exists
+            and (judgment_exists or skip_judge)
+            and (task_proposal_exists or skip_task_proposer)
+        )
+
         skip_this_task = (
             skip_finished
-            and judgment_exists
-            and task_proposal_exists
+            and all_data_exists
         )
 
         if skip_this_task:
@@ -723,13 +739,12 @@ def iter_trajectories(
         else: url = domain
         
         trajectory = safe_call(
-            generate_trajectory,
-            browser = browser, agent = agent, judge = judge,
-            task_proposer = task_proposer,
-            url = url, instruction = instruction,
-            agent_instruction = agent_instruction,
+            generate_trajectory, browser = browser, agent = agent,
+            judge = judge, task_proposer = task_proposer,
+            url = url, agent_instruction = agent_instruction,
             judge_instruction = judge_instruction,
             task_proposer_instruction = task_proposer_instruction,
+            instruction = instruction,
             max_actions = max_actions,
             agent_response_key = agent_response_key,
             judge_response_key = judge_response_key,
@@ -797,8 +812,8 @@ def iter_trajectories(
 
         trajectory_valid = (
             observations_valid and actions_valid and 
-            (judgment_valid or judge is None) and
-            (task_proposal_valid or task_proposer is None)
+            (judgment_valid or skip_judge) and
+            (task_proposal_valid or skip_task_proposer)
         )
 
         if observations_valid and \
