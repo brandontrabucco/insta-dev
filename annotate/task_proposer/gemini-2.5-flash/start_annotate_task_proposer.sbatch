@@ -28,12 +28,12 @@ conda activate insta
 
 # Arguments for data collection
 
-DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-step2-explorer"}
+DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-step3-refiner"}
 DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
 SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
 
-INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment/gemini-2.5-flash-step2-explorer"}
+INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment/gemini-2.5-flash-step3-refiner"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 

@@ -243,15 +243,79 @@ def get_dataset_from_cli(args: argparse.Namespace):
     return dataset
 
 
-def start_insta_pipeline() -> None:
-    """Run the InSTA pipeline with the provided configurations, refer to
+def get_data_dirs_from_cli(args: argparse.Namespace):
+    """Get the data directories from the command line arguments, refer to
     the command line arguments in insta.args.
+
+    Arguments:
+
+    args: argparse.Namespace
+        The command line arguments for the insta pipeline.
+
+    Returns:
+
+    input_data_dirs: dict
+        A dictionary containing the directories for observations,
+        screenshots, actions, and optional judgments, and task proposals.
 
     """
 
-    parser = argparse.ArgumentParser()
-    parser = add_all_args(parser)
-    args = parser.parse_args()
+    observations_dir = os.path.join(
+        args.input_data_dir,
+        "observations"
+    )
+
+    screenshot_dir = os.path.join(
+        args.input_data_dir,
+        "screenshots"
+    )
+
+    actions_dir = os.path.join(
+        args.input_data_dir,
+        "actions"
+    )
+
+    judgments_dir = None
+
+    if args.set_annotate_judge or args.set_annotate_task_proposer:
+
+        judgments_dir = os.path.join(
+            args.input_data_dir,
+            args.judge_name
+        )
+
+    task_proposals_dir = None
+
+    if args.set_annotate_task_proposer:
+
+        task_proposals_dir = os.path.join(
+            args.input_data_dir,
+            args.task_proposer_name
+        )
+
+    return {
+        "observations_dir": observations_dir,
+        "screenshot_dir": screenshot_dir,
+        "actions_dir": actions_dir,
+        "judgments_dir": judgments_dir,
+        "task_proposals_dir": task_proposals_dir
+    }
+
+
+def get_pipeline_from_cli(args: argparse.Namespace):
+    """Build the InSTA pipeline from the command line arguments, refer to
+    the command line arguments in insta.args.
+
+    Arguments:
+
+    args: argparse.Namespace
+        The command line arguments for the insta pipeline.
+
+    Returns:
+
+    pipeline: insta.InstaPipeline
+
+    """
 
     browser_config = get_browser_config(
         playwright_url = args.playwright_url,
@@ -278,38 +342,9 @@ def start_insta_pipeline() -> None:
             args = args
         )
 
-    observations_dir = os.path.join(
-        args.input_data_dir,
-        "observations"
+    data_dirs = get_data_dirs_from_cli(
+        args = args
     )
-
-    actions_dir = os.path.join(
-        args.input_data_dir,
-        "actions"
-    )
-
-    screenshot_dir = os.path.join(
-        args.input_data_dir,
-        "screenshots"
-    )
-
-    judgments_dir = None
-
-    if args.set_annotate_judge:
-
-        judgments_dir = os.path.join(
-            args.input_data_dir,
-            args.judge_name
-        )
-
-    task_proposals_dir = None
-
-    if args.set_annotate_task_proposer:
-
-        task_proposals_dir = os.path.join(
-            args.input_data_dir,
-            args.task_proposer_name
-        )
 
     pipeline = InstaPipeline(
         browser_config = browser_config,
@@ -318,14 +353,11 @@ def start_insta_pipeline() -> None:
         task_proposer_config = task_proposer_config,
         seed = args.seed, rank = args.rank,
         world_size = args.world_size,
-        observations_dir = observations_dir,
-        screenshot_dir = screenshot_dir,
-        actions_dir = actions_dir,
-        judgments_dir = judgments_dir,
-        task_proposals_dir = task_proposals_dir,
-        max_actions = args.max_actions,
-        agent_response_key = args.agent_response_key,
-        judge_response_key = args.judge_response_key,
+        observations_dir = data_dirs["observations_dir"],
+        screenshot_dir = data_dirs["screenshot_dir"],
+        actions_dir = data_dirs["actions_dir"],
+        judgments_dir = data_dirs["judgments_dir"],
+        task_proposals_dir = data_dirs["task_proposals_dir"],
         skip_finished = args.skip_finished,
         prune_observations = args.prune_observations,
         add_steps_to_agent = args.add_steps_to_agent,
@@ -334,6 +366,27 @@ def start_insta_pipeline() -> None:
         add_criteria_to_judge = args.add_criteria_to_judge,
         add_steps_to_task_proposer = args.add_steps_to_task_proposer,
         add_criteria_to_task_proposer = args.add_criteria_to_task_proposer,
+        agent_response_key = args.agent_response_key,
+        judge_response_key = args.judge_response_key,
+        max_actions = args.max_actions,
+    )
+
+    return pipeline
+
+
+def launch_pipeline_from_cli(args: argparse.Namespace):
+    """Launch the InSTA pipeline from the command line arguments, refer to
+    the command line arguments in insta.args.
+
+    Arguments:
+
+    args: argparse.Namespace
+        The command line arguments for the insta pipeline.
+
+    """
+
+    pipeline = get_pipeline_from_cli(
+        args = args
     )
 
     dataset = get_dataset_from_cli(
@@ -345,6 +398,23 @@ def start_insta_pipeline() -> None:
         num_agents = args.num_agents,
         playwright_workers = args.playwright_workers,
         return_trajectories = False
+    )
+
+
+def start_insta_pipeline():
+    """Run the InSTA pipeline with the provided configurations, refer to
+    the command line arguments in insta.args.
+
+    """
+
+    parser = argparse.ArgumentParser(
+        description = "Run the InSTA pipeline."
+    )
+
+    parser = add_all_args(parser)
+
+    launch_pipeline_from_cli(
+        args = parser.parse_args()
     )
 
 

@@ -12,6 +12,23 @@ from insta.pipeline import (
     JUDGE_CRITERIA_TEMPLATE,
 )
 
+from insta.args import (
+    add_judge_llm_args,
+    add_judge_name_args,
+    add_judge_prompt_args,
+    add_judge_sampling_args,
+    add_data_args,
+    add_parallel_args,
+    add_annotate_args,
+    set_annotate_mode
+)
+
+from insta.entry_points import (
+    get_judge_config_from_cli,
+    get_data_dirs_from_cli,
+    get_dataset_from_cli,
+)
+
 from multiprocessing import Pool
 from functools import partial
 
@@ -39,9 +56,9 @@ DEFAULT_CRITERIA = []
 def query_judge(
     example_id: int, dataset: Dataset,
     judge_config: JudgeConfig = DEFAULT_JUDGE_CONFIG,
-    input_observations_dir: str = None,
-    input_actions_dir: str = None,
-    output_judgments_dir: str = None,
+    observations_dir: str = None,
+    actions_dir: str = None,
+    judgments_dir: str = None,
     agent_response_key: str = "response",
     add_steps_to_judge: bool = True,
     add_criteria_to_judge: bool = True,
@@ -105,17 +122,17 @@ def query_judge(
         )
 
     input_observations_path = os.path.join(
-        input_observations_dir,
+        observations_dir,
         "{}.json".format(identifier)
     )
 
     input_actions_path = os.path.join(
-        input_actions_dir,
+        actions_dir,
         "{}.json".format(identifier)
     )
 
     output_judgment_path = os.path.join(
-        output_judgments_dir,
+        judgments_dir,
         "{}.json".format(identifier)
     )
 
@@ -194,215 +211,33 @@ def query_judge(
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "--input_data_dir",
-        type = str,
-        default = "/data/matrix/projects/rsalakhugroup/btrabucc/neurips_data_collection/qwen3-1.7b-10000x-0.9s-qwen3-235b-judge"
+    parser = argparse.ArgumentParser(
+        description = "Annotate trajectories with the judge.",
     )
 
-    parser.add_argument(
-        "--judge_model_name",
-        type = str,
-        default = "Qwen/Qwen3-235B-A22B-fp8-tput",
-    )
+    parser = add_data_args(parser)
+    parser = add_parallel_args(parser)
+    parser = add_annotate_args(parser)
 
-    parser.add_argument(
-        "--judge_api_key",
-        type = str,
-        default = os.environ.get("TOGETHER_API_KEY")
-    )
-
-    parser.add_argument(
-        "--judge_llm_endpoint",
-        type = str,
-        default = "https://api.together.xyz/v1"
-    )
-
-    parser.add_argument(
-        "--judge_top_p",
-        type = float,
-        help = "Sampling Top p for LLMs",
-        default = 1.0
-    )
-
-    parser.add_argument(
-        "--judge_top_k",
-        type = int,
-        help = "Sampling Top k for LLMs",
-        default = None
-    )
-
-    parser.add_argument(
-        "--judge_temperature",
-        type = float,
-        help = "Sampling temperature for LLMs",
-        default = 0.5
-    )
-
-    parser.add_argument(
-        "--judge_reasoning_effort",
-        type = str,
-        help = "Set reasoning mode in certain LLMs",
-        default = None,
-    )
-
-    parser.add_argument(
-        "--judge_disable_thinking_chat_template",
-        action = "store_true",
-        help = "Turns off reasoning mode in certain LLMs"
-    )
-
-    parser.add_argument(
-        "--add_steps_to_judge",
-        action = "store_true",
-        help = "Add the steps to the instruction",
-        default = False
-    )
-
-    parser.add_argument(
-        "--add_criteria_to_judge",
-        action = "store_true",
-        help = "Add the success criteria to the instruction",
-        default = False
-    )
-
-    parser.add_argument(
-        "--judge_name",
-        type = str,
-        default = "qwen3-235b-judge"
-    )
-
-    parser.add_argument(
-        "--dataset",
-        type = str,
-        default = "data-for-agents/insta-150k-v2",
-    )
-
-    parser.add_argument(
-        "--dataset_split",
-        type = str,
-        default = "train",
-    )
-
-    parser.add_argument(
-        "--agent_response_key",
-        type = str,
-        help = "key for response from the agent",
-        default = "response",
-    )
-
-    parser.add_argument(
-        "--judge_prompt",
-        type = str,
-        help = "System prompt and parser for the judge",
-        default = "verbose"
-    )
-
-    parser.add_argument(
-        "--skip_finished",
-        action = "store_true",
-        help = "Whether to skip existing judgments",
-        default = False
-    )
-
-    parser.add_argument(
-        "--seed",
-        type = int,
-        help = "Seed for the dataset",
-        default = 0
-    )
-
-    parser.add_argument(
-        "--rank",
-        type = int,
-        help = "Rank of the process",
-        default = 0
-    )
-
-    parser.add_argument(
-        "--world_size",
-        type = int,
-        help = "Number of processes",
-        default = 1
-    )
-
-    parser.add_argument(
-        "--num_workers",
-        type = int,
-        help = "Number of agents per machine",
-        default = 8
-    )
+    parser = add_judge_llm_args(parser)
+    parser = add_judge_name_args(parser)
+    parser = add_judge_prompt_args(parser)
+    parser = add_judge_sampling_args(parser)
 
     args = parser.parse_args()
 
-    judge_client_type = "openai"
+    set_annotate_mode(args)
 
-    judge_client_kwargs = {
-        "api_key": args.judge_api_key,
-        "base_url": args.judge_llm_endpoint
-    }
-
-    judge_generation_kwargs = {
-        "model": args.judge_model_name,
-        "max_tokens": 1024,
-        "top_p": args.judge_top_p,
-        "temperature": args.judge_temperature,
-        "extra_body": {}
-    }
-
-    if args.judge_reasoning_effort:
-
-        judge_generation_kwargs.update({
-            "reasoning_effort": 
-            args.judge_reasoning_effort
-        })
-
-    if args.judge_disable_thinking_chat_template:
-
-        if "chat_template_kwargs" not in judge_generation_kwargs["extra_body"]:
-
-            judge_generation_kwargs["extra_body"].update({
-                "chat_template_kwargs": {}
-            })
-
-        judge_generation_kwargs["extra_body"]["chat_template_kwargs"].update({
-            "enable_thinking": False
-        })
-
-    if args.judge_top_k is not None:
-
-        judge_generation_kwargs["extra_body"].update({
-            "top_k": args.judge_top_k
-        })
-
-    judge_config = get_judge_config(
-        client_type = judge_client_type,
-        client_kwargs = judge_client_kwargs,
-        generation_kwargs = judge_generation_kwargs,
-        judge_prompt = args.judge_prompt,
-        log_errors = True,
+    judge_config = get_judge_config_from_cli(
+        args = args
     )
 
-    input_observations_dir = os.path.join(
-        args.input_data_dir,
-        "observations"
+    data_dirs = get_data_dirs_from_cli(
+        args = args
     )
 
-    input_actions_dir = os.path.join(
-        args.input_data_dir,
-        "actions"
-    )
-
-    output_judgments_dir = os.path.join(
-        args.input_data_dir,
-        args.judge_name
-    )
-
-    dataset = load_dataset(
-        args.dataset,
-        split = args.dataset_split
+    dataset = get_dataset_from_cli(
+        args = args
     )
 
     dataset_ids = list(range(len(dataset)))
@@ -421,7 +256,7 @@ if __name__ == "__main__":
         ])
 
     os.makedirs(
-        output_judgments_dir,
+        data_dirs["judgments_dir"],
         exist_ok = True
     )
 
@@ -434,9 +269,9 @@ if __name__ == "__main__":
     worker_fn = partial(
         query_judge, dataset = dataset,
         judge_config = judge_config,
-        input_observations_dir = input_observations_dir,
-        input_actions_dir = input_actions_dir,
-        output_judgments_dir = output_judgments_dir,
+        observations_dir = data_dirs["observations_dir"],
+        actions_dir = data_dirs["actions_dir"],
+        judgments_dir = data_dirs["judgments_dir"],
         agent_response_key = args.agent_response_key,
         add_steps_to_judge = args.add_steps_to_judge,
         add_criteria_to_judge = args.add_criteria_to_judge,

@@ -97,8 +97,7 @@ if __name__ == "__main__":
                 identifier
             ))
 
-        elif not args.remove_null \
-                and not valid_example:
+        if not valid_example:
             
             continue
 
@@ -133,8 +132,7 @@ if __name__ == "__main__":
                 identifier
             ))
 
-        elif not args.remove_null \
-                and data_collection_error:
+        if data_collection_error:
             
             continue
 
@@ -150,8 +148,17 @@ if __name__ == "__main__":
         total_num_actions
     ))
 
-    print("Number of trajectories: {}\n".format(
+    print("Number of trajectories: {}".format(
         len(all_actions)
+    ))
+
+    average_num_actions = (
+        total_num_actions / 
+        len(all_actions)
+    )
+
+    print("Average length of trajectories: {:0.2f}\n".format(
+        average_num_actions
     ))
 
     trajectories_with_stop = [
@@ -169,18 +176,9 @@ if __name__ == "__main__":
         if actions[-1]['function_calls'][0]['dotpath'] == 'stop'
     ]
 
-    print("Average length of trajectories that stop: {:0.2f}".format(
+    print("Average length of trajectories that stop: {:0.2f}\n".format(
         sum(length_trajectories_with_stop)
         / len(length_trajectories_with_stop)
-    ))
-
-    average_num_actions = (
-        total_num_actions / 
-        len(all_actions)
-    )
-
-    print("Average length of trajectories: {:0.2f}\n".format(
-        average_num_actions
     ))
 
     def comparator(x, threshold):

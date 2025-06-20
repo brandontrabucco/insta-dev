@@ -12,6 +12,24 @@ from insta.pipeline import (
     TASK_PROPOSER_CRITERIA_TEMPLATE,
 )
 
+from insta.args import (
+    add_task_proposer_llm_args,
+    add_task_proposer_name_args,
+    add_task_proposer_prompt_args,
+    add_task_proposer_sampling_args,
+    add_judge_name_args,
+    add_data_args,
+    add_parallel_args,
+    add_annotate_args,
+    set_annotate_mode
+)
+
+from insta.entry_points import (
+    get_task_proposer_config_from_cli,
+    get_data_dirs_from_cli,
+    get_dataset_from_cli,
+)
+
 from multiprocessing import Pool
 from functools import partial
 
@@ -39,10 +57,10 @@ def query_task_proposer(
     example_id: int, dataset: Dataset,
     task_proposer_config: TaskProposerConfig = 
     DEFAULT_TASK_PROPOSER_CONFIG,
-    input_observations_dir: str = None,
-    input_actions_dir: str = None,
-    input_judgments_dir: str = None,
-    output_tasks_dir: str = None,
+    observations_dir: str = None,
+    actions_dir: str = None,
+    judgments_dir: str = None,
+    task_proposals_dir: str = None,
     agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
     judge_response_key: str = DEFAULT_JUDGE_RESPONSE_KEY,
     add_steps_to_task_proposer: bool = True,
@@ -107,22 +125,22 @@ def query_task_proposer(
         )
 
     input_observations_path = os.path.join(
-        input_observations_dir,
+        observations_dir,
         "{}.json".format(identifier)
     )
 
     input_actions_path = os.path.join(
-        input_actions_dir,
+        actions_dir,
         "{}.json".format(identifier)
     )
 
     input_judgment_path = os.path.join(
-        input_judgments_dir,
+        judgments_dir,
         "{}.json".format(identifier)
     )
 
     output_task_path = os.path.join(
-        output_tasks_dir,
+        task_proposals_dir,
         "{}.json".format(identifier)
     )
 
@@ -207,241 +225,36 @@ def query_task_proposer(
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "--input_data_dir",
-        type = str,
-        default = "/data/matrix/projects/rsalakhugroup/btrabucc/neurips_data_collection/qwen3-1.7b-10000x-0.9s-qwen3-235b-judge"
+    parser = argparse.ArgumentParser(
+        description = "Annotate trajectories with the task proposer.",
     )
 
-    parser.add_argument(
-        "--task_proposer_model_name",
-        type = str,
-        default = "gemini-2.5-flash-preview-04-17",
-    )
+    parser = add_data_args(parser)
+    parser = add_parallel_args(parser)
+    parser = add_annotate_args(parser)
+    
+    parser = add_judge_name_args(parser)
 
-    parser.add_argument(
-        "--task_proposer_api_key",
-        type = str,
-        default = os.environ.get("GOOGLE_API_KEY"),
-    )
-
-    parser.add_argument(
-        "--task_proposer_llm_endpoint",
-        type = str,
-        default = "https://generativelanguage.googleapis.com/v1beta/openai/",
-    )
-
-    parser.add_argument(
-        "--task_proposer_top_p",
-        type = float,
-        help = "Sampling Top p for LLMs",
-        default = 1.0
-    )
-
-    parser.add_argument(
-        "--task_proposer_top_k",
-        type = int,
-        help = "Sampling Top k for LLMs",
-        default = None
-    )
-
-    parser.add_argument(
-        "--task_proposer_temperature",
-        type = float,
-        help = "Sampling temperature for LLMs",
-        default = 0.5
-    )
-
-    parser.add_argument(
-        "--task_proposer_reasoning_effort",
-        type = str,
-        help = "Set reasoning mode in certain LLMs",
-        default = None,
-    )
-
-    parser.add_argument(
-        "--task_proposer_disable_thinking_chat_template",
-        action = "store_true",
-        help = "Turns off reasoning mode in certain LLMs"
-    )
-
-    parser.add_argument(
-        "--add_steps_to_task_proposer",
-        action = "store_true",
-        help = "Add the steps to the instruction",
-        default = False
-    )
-
-    parser.add_argument(
-        "--add_criteria_to_task_proposer",
-        action = "store_true",
-        help = "Add the success criteria to the instruction",
-        default = False
-    )
-
-    parser.add_argument(
-        "--task_proposer_name",
-        type = str,
-        default = "gemini-2.5-flash-task-proposer"
-    )
-
-    parser.add_argument(
-        "--judge_name",
-        type = str,
-        default = "qwen3-235b-judge"
-    )
-
-    parser.add_argument(
-        "--dataset",
-        type = str,
-        default = "data-for-agents/insta-150k-v2",
-    )
-
-    parser.add_argument(
-        "--dataset_split",
-        type = str,
-        default = "train",
-    )
-
-    parser.add_argument(
-        "--agent_response_key",
-        type = str,
-        help = "key for response from the agent",
-        default = "response",
-    )
-
-    parser.add_argument(
-        "--judge_response_key",
-        type = str,
-        help = "key for response from the agent",
-        default = "response",
-    )
-
-    parser.add_argument(
-        "--task_proposer_prompt",
-        type = str,
-        help = "System prompt and parser for task proposal",
-        default = "verbose"
-    )
-
-    parser.add_argument(
-        "--skip_finished",
-        action = "store_true",
-        help = "Whether to skip existing task proposals",
-        default = False
-    )
-
-    parser.add_argument(
-        "--set_exploration_mode",
-        action = "store_true",
-        help = "Set the agent to exploration mode",
-        default = False
-    )
-
-    parser.add_argument(
-        "--seed",
-        type = int,
-        help = "Seed for the dataset",
-        default = 0
-    )
-
-    parser.add_argument(
-        "--rank",
-        type = int,
-        help = "Rank of the process",
-        default = 0
-    )
-
-    parser.add_argument(
-        "--world_size",
-        type = int,
-        help = "Number of processes",
-        default = 1
-    )
-
-    parser.add_argument(
-        "--num_workers",
-        type = int,
-        help = "Number of agents per machine",
-        default = 8
-    )
+    parser = add_task_proposer_llm_args(parser)
+    parser = add_task_proposer_name_args(parser)
+    parser = add_task_proposer_prompt_args(parser)
+    parser = add_task_proposer_sampling_args(parser)
 
     args = parser.parse_args()
 
-    task_proposer_client_type = "openai"
+    set_annotate_mode(args)
 
-    task_proposer_client_kwargs = {
-        "api_key": args.task_proposer_api_key,
-        "base_url": args.task_proposer_llm_endpoint
-    }
-
-    task_proposer_generation_kwargs = {
-        "model": args.task_proposer_model_name,
-        "max_tokens": 1024,
-        "top_p": args.task_proposer_top_p,
-        "temperature": args.task_proposer_temperature,
-        "extra_body": {}
-    }
-
-    if args.task_proposer_reasoning_effort:
-
-        task_proposer_generation_kwargs.update({
-            "reasoning_effort": 
-            args.task_proposer_reasoning_effort
-        })
-
-    if args.task_proposer_disable_thinking_chat_template:
-
-        task_proposer_generation_kwargs["extra_body"][
-            "chat_template_kwargs"
-        ] = {"enable_thinking": False}
-
-    if args.task_proposer_top_k is not None:
-
-        task_proposer_generation_kwargs["extra_body"].update({
-            "top_k": args.task_proposer_top_k
-        })
-
-    task_proposer_config = get_task_proposer_config(
-        client_type = task_proposer_client_type,
-        client_kwargs = task_proposer_client_kwargs,
-        generation_kwargs = task_proposer_generation_kwargs,
-        task_proposer_prompt = args.task_proposer_prompt,
-        log_errors = True,
+    task_proposer_config = get_task_proposer_config_from_cli(
+        args = args
     )
 
-    input_observations_dir = os.path.join(
-        args.input_data_dir,
-        "observations"
+    data_dirs = get_data_dirs_from_cli(
+        args = args
     )
 
-    input_actions_dir = os.path.join(
-        args.input_data_dir,
-        "actions"
+    dataset = get_dataset_from_cli(
+        args = args
     )
-
-    input_judgments_dir = os.path.join(
-        args.input_data_dir,
-        args.judge_name
-    )
-
-    output_tasks_dir = os.path.join(
-        args.input_data_dir,
-        args.task_proposer_name
-    )
-
-    dataset = load_dataset(
-        args.dataset,
-        split = args.dataset_split
-    )
-
-    if args.set_exploration_mode:
-
-        dataset = dataset.remove_columns(list({
-            "instruction", "task", "steps", "criteria"
-        } & set(dataset.column_names)))
 
     dataset_ids = list(range(len(dataset)))
 
@@ -459,7 +272,7 @@ if __name__ == "__main__":
         ])
 
     os.makedirs(
-        output_tasks_dir,
+        data_dirs["task_proposals_dir"],
         exist_ok = True
     )
 
@@ -472,10 +285,10 @@ if __name__ == "__main__":
     worker_fn = partial(
         query_task_proposer, dataset = dataset,
         task_proposer_config = task_proposer_config,
-        input_observations_dir = input_observations_dir,
-        input_actions_dir = input_actions_dir,
-        input_judgments_dir = input_judgments_dir,
-        output_tasks_dir = output_tasks_dir,
+        observations_dir = data_dirs["observations_dir"],
+        actions_dir = data_dirs["actions_dir"],
+        judgments_dir = data_dirs["judgments_dir"],
+        task_proposals_dir = data_dirs["task_proposals_dir"],
         agent_response_key = args.agent_response_key,
         judge_response_key = args.judge_response_key,
         add_steps_to_task_proposer = args.add_steps_to_task_proposer,

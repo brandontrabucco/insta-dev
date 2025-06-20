@@ -454,6 +454,45 @@ def add_pipeline_args(parser: argparse.ArgumentParser):
     return parser
 
 
+def add_annotate_args(parser: argparse.ArgumentParser):
+
+    parser.add_argument(
+        "--skip_finished",
+        action = "store_true",
+        help = "Whether to skip existing task proposals",
+        default = False
+    )
+
+    parser.add_argument(
+        "--set_exploration_mode",
+        action = "store_true",
+        help = "Set the agent to exploration mode",
+        default = False
+    )
+
+    parser.add_argument(
+        "--seed",
+        type = int,
+        help = "Seed for the dataset",
+        default = 0
+    )
+
+    parser.add_argument(
+        "--num_workers",
+        type = int,
+        help = "Number of agents per machine",
+        default = 8
+    )
+
+    return parser
+
+
+def set_annotate_mode(args: argparse.Namespace):
+
+    args.set_annotate_judge = True
+    args.set_annotate_task_proposer = True
+
+
 def add_all_args(parser: argparse.ArgumentParser):
     
     parser = add_agent_llm_args(parser)
