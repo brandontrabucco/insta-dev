@@ -126,6 +126,7 @@ PIPELINE_ARGS=(
 
 DATA_ARGS=(
     --input_data_dir ${INPUT_DATA_DIR}
+    --judge_name ${JUDGE_NAME}
     --dataset ${DATASET}
     --dataset_split ${DATASET_SPLIT}
     ${SET_EXPLORATION_MODE}
