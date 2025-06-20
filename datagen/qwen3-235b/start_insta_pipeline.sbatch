@@ -125,10 +125,7 @@ PIPELINE_ARGS=(
 )
 
 DATA_ARGS=(
-    --observations_dir ${INPUT_DATA_DIR}/observations
-    --screenshot_dir ${INPUT_DATA_DIR}/screenshots
-    --actions_dir ${INPUT_DATA_DIR}/actions
-    --judgments_dir ${INPUT_DATA_DIR}/${JUDGE_NAME}
+    --input_data_dir ${INPUT_DATA_DIR}
     --dataset ${DATASET}
     --dataset_split ${DATASET_SPLIT}
     ${SET_EXPLORATION_MODE}
@@ -160,6 +157,6 @@ huggingface-cli login --token $HUGGINGFACE_ACCESS_TOKEN
 
 echo "Starting pipeline with args ${INSTA_ARGS[@]}"
 
-python -u datagen/insta_pipeline.py \
+python -um insta.entry_points \
     ${INSTA_ARGS[@]} \
     > logs/agents-${RANK}.log 2>&1

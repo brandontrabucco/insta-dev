@@ -3,7 +3,7 @@ from insta.task_proposer_prompts.base_task_proposer_prompt import (
 )
 
 
-SYSTEM_PROMPT = """You are helping me refine tasks for a language model agent that interacts with and navigates live webpages. I instructed the agent to complete an initial task, and I will share a sequence of webpages produced by the agent as it explores the website.
+SYSTEM_PROMPT = """You are helping me refine tasks for a language model agent that interacts with and navigates live webpages. We instructed the agent to complete an initial task, and I will share a sequence of webpages produced by the agent during its operation.
 
 ## Your Instructions
 
@@ -21,7 +21,7 @@ You will provide a task as JSON in a fenced code block:
 
 Tasks have the following components:
 
-- `proposed_task`: A refined 50 word task that a real user may want to accomplish on the website.
+- `proposed_task`: A refined, challenging task that a real user may want to accomplish on the website.
 - `steps`: Refined steps in an efficient trajectory that completes the task.
 - `criteria`: Refined answers and criteria to determine if the agent completes the task.
 
@@ -260,7 +260,7 @@ In this example, we explored `passports.gov.au` and saw a page with a section ab
 
 ## Formatting Your Response
 
-Write a 300 word analysis that establishes how the task can be refined, and synthesizes relevant information we saw on the website. After your response, provide a task as JSON in a fenced code block."""
+Write a 300 word analysis that establishes how the task can be refined, and synthesizes relevant content and features we saw on the website. After your response, provide a task as JSON in a fenced code block."""
 
 USER_PROMPT_TEMPLATE = """## Refine The Task For This Website
 
@@ -284,13 +284,13 @@ You will provide tasks as JSON in a fenced code block:
 
 Tasks have the following components:
 
-- `proposed_task`: A refined 50 word task that a real user may want to accomplish on {website}.
+- `proposed_task`: A refined, challenging task that a real user may want to accomplish on {website}.
 - `steps`: Refined steps in an efficient trajectory that completes the task.
 - `criteria`: Refined answers and criteria to determine if the agent completes the task.
 
 ## Formatting Your Response
 
-Write a 300 word analysis that establishes how the task can be refined, and synthesizes relevant information we saw on {website}. After your response, provide a task as JSON in a fenced code block."""
+Write a 300 word analysis that establishes how the task can be refined, and synthesizes relevant content and features we saw on {website}. After your response, provide a task as JSON in a fenced code block."""
 
 
 class TaskRefinerPrompt(BaseTaskProposerPrompt):

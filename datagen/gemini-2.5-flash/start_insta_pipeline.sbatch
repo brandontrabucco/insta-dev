@@ -7,7 +7,7 @@
 #SBATCH --mem=64G
 #SBATCH --nodes=1
 #SBATCH --partition=general
-#SBATCH --array=0-0
+#SBATCH --array=0-7
 
 
 
@@ -51,13 +51,13 @@ conda activate insta
 
 # Arguments for data collection
 
-DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-step6"}
+DATASET=${DATASET:-"btrabucco/gemini-2.5-flash-step2-explorer"}
 DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
 SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
 SET_ANNOTATE_JUDGE=${SET_ANNOTATE_JUDGE:-"--set_annotate_judge"}
 
-INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment/gemini-2.5-flash-step6"}
+INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment/gemini-2.5-flash-step2-explorer"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
@@ -125,10 +125,7 @@ PIPELINE_ARGS=(
 )
 
 DATA_ARGS=(
-    --observations_dir ${INPUT_DATA_DIR}/observations
-    --screenshot_dir ${INPUT_DATA_DIR}/screenshots
-    --actions_dir ${INPUT_DATA_DIR}/actions
-    --judgments_dir ${INPUT_DATA_DIR}/${JUDGE_NAME}
+    --input_data_dir ${INPUT_DATA_DIR}
     --dataset ${DATASET}
     --dataset_split ${DATASET_SPLIT}
     ${SET_EXPLORATION_MODE}
@@ -160,6 +157,6 @@ huggingface-cli login --token $HUGGINGFACE_ACCESS_TOKEN
 
 echo "Starting pipeline with args ${INSTA_ARGS[@]}"
 
-python -u datagen/insta_pipeline.py \
+python -um insta.entry_points \
     ${INSTA_ARGS[@]} \
     > logs/agents-${RANK}.log 2>&1

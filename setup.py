@@ -43,6 +43,12 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 3',
 ]
 
+ENTRY_POINTS = {
+    'console_scripts': [
+        'start-insta-pipeline=insta.entry_points:start_insta_pipeline',
+    ]
+}
+
 
 setuptools.setup(
     name = 'insta-env',
@@ -57,6 +63,7 @@ setuptools.setup(
     long_description = DESCRIPTION,
     long_description_content_type = 'text/markdown',
     classifiers = CLASSIFIERS,
+    entry_points = ENTRY_POINTS,
     extras_require = {
         'pii': [
             'scrubadub',
