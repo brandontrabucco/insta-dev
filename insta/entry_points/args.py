@@ -492,26 +492,3 @@ def set_annotate_mode(args: argparse.Namespace):
     args.set_annotate_judge = True
     args.set_annotate_task_proposer = True
 
-
-def add_all_args(parser: argparse.ArgumentParser):
-    
-    parser = add_agent_llm_args(parser)
-    parser = add_agent_prompt_args(parser)
-    parser = add_agent_sampling_args(parser)
-    
-    parser = add_judge_llm_args(parser)
-    parser = add_judge_name_args(parser)
-    parser = add_judge_prompt_args(parser)
-    parser = add_judge_sampling_args(parser)
-
-    parser = add_task_proposer_llm_args(parser)
-    parser = add_task_proposer_name_args(parser)
-    parser = add_task_proposer_prompt_args(parser)
-    parser = add_task_proposer_sampling_args(parser)
-
-    parser = add_data_args(parser)
-    parser = add_parallel_args(parser)
-    parser = add_playwright_args(parser)
-    parser = add_pipeline_args(parser)
-
-    return parser

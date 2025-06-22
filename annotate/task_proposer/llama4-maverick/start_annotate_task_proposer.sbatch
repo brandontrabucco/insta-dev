@@ -86,7 +86,7 @@ DATA_ARGS=(
 )
 
 ANNOTATE_ARGS=(
-    annotate/task_proposer/query_task_proposer.py
+    insta.entry_points.annotate_task_proposer
     ${LLM_ARGS[@]}
     ${SAMPLING_ARGS[@]}
     ${PIPELINE_ARGS[@]}
@@ -97,4 +97,4 @@ ANNOTATE_ARGS=(
 
 # Annotate trajectories using the task proposer
 
-python -u ${ANNOTATE_ARGS[@]}
+python -um ${ANNOTATE_ARGS[@]}

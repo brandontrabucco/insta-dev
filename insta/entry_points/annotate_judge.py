@@ -12,7 +12,7 @@ from insta.pipeline import (
     JUDGE_CRITERIA_TEMPLATE,
 )
 
-from insta.args import (
+from insta.entry_points.args import (
     add_judge_llm_args,
     add_judge_name_args,
     add_judge_prompt_args,
@@ -23,7 +23,7 @@ from insta.args import (
     set_annotate_mode
 )
 
-from insta.entry_points import (
+from insta.entry_points.insta_pipeline import (
     get_judge_config_from_cli,
     get_data_dirs_from_cli,
     get_dataset_from_cli,
@@ -44,26 +44,69 @@ import tqdm
 import json
 import os
 
-from insta.utils import (
+from insta.configs.judge_config import (
     VALUE_KEYS
 )
 
+
+DEFAULT_AGENT_RESPONSE_KEY = "response"
 
 DEFAULT_STEPS = []
 DEFAULT_CRITERIA = []
 
 
 def query_judge(
-    example_id: int, dataset: Dataset,
-    judge_config: JudgeConfig = DEFAULT_JUDGE_CONFIG,
-    observations_dir: str = None,
-    actions_dir: str = None,
-    judgments_dir: str = None,
-    agent_response_key: str = "response",
-    add_steps_to_judge: bool = True,
-    add_criteria_to_judge: bool = True,
-    skip_finished: bool = False,
-):
+        example_id: int, dataset: Dataset,
+        judge_config: JudgeConfig = DEFAULT_JUDGE_CONFIG,
+        observations_dir: str = None,
+        actions_dir: str = None,
+        judgments_dir: str = None,
+        agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
+        add_steps_to_judge: bool = True,
+        add_criteria_to_judge: bool = True,
+        skip_finished: bool = False):
+    """Query the judge to annotate a single example from the dataset,
+    and save the judgment to the judgments directory.
+
+    Arguments:
+
+    example_id: int
+        ID of the example to annotate.
+
+    dataset: Dataset
+        Hugginggface dataset of websites, and task metadata.
+
+    judge_config: JudgeConfig
+        Configuration for the judge, including the LLM and prompt.
+
+    observations_dir: str
+        Directory where the observations are stored.
+
+    actions_dir: str
+        Directory where the actions are stored.
+
+    judgments_dir: str
+        Directory where the judgments will be saved.
+
+    agent_response_key: str
+        Key in action JSON for the agent's response.
+
+    add_steps_to_judge: bool
+        Whether to add steps to the judge instruction.
+
+    add_criteria_to_judge: bool
+        Whether to add criteria to the judge instruction.
+
+    skip_finished: bool
+        Whether to skip examples that have already been judged.
+
+    Returns:
+
+    identifier: str or None
+        Identifier of the example if the judgment was created or None
+        if the example is invalid or already judged.
+
+    """
 
     example_dict = dataset[example_id]
 
@@ -209,22 +252,16 @@ def query_judge(
     return identifier
 
 
-if __name__ == "__main__":
+def annotate_judge_from_cli(args: argparse.Namespace):
+    """Annotate with the judge from the command line arguments, refer to
+    the command line arguments in insta.args.
 
-    parser = argparse.ArgumentParser(
-        description = "Annotate trajectories with the judge.",
-    )
+    Arguments:
 
-    parser = add_data_args(parser)
-    parser = add_parallel_args(parser)
-    parser = add_annotate_args(parser)
+    args: argparse.Namespace
+        The command line arguments for the insta pipeline.
 
-    parser = add_judge_llm_args(parser)
-    parser = add_judge_name_args(parser)
-    parser = add_judge_prompt_args(parser)
-    parser = add_judge_sampling_args(parser)
-
-    args = parser.parse_args()
+    """
 
     set_annotate_mode(args)
 
@@ -293,3 +330,33 @@ if __name__ == "__main__":
                     "Processing {}"
                     .format(identifier)
                 )
+
+def start_annotate_judge():
+    """Annotate trajectories with the provided configurations, refer to
+    the command line arguments in insta.args.
+
+    """
+
+    parser = argparse.ArgumentParser(
+        description = "Annotate trajectories with the judge.",
+    )
+
+    parser = add_data_args(parser)
+    parser = add_parallel_args(parser)
+    parser = add_annotate_args(parser)
+
+    parser = add_judge_llm_args(parser)
+    parser = add_judge_name_args(parser)
+    parser = add_judge_prompt_args(parser)
+    parser = add_judge_sampling_args(parser)
+
+    args = parser.parse_args()
+
+    annotate_judge_from_cli(
+        args = args
+    )
+
+
+if __name__ == "__main__":
+
+    start_annotate_judge()

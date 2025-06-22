@@ -56,8 +56,9 @@ DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
 SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-""}
 SET_ANNOTATE_JUDGE=${SET_ANNOTATE_JUDGE:-"--set_annotate_judge"}
+SET_ANNOTATE_TASK_PROPOSER=${SET_ANNOTATE_TASK_PROPOSER:-"--set_annotate_task_proposer"}
 
-INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment/gemini-2.5-flash-step3-refiner"}
+INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_feedback_experiment/gemini-2.5-flash-step3-refiner-reproduced"}
 
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
@@ -70,7 +71,12 @@ JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gemini-2.5-flash"}
 JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://generativelanguage.googleapis.com/v1beta/openai/"}
 JUDGE_API_KEY=${JUDGE_API_KEY:-${GOOGLE_API_KEY}}
 
+TASK_PROPOSER_MODEL_NAME=${TASK_PROPOSER_MODEL_NAME:-"gemini-2.5-flash"}
+TASK_PROPOSER_LLM_ENDPOINT=${TASK_PROPOSER_LLM_ENDPOINT:-"https://generativelanguage.googleapis.com/v1beta/openai/"}
+TASK_PROPOSER_API_KEY=${TASK_PROPOSER_API_KEY:-${GOOGLE_API_KEY}}
+
 JUDGE_NAME=${JUDGE_NAME:-"gemini-2.5-flash-judge"}
+TASK_PROPOSER_NAME=${TASK_PROPOSER_NAME:-"gemini-2.5-flash-task-refiner"}
 
 ADD_STEPS_TO_AGENT=${ADD_STEPS_TO_AGENT:-"--add_steps_to_agent"}
 ADD_CRITERIA_TO_AGENT=${ADD_CRITERIA_TO_AGENT:-"--add_criteria_to_agent"}
@@ -78,14 +84,20 @@ ADD_CRITERIA_TO_AGENT=${ADD_CRITERIA_TO_AGENT:-"--add_criteria_to_agent"}
 ADD_STEPS_TO_JUDGE=${ADD_STEPS_TO_JUDGE:-"--add_steps_to_judge"}
 ADD_CRITERIA_TO_JUDGE=${ADD_CRITERIA_TO_JUDGE:-"--add_criteria_to_judge"}
 
+ADD_STEPS_TO_TASK_PROPOSER=${ADD_STEPS_TO_TASK_PROPOSER:-"--add_steps_to_task_proposer"}
+ADD_CRITERIA_TO_TASK_PROPOSER=${ADD_CRITERIA_TO_TASK_PROPOSER:-"--add_criteria_to_task_proposer"}
+
 AGENT_DISABLE_THINKING_CHAT_TEMPLATE=${AGENT_DISABLE_THINKING_CHAT_TEMPLATE:-""}
 JUDGE_DISABLE_THINKING_CHAT_TEMPLATE=${JUDGE_DISABLE_THINKING_CHAT_TEMPLATE:-""}
+TASK_PROPOSER_DISABLE_THINKING_CHAT_TEMPLATE=${TASK_PROPOSER_DISABLE_THINKING_CHAT_TEMPLATE:-""}
 
 AGENT_REASONING_EFFORT=${AGENT_REASONING_EFFORT:-"--agent_reasoning_effort none"}
 JUDGE_REASONING_EFFORT=${JUDGE_REASONING_EFFORT:-"--judge_reasoning_effort none"}
+TASK_PROPOSER_REASONING_EFFORT=${TASK_PROPOSER_REASONING_EFFORT:-"--task_proposer_reasoning_effort none"}
 
 AGENT_PROMPT=${AGENT_PROMPT:-"verbose"}
 JUDGE_PROMPT=${JUDGE_PROMPT:-"verbose"}
+TASK_PROPOSER_PROMPT=${TASK_PROPOSER_PROMPT:-"refiner"}
 
 
 
@@ -103,6 +115,12 @@ LLM_ARGS=(
     ${ADD_STEPS_TO_JUDGE}
     ${ADD_CRITERIA_TO_JUDGE}
     ${SET_ANNOTATE_JUDGE}
+    --task_proposer_model_name ${TASK_PROPOSER_MODEL_NAME}
+    --task_proposer_llm_endpoint ${TASK_PROPOSER_LLM_ENDPOINT}
+    --task_proposer_api_key ${TASK_PROPOSER_API_KEY}
+    ${ADD_STEPS_TO_TASK_PROPOSER}
+    ${ADD_CRITERIA_TO_TASK_PROPOSER}
+    ${SET_ANNOTATE_TASK_PROPOSER}
 )
 
 SAMPLING_ARGS=(
@@ -110,6 +128,8 @@ SAMPLING_ARGS=(
     ${AGENT_REASONING_EFFORT}
     ${JUDGE_DISABLE_THINKING_CHAT_TEMPLATE}
     ${JUDGE_REASONING_EFFORT}
+    ${TASK_PROPOSER_DISABLE_THINKING_CHAT_TEMPLATE}
+    ${TASK_PROPOSER_REASONING_EFFORT}
 )
 
 PIPELINE_ARGS=(
@@ -117,6 +137,7 @@ PIPELINE_ARGS=(
     --playwright_workers ${PLAYWRIGHT_WORKERS}
     --agent_prompt ${AGENT_PROMPT}
     --judge_prompt ${JUDGE_PROMPT}
+    --task_proposer_prompt ${TASK_PROPOSER_PROMPT}
     --num_agents ${NUM_AGENTS}
     --rank ${RANK}
     --world_size ${WORLD_SIZE}
@@ -127,6 +148,7 @@ PIPELINE_ARGS=(
 DATA_ARGS=(
     --input_data_dir ${INPUT_DATA_DIR}
     --judge_name ${JUDGE_NAME}
+    --task_proposer_name ${TASK_PROPOSER_NAME}
     --dataset ${DATASET}
     --dataset_split ${DATASET_SPLIT}
     ${SET_EXPLORATION_MODE}
@@ -158,6 +180,6 @@ huggingface-cli login --token $HUGGINGFACE_ACCESS_TOKEN
 
 echo "Starting pipeline with args ${INSTA_ARGS[@]}"
 
-python -um insta.entry_points \
+python -um insta.entry_points.insta_pipeline \
     ${INSTA_ARGS[@]} \
     > logs/agents-${RANK}.log 2>&1

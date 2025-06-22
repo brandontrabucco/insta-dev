@@ -12,7 +12,7 @@ from insta.pipeline import (
     TASK_PROPOSER_CRITERIA_TEMPLATE,
 )
 
-from insta.args import (
+from insta.entry_points.args import (
     add_task_proposer_llm_args,
     add_task_proposer_name_args,
     add_task_proposer_prompt_args,
@@ -24,7 +24,7 @@ from insta.args import (
     set_annotate_mode
 )
 
-from insta.entry_points import (
+from insta.entry_points.insta_pipeline import (
     get_task_proposer_config_from_cli,
     get_data_dirs_from_cli,
     get_dataset_from_cli,
@@ -54,19 +54,66 @@ DEFAULT_CRITERIA = []
 
 
 def query_task_proposer(
-    example_id: int, dataset: Dataset,
-    task_proposer_config: TaskProposerConfig = 
-    DEFAULT_TASK_PROPOSER_CONFIG,
-    observations_dir: str = None,
-    actions_dir: str = None,
-    judgments_dir: str = None,
-    task_proposals_dir: str = None,
-    agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
-    judge_response_key: str = DEFAULT_JUDGE_RESPONSE_KEY,
-    add_steps_to_task_proposer: bool = True,
-    add_criteria_to_task_proposer: bool = True,
-    skip_finished: bool = False,
-) -> str | None:
+        example_id: int, dataset: Dataset,
+        task_proposer_config: TaskProposerConfig = 
+        DEFAULT_TASK_PROPOSER_CONFIG,
+        observations_dir: str = None,
+        actions_dir: str = None,
+        judgments_dir: str = None,
+        task_proposals_dir: str = None,
+        agent_response_key: str = DEFAULT_AGENT_RESPONSE_KEY,
+        judge_response_key: str = DEFAULT_JUDGE_RESPONSE_KEY,
+        add_steps_to_task_proposer: bool = True,
+        add_criteria_to_task_proposer: bool = True,
+        skip_finished: bool = False):
+    """Query the task proposer to annotate a single example from the dataset,
+    and save the proposed task to the task proposals directory.
+
+    Arguments:
+
+    example_id: int
+        ID of the example to annotate.
+
+    dataset: Dataset
+        Hugginggface dataset of websites, and task metadata.
+
+    task_proposer_config: TaskProposerConfig
+        Configuration for the task proposer, including the LLM and prompt.
+
+    observations_dir: str
+        Directory where the observations are stored.
+
+    actions_dir: str
+        Directory where the actions are stored.
+
+    judgments_dir: str
+        Directory where the judgments are stored.
+
+    task_proposals_dir: str
+        Directory where the task proposals will be saved.
+
+    agent_response_key: str
+        Key in action JSON for the agent's response.
+
+    judge_response_key: str
+        Key in judgment JSON for the judge's response.
+
+    add_steps_to_task_proposer: bool
+        Whether to add steps to the task proposer instruction.
+
+    add_criteria_to_task_proposer: bool
+        Whether to add criteria to the task proposer instruction.
+
+    skip_finished: bool
+        Whether to skip examples that have already been assigned tasks.
+
+    Returns:
+
+    identifier: str or None
+        Identifier of the example if the judgment was created or None
+        if the example is invalid or already judged.
+
+    """
 
     example_dict = dataset[example_id]
 
@@ -223,24 +270,16 @@ def query_task_proposer(
     return identifier
 
 
-if __name__ == "__main__":
+def annotate_task_proposer_from_cli(args: argparse.Namespace):
+    """Annotate with the task proposer from the command line arguments, refer to
+    the command line arguments in insta.args.
 
-    parser = argparse.ArgumentParser(
-        description = "Annotate trajectories with the task proposer.",
-    )
+    Arguments:
 
-    parser = add_data_args(parser)
-    parser = add_parallel_args(parser)
-    parser = add_annotate_args(parser)
-    
-    parser = add_judge_name_args(parser)
+    args: argparse.Namespace
+        The command line arguments for the insta pipeline.
 
-    parser = add_task_proposer_llm_args(parser)
-    parser = add_task_proposer_name_args(parser)
-    parser = add_task_proposer_prompt_args(parser)
-    parser = add_task_proposer_sampling_args(parser)
-
-    args = parser.parse_args()
+    """
 
     set_annotate_mode(args)
 
@@ -311,3 +350,36 @@ if __name__ == "__main__":
                     "Processing {}"
                     .format(identifier)
                 )
+
+
+def start_annotate_task_proposer():
+    """Annotate trajectories with the provided configurations, refer to
+    the command line arguments in insta.args.
+
+    """
+
+    parser = argparse.ArgumentParser(
+        description = "Annotate trajectories with the task proposer.",
+    )
+
+    parser = add_data_args(parser)
+    parser = add_parallel_args(parser)
+    parser = add_annotate_args(parser)
+    
+    parser = add_judge_name_args(parser)
+
+    parser = add_task_proposer_llm_args(parser)
+    parser = add_task_proposer_name_args(parser)
+    parser = add_task_proposer_prompt_args(parser)
+    parser = add_task_proposer_sampling_args(parser)
+
+    args = parser.parse_args()
+
+    annotate_task_proposer_from_cli(
+        args = args
+    )
+
+
+if __name__ == "__main__":
+
+    start_annotate_task_proposer()

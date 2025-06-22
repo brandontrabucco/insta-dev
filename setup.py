@@ -45,7 +45,9 @@ CLASSIFIERS = [
 
 ENTRY_POINTS = {
     'console_scripts': [
-        'start-insta-pipeline=insta.entry_points:start_insta_pipeline',
+        'start-insta-pipeline=insta.entry_points.insta_pipeline:start_insta_pipeline',
+        'start-annotate-judge=insta.entry_points.annotate_judge:start_annotate_judge',
+        'start-annotate-task-proposer=insta.entry_points.annotate_task_proposer:start_annotate_task_proposer',
     ]
 }
 

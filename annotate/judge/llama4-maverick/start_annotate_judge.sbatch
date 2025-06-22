@@ -81,7 +81,7 @@ DATA_ARGS=(
 )
 
 ANNOTATE_ARGS=(
-    annotate/judge/query_judge.py
+    insta.entry_points.annotate_judge
     ${LLM_ARGS[@]}
     ${SAMPLING_ARGS[@]}
     ${PIPELINE_ARGS[@]}
@@ -92,4 +92,4 @@ ANNOTATE_ARGS=(
 
 # Annotate trajectories using the judge
 
-python -u ${ANNOTATE_ARGS[@]}
+python -um ${ANNOTATE_ARGS[@]}
