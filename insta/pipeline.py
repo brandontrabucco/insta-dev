@@ -85,19 +85,19 @@ DEFAULT_ADD_STEPS_TO_TASK_PROPOSER = False
 DEFAULT_ADD_CRITERIA_TO_TASK_PROPOSER = False
 
 AGENT_EXPLORATION_TEMPLATE = (
-    "Thoroughly explore this website by navigating pages, highlight interesting content we find, and list what real users can accomplish on this website."
+    "Briefly explore the website by navigating pages, highlight interesting content we find, and list what real users can accomplish on this website."
 )
 
 JUDGE_EXPLORATION_TEMPLATE = (
-    "The agent must thoroughly explore this website by navigating pages, highlight interesting content it finds, and list what real users can accomplish on this website."
+    "The agent must explore the website by navigating pages, highlight interesting content it finds, and list what real users can accomplish on this website."
 )
 
 TASK_PROPOSER_EXPLORATION_TEMPLATE = (
-    "The agent must thoroughly explore this website by navigating pages, highlight interesting content it finds, and list what real users can accomplish on this website."
+    "The agent must explore the website by navigating pages, highlight interesting content it finds, and list what real users can accomplish on this website."
 )
 
 AGENT_STEPS_TEMPLATE = (
-    "{instruction}\n\nTo complete the task, we should consider these steps:\n{steps}"
+    "{instruction}\n\nTo complete the task, let's follow these steps:\n{steps}"
 )
 
 JUDGE_STEPS_TEMPLATE = (
@@ -109,7 +109,7 @@ TASK_PROPOSER_STEPS_TEMPLATE = (
 )
 
 AGENT_CRITERIA_TEMPLATE = (
-    "{instruction}\n\nTo complete the task, we should consider these criteria:\n{criteria}"
+    "{instruction}\n\nTo complete the task, we must satisfy these criteria:\n{criteria}"
 )
 
 JUDGE_CRITERIA_TEMPLATE = (
@@ -355,6 +355,8 @@ def generate_trajectory(
     task_proposal = {}
 
     if task_proposer is not None:
+
+        task_proposer.reset()
 
         task_proposal = task_proposer(
             instruction = task_proposer_instruction,

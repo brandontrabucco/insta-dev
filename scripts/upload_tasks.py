@@ -39,6 +39,16 @@ def load_tasks(
                 
                 continue
 
+        valid_example = (
+            task_dict["proposed_task"] is not None or
+            task_dict["steps"] is not None or
+            task_dict["criteria"] is not None
+        )
+
+        if not valid_example:
+
+            continue
+
         output_example = {
             "website": domain,
             "instruction": task_dict["proposed_task"],
