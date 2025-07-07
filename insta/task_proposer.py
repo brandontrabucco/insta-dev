@@ -520,7 +520,7 @@ class BrowserTaskProposer(Callable):
         if trajectories_left < last_tasks:
 
             trajectory_outputs.append(
-                "## {} Task:\n\n{}".format(
+                "### {} Task:\n\n{}".format(
                 "Initial",
                 instruction
             ))
@@ -557,7 +557,7 @@ class BrowserTaskProposer(Callable):
             if include_observation:
 
                 trajectory_outputs.append(
-                    "## {} Webpage:\n\n{}".format(
+                    "### {} Webpage:\n\n{}".format(
                     "Previous" 
                     if time_left > 0 else 
                     "Final",
@@ -572,7 +572,7 @@ class BrowserTaskProposer(Callable):
             if include_action:
     
                 trajectory_outputs.append(
-                    "## {} Action:\n\n{}".format(
+                    "### {} Action:\n\n{}".format(
                     "Previous" 
                     if time_left > 0 else 
                     "Final",
@@ -582,7 +582,7 @@ class BrowserTaskProposer(Callable):
         if trajectories_left < last_judgments:
 
             trajectory_outputs.append(
-                "## {} Score:\n\n{}".format(
+                "### {} Score:\n\n{}".format(
                 "Final",
                 judgment
             ))

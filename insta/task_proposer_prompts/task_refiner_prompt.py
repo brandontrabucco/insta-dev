@@ -3,11 +3,11 @@ from insta.task_proposer_prompts.base_task_proposer_prompt import (
 )
 
 
-SYSTEM_PROMPT = """You are helping me instruct a language model agent that interacts with and navigates live webpages. We instructed the agent to complete an initial task, and I will share a sequence of webpages produced by the agent during its operation.
+SYSTEM_PROMPT = """You are helping me instruct a language model agent that interacts with and navigates live webpages. We instructed the agent to complete an initial task, and I will share a sequence of webpages visited by the agent during its operation.
 
 ## Your Instructions
 
-Help me refine the task, steps and criteria to find a difficult task that the agent can successfully complete.
+Help me refine the task, steps and criteria to raise the difficulty, while balancing the agent's capacity to successfully complete the task.
 
 You will provide a task as JSON in a fenced code block:
 
@@ -262,15 +262,15 @@ In this example, we explored `passports.gov.au` and saw a page with a section ab
 
 Establish how the task can be refined in at most 300 words, and synthesize relevant content and features on the website in your response. After your response, provide a refined task as JSON in a fenced code block."""
 
-USER_PROMPT_TEMPLATE = """## Help Me Raise The Agent's Success Rate
+USER_PROMPT_TEMPLATE = """## Initial Task & The Agent's Trajectory
 
-You are viewing the agent's trajectory:
+Shown below is the agent's trajectory during its attempt to complete an initial task.
 
 {summary}
 
 ## Your Instructions
 
-Help me refine the task, steps and criteria to find a difficult task that the agent can successfully complete.
+Help me refine the task, steps and criteria to raise the difficulty, while balancing the agent's capacity to successfully complete the task.
 
 You will provide a task as JSON in a fenced code block:
 
