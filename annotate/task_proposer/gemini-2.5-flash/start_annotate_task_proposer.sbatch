@@ -28,7 +28,7 @@ conda activate insta
 
 # Arguments for data collection
 
-DATASET=${DATASET:-"btrabucco/refiner-step5"}
+DATASET=${DATASET:-"btrabucco/refiner-step1"}
 DATASET_SPLIT=${DATASET_SPLIT:-"train"}
 
 SET_EXPLORATION_MODE=${SET_EXPLORATION_MODE:-"--set_exploration_mode"}

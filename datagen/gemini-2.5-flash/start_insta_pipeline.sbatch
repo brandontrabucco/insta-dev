@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --nodes=1
-#SBATCH --partition=preempt
+#SBATCH --partition=array
 #SBATCH --array=0-15
 
 
@@ -63,20 +63,20 @@ INPUT_DATA_DIR=${INPUT_DATA_DIR:-"${NFS_DIR}/btrabucc/neurips_refiner_experiment
 SKIP_FINISHED=${SKIP_FINISHED:-"--skip_finished"}
 PRUNE_OBSERVATIONS=${PRUNE_OBSERVATIONS:-"--prune_observations"}
 
-AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"gemini-2.5-flash"}
+AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-"gemini-2.5-flash-preview-05-20"}
 AGENT_LLM_ENDPOINT=${AGENT_LLM_ENDPOINT:-"https://generativelanguage.googleapis.com/v1beta/openai/"}
 AGENT_API_KEY=${AGENT_API_KEY:-${GOOGLE_API_KEY}}
 
-JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gemini-2.5-flash"}
+JUDGE_MODEL_NAME=${JUDGE_MODEL_NAME:-"gemini-2.5-flash-preview-05-20"}
 JUDGE_LLM_ENDPOINT=${JUDGE_LLM_ENDPOINT:-"https://generativelanguage.googleapis.com/v1beta/openai/"}
 JUDGE_API_KEY=${JUDGE_API_KEY:-${GOOGLE_API_KEY}}
 
-TASK_PROPOSER_MODEL_NAME=${TASK_PROPOSER_MODEL_NAME:-"gemini-2.5-flash"}
+TASK_PROPOSER_MODEL_NAME=${TASK_PROPOSER_MODEL_NAME:-"gemini-2.5-flash-preview-05-20"}
 TASK_PROPOSER_LLM_ENDPOINT=${TASK_PROPOSER_LLM_ENDPOINT:-"https://generativelanguage.googleapis.com/v1beta/openai/"}
 TASK_PROPOSER_API_KEY=${TASK_PROPOSER_API_KEY:-${GOOGLE_API_KEY}}
 
 JUDGE_NAME=${JUDGE_NAME:-"gemini-2.5-flash-judge"}
-TASK_PROPOSER_NAME=${TASK_PROPOSER_NAME:-"gemini-2.5-flash-task-refiner-v2"}
+TASK_PROPOSER_NAME=${TASK_PROPOSER_NAME:-"gemini-2.5-flash-task-refiner"}
 
 ADD_STEPS_TO_AGENT=${ADD_STEPS_TO_AGENT:-"--add_steps_to_agent"}
 ADD_CRITERIA_TO_AGENT=${ADD_CRITERIA_TO_AGENT:-"--add_criteria_to_agent"}
